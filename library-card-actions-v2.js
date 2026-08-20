@@ -57,9 +57,9 @@
     style.textContent = `
       #libraryGrid .lib-poster[data-open-detail]{cursor:pointer}
       #libraryGrid .lib-poster[data-open-detail]:focus-visible{outline:2px solid rgba(159,124,255,.8);outline-offset:-2px}
-      #libraryGrid .lib-card > .status-pill{display:none!important}
-      #libraryGrid .lib-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;align-items:stretch!important}
-      #libraryGrid .lib-actions button{width:100%!important;min-width:0!important;height:30px!important;margin:0!important;padding:0 6px!important;display:flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important}
+      #libraryGrid .status-pill{display:none!important;visibility:hidden!important;pointer-events:none!important}
+      #libraryGrid .lib-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;align-items:stretch!important;width:100%!important}
+      #libraryGrid .lib-actions button{width:100%!important;min-width:0!important;height:30px!important;margin:0!important;padding:0 6px!important;display:flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;position:static!important;transform:none!important}
       #libraryGrid .lib-actions button.library-status-btn.want{color:#d8cfff;border-color:rgba(159,124,255,.28);background:rgba(107,74,200,.18)}
       #libraryGrid .lib-actions button.library-status-btn.watched{color:#8ce7bb;border-color:rgba(98,210,162,.24);background:rgba(37,128,91,.16)}
       #libraryGrid .lib-actions button.library-status-btn.watching{color:#9fd4ff;border-color:rgba(100,167,255,.25);background:rgba(46,93,160,.18)}
@@ -137,6 +137,8 @@
   }
 
   function rebuildCardActions(card) {
+    card.querySelectorAll('.status-pill').forEach(node => node.remove());
+
     const edit = card.querySelector('[data-edit-id]');
     const cycle = card.querySelector('[data-cycle-status]');
     const existingStatus = card.querySelector('[data-library-status]');
@@ -158,7 +160,7 @@
     const actions = card.querySelector('.lib-actions');
     if (!actions) return;
     const signature = `${id}|${statusClass}`;
-    if (actions.dataset.libraryActionsV2 === signature) return;
+    if (actions.dataset.libraryActionsV2 === signature && actions.children.length === 3) return;
     actions.dataset.libraryActionsV2 = signature;
     actions.innerHTML = `
       <button type="button" class="library-status-btn ${esc(statusClass)}" data-library-status="${esc(id)}">${esc(statusLabel)}</button>
@@ -168,6 +170,7 @@
 
   function decorateLibraryCards() {
     document.querySelectorAll('#libraryGrid .lib-card').forEach(rebuildCardActions);
+    document.querySelectorAll('#libraryGrid .status-pill').forEach(node => node.remove());
     cleanFollowControls();
   }
 
