@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Trigger: apply shared two-column alignment.
 p = Path('index.html')
 s = p.read_text(encoding='utf-8')
 
@@ -50,7 +51,6 @@ if anchor not in s:
     raise SystemExit('settings CSS insertion anchor not found')
 s = s.replace(anchor, css + anchor, 1)
 
-# Basic structural checks: the expected four cards must still exist.
 for token in [
     '个人资料 · 你的影视名片',
     'TMDb · 影视资料服务',
