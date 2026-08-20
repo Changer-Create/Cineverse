@@ -1,9 +1,15 @@
 from pathlib import Path
 import re
 
-# trigger: 2026-08-20 next-round refresh
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
+
+def sub(pattern,repl,label,flags=0):
+    global s
+    s2,n=re.subn(pattern,repl,s,count=1,flags=flags)
+    if n!=1:
+        raise SystemExit(f'{label}: expected 1 match, got {n}')
+    s=s2
 
 def once(old,new,label):
     global s
@@ -12,29 +18,33 @@ def once(old,new,label):
         raise SystemExit(f'{label}: expected 1 occurrence, got {n}')
     s=s.replace(old,new,1)
 
-old_css='''  .home-top-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(330px,.85fr);gap:18px;margin-top:18px;align-items:stretch}\n  .home-top-grid>.panel{height:100%}\n  .home-triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:18px;align-items:stretch}\n  .home-triple>.panel{height:100%;min-height:286px}\n  .home-triple .recent-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start}\n  .home-triple .recent{grid-template-columns:50px minmax(0,1fr)}\n  .home-triple .mini-poster{width:50px;height:72px}\n  .home-triple .insight{display:flex;flex-direction:column}\n  .home-triple .quote-card{margin-top:auto}\n'''
-new_css='''  .home-top-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(330px,.85fr);gap:18px;margin-top:18px;align-items:stretch}\n  .home-top-grid>.panel{height:100%}\n  .home-top-grid .recent-grid{grid-template-columns:repeat(4,minmax(0,1fr));align-content:start}\n  .home-triple{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:18px;align-items:stretch}\n  .home-triple>.panel{height:100%;min-height:330px;display:flex;flex-direction:column}\n  .home-triple .radar-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;flex:1}\n  .home-triple .movie-card .poster{aspect-ratio:2/2.45}\n  .home-triple .movie-body{padding:9px 10px 10px}\n  .home-triple .scores{display:grid;gap:3px}\n  .home-triple .plan{flex:1}\n  .home-triple .insight{padding:0}\n  .home-triple .insight-body{padding:8px 18px 18px;display:flex;flex-direction:column;flex:1}\n  .home-triple .quote-card{margin-top:auto}\n'''
-once(old_css,new_css,'home css')
-s=s.replace('.home-triple .insight{grid-column:1/-1}', '.home-triple .insight{grid-column:1/-1}.home-top-grid .recent-grid{grid-template-columns:repeat(2,1fr)}',1)
-s=s.replace('.home-triple .insight{grid-column:auto}.home-triple .recent-grid{grid-template-columns:1fr}', '.home-triple .insight{grid-column:auto}.home-top-grid .recent-grid{grid-template-columns:1fr}.home-triple .radar-grid{grid-template-columns:1fr 1fr}',1)
+# Home CSS: tolerate the compressed CSS used by the current public build.
+sub(r'\.home-top-grid>\.panel\{height:100%\}', '.home-top-grid>.panel{height:100%}.home-top-grid .recent-grid{grid-template-columns:repeat(4,minmax(0,1fr));align-content:start}', 'home recent css')
+sub(r'\.home-triple>\.panel\{height:100%;min-height:286px\}', '.home-triple>.panel{height:100%;min-height:330px;display:flex;flex-direction:column}', 'home triple panel')
+sub(r'\.home-triple \.recent-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\);align-content:start\}\.home-triple \.recent\{grid-template-columns:50px minmax\(0,1fr\)\}\.home-triple \.mini-poster\{width:50px;height:72px\}', '.home-triple .radar-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;flex:1}.home-triple .movie-card .poster{aspect-ratio:2/2.45}.home-triple .movie-body{padding:9px 10px 10px}.home-triple .scores{display:grid;gap:3px}.home-triple .plan{flex:1}', 'home triple content css')
+sub(r'\.home-triple \.insight\{display:flex;flex-direction:column\}', '.home-triple .insight{padding:0}.home-triple .insight-body{padding:8px 18px 18px;display:flex;flex-direction:column;flex:1}', 'home insight css')
+if '.home-top-grid .recent-grid{grid-template-columns:repeat(2,1fr)}' not in s:
+    s=s.replace('.home-triple .insight{grid-column:1/-1}', '.home-triple .insight{grid-column:1/-1}.home-top-grid .recent-grid{grid-template-columns:repeat(2,1fr)}',1)
+if '.home-top-grid .recent-grid{grid-template-columns:1fr}' not in s:
+    s=s.replace('.home-triple .insight{grid-column:auto}.home-triple .recent-grid{grid-template-columns:1fr}', '.home-triple .insight{grid-column:auto}.home-top-grid .recent-grid{grid-template-columns:1fr}.home-triple .radar-grid{grid-template-columns:1fr 1fr}',1)
 
-radar='''      <section class="panel" id="radar">\n        <div class="panel-head"><div class="panel-title"><span class="star">✦</span> 本周电影雷达 <span class="panel-kicker">为你精选的值得关注</span></div><button class="link-btn" data-view-link="radar">查看全部 ›</button></div>\n        <div class="radar-grid" id="radarGrid"></div>\n      </section>'''
-watched='''      <section class="panel" id="watched">\n        <div class="panel-head"><div class="panel-title"><span class="star">★</span> 最近观看</div><button class="link-btn" id="recentSeeAll">查看全部 ›</button></div>\n        <div class="recent-grid" id="recentGrid"></div>\n      </section>'''
-if s.count(radar)!=1 or s.count(watched)!=1: raise SystemExit('home blocks not unique')
-s=s.replace(radar,'__RADAR__',1).replace(watched,'__WATCHED__',1)
-s=s.replace('__RADAR__',watched,1).replace('__WATCHED__',radar,1)
+# Swap Recent Watched and Weekly Radar.
+radar=re.search(r'<section class="panel" id="radar">.*?<div class="radar-grid" id="radarGrid"></div>\s*</section>',s,re.S)
+watched=re.search(r'<section class="panel" id="watched">.*?<div class="recent-grid" id="recentGrid"></div>\s*</section>',s,re.S)
+if not radar or not watched: raise SystemExit('home modules not found')
+rb,wb=radar.group(0),watched.group(0)
+s=s.replace(rb,'__NEXT_RADAR__',1).replace(wb,'__NEXT_WATCHED__',1)
+s=s.replace('__NEXT_RADAR__',wb,1).replace('__NEXT_WATCHED__',rb,1)
 
-old_insight='''      <section class="panel insight">\n        <div class="panel-title">这一月的星图</div>\n        <div class="insight-grid"><div class="insight-item"><div class="n" id="monthRadarCount">0</div><div class="l">本月新增雷达</div></div><div class="insight-item"><div class="n" id="monthNinePlus">0</div><div class="l">9分以上</div></div><div class="insight-item"><div class="n" id="monthTopDirector">—</div><div class="l">最常见主创</div></div></div>\n        <div class="quote-card">“每一部作品，都是一次平行宇宙的旅行。”<br><span style="color:#8f99b8">愿你在光影里，遇见更好的自己。</span></div>\n      </section>'''
-new_insight='''      <section class="panel insight">\n        <div class="panel-head"><div class="panel-title">这一月的星图</div></div>\n        <div class="insight-body">\n          <div class="insight-grid"><div class="insight-item"><div class="n" id="monthRadarCount">0</div><div class="l">本月新增雷达</div></div><div class="insight-item"><div class="n" id="monthNinePlus">0</div><div class="l">9分以上</div></div><div class="insight-item"><div class="n" id="monthTopDirector">—</div><div class="l">最常见主创</div></div></div>\n          <div class="quote-card">“每一部作品，都是一次平行宇宙的旅行。”<br><span style="color:#8f99b8">愿你在光影里，遇见更好的自己。</span></div>\n        </div>\n      </section>'''
-once(old_insight,new_insight,'insight')
+# Align the three lower module headers exactly.
+sub(r'<section class="panel insight">\s*<div class="panel-title">这一月的星图</div>\s*(<div class="insight-grid">.*?</div></div></div>)\s*(<div class="quote-card">.*?</div>)\s*</section>', r'<section class="panel insight">\n        <div class="panel-head"><div class="panel-title">这一月的星图</div></div>\n        <div class="insight-body">\n          \1\n          \2\n        </div>\n      </section>', 'insight html', re.S)
 once('.sort((a,b)=>(b.match||0)-(a.match||0)).slice(0,4);','.sort((a,b)=>(b.match||0)-(a.match||0)).slice(0,2);','radar count')
 
-old_modal='''    <div class="data-note">每行一部影视。支持“中文名 / 外文原名”，也可以直接粘贴带序号的片单；已存在的同名作品会自动跳过。</div>\n    <textarea id="bulkAddTitlesText" class="bulk-title-textarea" placeholder="爱乐之城 / La La Land\n爆裂鼓手 / Whiplash\n花样年华\n1. 公民凯恩"></textarea>\n    <div id="bulkAddTitlesStatus" class="tmdb-status">新条目会先以“待识别”加入影视库，之后可统一进入 TMDb 匹配中心补全。</div>\n  </div>\n  <div class="modal-foot"><button type="button" id="bulkAddTitlesCancel">取消</button><button type="button" id="bulkAddTitlesOnly">只添加</button><button class="save" type="button" id="bulkAddTitlesMatch">添加并打开匹配中心</button></div>'''
-new_modal='''    <div class="data-note">每行一部影视。支持“中文名 / 外文原名”和带序号片单；已存在作品自动跳过。点击自动匹配后，唯一精确结果会直接关联 TMDb 并新增，歧义结果才进入待确认。</div>\n    <textarea id="bulkAddTitlesText" class="bulk-title-textarea" placeholder="爱乐之城 / La La Land\n爆裂鼓手 / Whiplash\n花样年华\n1. 公民凯恩"></textarea>\n    <div id="bulkAddTitlesStatus" class="tmdb-status">粘贴片名后即可批量匹配；不会使用年份或观看日期参与自动确认。</div>\n  </div>\n  <div class="modal-foot"><button type="button" id="bulkAddTitlesCancel">取消</button><button type="button" id="bulkAddTitlesOnly">只添加不匹配</button><button class="save" type="button" id="bulkAddTitlesMatch">自动匹配并新增</button></div>'''
-once(old_modal,new_modal,'bulk modal')
+# True bulk title -> TMDb auto matching flow.
+sub(r'<div class="data-note">每行一部影视。支持“中文名 / 外文原名”，也可以直接粘贴带序号的片单；已存在的同名作品会自动跳过。</div>\s*(<textarea id="bulkAddTitlesText".*?</textarea>)\s*<div id="bulkAddTitlesStatus" class="tmdb-status">.*?</div>', r'<div class="data-note">每行一部影视。支持“中文名 / 外文原名”和带序号片单；已存在作品自动跳过。点击自动匹配后，唯一精确结果会直接关联 TMDb 并新增，歧义结果才进入待确认。</div>\n    \1\n    <div id="bulkAddTitlesStatus" class="tmdb-status">粘贴片名后即可批量匹配；不会使用年份或观看日期参与自动确认。</div>', 'bulk copy', re.S)
+once('<button type="button" id="bulkAddTitlesOnly">只添加</button><button class="save" type="button" id="bulkAddTitlesMatch">添加并打开匹配中心</button>', '<button type="button" id="bulkAddTitlesOnly">只添加不匹配</button><button class="save" type="button" id="bulkAddTitlesMatch">自动匹配并新增</button>', 'bulk buttons')
 
-pat=re.compile(r"  function openBulkAddTitles\(\)\{.*?\n  function openMovieModal\(id=null\)\{",re.S)
-m=pat.search(s)
+m=re.search(r'  function openBulkAddTitles\(\)\{.*?  function openMovieModal\(id=null\)\{',s,re.S)
 if not m: raise SystemExit('bulk function block not found')
 funcs=r'''  function bulkTitleExisting(row){
     const t=cleanTmdbTitle(row.title),o=cleanTmdbTitle(row.originalTitle);
@@ -76,6 +86,7 @@ funcs=r'''  function bulkTitleExisting(row){
 s=s[:m.start()]+funcs+s[m.end():]
 once("els.bulkAddTitlesOnly.addEventListener('click',()=>addBulkTitles(false));els.bulkAddTitlesMatch.addEventListener('click',()=>addBulkTitles(true));","els.bulkAddTitlesOnly.addEventListener('click',addBulkTitles);els.bulkAddTitlesMatch.addEventListener('click',addBulkTitlesAutoMatch);",'bulk listeners')
 
+# Remove stale element-registry entries for UI cards/buttons that no longer exist.
 for key in ['quoteSourceBtn','quoteSourceDialog','quoteSourceClose','quoteSourceText','quoteSourceCredit','quoteSourceVerification','quoteSourceType','quoteSourceTitle','quoteSourceTranslation','quoteSourceLink','quoteSourceNext','quoteSourceDone','settingsMovieCount','settingsWatchCount','settingsPlanCount','settingsRadarCount','settingsLastUpdated','settingsLegacySeedStatus','settingsCleanupLegacySeed','settingsClearData']:
     s=re.sub(rf"\b{re.escape(key)}:\$\('{re.escape(key)}'\),?",'',s)
 
