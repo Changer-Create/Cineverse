@@ -1,0 +1,48 @@
+name: Public default profile cleanup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/public-defaults.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-defaults:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch public default profile
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          replacements = {
+              '<div class="profile"><div class="avatar" id="profileAvatar"></div><div><div class="name" id="profileName">锦荣</div><div class="role" id="profileRole">影视收藏家</div></div></div>': '<div class="profile"><div class="avatar" id="profileAvatar"></div><div><div class="name" id="profileName">电影爱好者</div><div class="role hidden" id="profileRole"></div></div></div>',
+              '<h2>晚上好，<span id="homeGreetingName">锦荣</span> <span class="spark">✦</span></h2>': '<h2>晚上好，<span id="homeGreetingName">电影爱好者</span> <span class="spark">✦</span></h2>',
+              '<div class="profile-preview-box"><div class="profile-preview-avatar" id="settingsProfileAvatarPreview"></div><b id="settingsProfilePreviewName">锦荣</b><span id="settingsProfilePreviewRole">影视收藏家</span></div>': '<div class="profile-preview-box"><div class="profile-preview-avatar" id="settingsProfileAvatarPreview"></div><b id="settingsProfilePreviewName">电影爱好者</b><span class="hidden" id="settingsProfilePreviewRole"></span></div>',
+              'placeholder="例如：锦荣"': 'placeholder="例如：你的昵称"',
+              'placeholder="例如：锦荣的影视收藏"': 'placeholder="例如：我的影视收藏"',
+              "const DEFAULT_SETTINGS={profileName:'锦荣',profileRole:'影视收藏家'": "const DEFAULT_SETTINGS={profileName:'电影爱好者',profileRole:''",
+              "name=String(st.profileName||'锦荣').trim()||'锦荣'": "name=String(st.profileName||'电影爱好者').trim()||'电影爱好者'",
+              "name=String(st.profileName||'锦荣'),role": "name=String(st.profileName||'电影爱好者'),role",
+              "name||'锦荣'": "name||'电影爱好者'",
+              "profileName:String(els.settingsProfileName?.value||'').trim()||'锦荣'": "profileName:String(els.settingsProfileName?.value||'').trim()||'电影爱好者'",
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          old_load = "    if(saved){saved.movies=(saved.movies||[]).map(normalizeMovie);saved.home={...structuredClone(EMPTY_HOME),...(saved.home||{})};saved.settings=normalizeSettings(saved.settings);return saved}"
+          new_load = "    if(saved){saved.movies=(saved.movies||[]).map(normalizeMovie);saved.home={...structuredClone(EMPTY_HOME),...(saved.home||{})};const previousSettings=saved.settings||{},wasOldPublicDefault=previousSettings.profileName==='锦荣'&&previousSettings.profileRole==='影视收藏家'&&!previousSettings.profileAvatarDataUrl;saved.settings=normalizeSettings(previousSettings);if(wasOldPublicDefault){saved.settings.profileName='电影爱好者';saved.settings.profileRole='';localStorage.setItem(V2_KEY,JSON.stringify(saved))}return saved}"
+          text = text.replace(old_load, new_load)
+          p.write_text(text, encoding='utf-8')
+      - name: Commit patched defaults
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Make public profile defaults generic"
+          git push
