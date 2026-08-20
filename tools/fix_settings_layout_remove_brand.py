@@ -36,7 +36,6 @@ if old in s:
 elif 'function normalizeSettings(v){return {...DEFAULT_SETTINGS,...(v||{})}}' in s:
     s=s.replace('function normalizeSettings(v){return {...DEFAULT_SETTINGS,...(v||{})}}',new)
 else:
-    # tolerate already-custom normalization while ensuring the fields are removed
     s=re.sub(r'function normalizeSettings\(v\)\{(.*?)return out\}',
              lambda m: 'function normalizeSettings(v){'+m.group(1)+"delete out.brandTitle;delete out.brandSubtitle;delete out.brandLogoDataUrl;return out}",
              s,count=1,flags=re.S)
@@ -69,7 +68,6 @@ s=s.replace('updateBrandSettingsUI();','')
 # Image cropper is profile-only now.
 s=s.replace("imageCropState.outputSize=target==='brand'?256:320;",'imageCropState.outputSize=320;')
 s=s.replace("els.imageCropTitle.textContent=target==='brand'?'裁切品牌图标':'裁切个人头像';","els.imageCropTitle.textContent='裁切个人头像';")
-# Replace the brand/profile branch in crop apply with profile only.
 s=re.sub(
     r"if\(s\.target==='brand'\)\{appState\.settings=normalizeSettings\(\{\.\.\.appState\.settings,brandLogoDataUrl:data\}\);save\(\);applyBrand\(\);.*?\}else\{appState\.settings=normalizeSettings\(\{\.\.\.appState\.settings,profileAvatarDataUrl:data\}\);save\(\);applyProfile\(\);updateProfileSettingsUI\(\);toastMsg\('头像已裁切并保存 ✦'\)\}",
     "appState.settings=normalizeSettings({...appState.settings,profileAvatarDataUrl:data});save();applyProfile();updateProfileSettingsUI();toastMsg('头像已裁切并保存 ✦')",
@@ -95,3 +93,4 @@ if "sidebarBrandTitle.textContent='影视收藏夹'" not in s:
 
 p.write_text(s,encoding='utf-8')
 print('settings layout cleanup applied')
+# trigger v2
