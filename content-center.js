@@ -8,5 +8,5 @@
     if(!token){location.replace('admin.html');return}
     document.write('<script src="admin-auth.js"></script>');
   }
-  document.write('<script src="content-center-core.js"></script><script src="content-compat.js"></script><script src="content-schema-extra.js"></script><script src="content-schema-guard.js"></script>');
+  document.write('<script src="content-observer-shield.js"></script><script src="content-center-core.js"></script><script src="content-compat.js"></script><script src="content-schema-extra.js"></script><script src="content-schema-guard.js"></script>');
 })();
