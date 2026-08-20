@@ -3,10 +3,10 @@
 
   const KEY='movie-collection-nav-order-v1';
   const VERSION=1;
-  const DEFAULT_ORDER=['home','library','match','radar','plan','watched','stats','settings','admin'];
+  const DEFAULT_ORDER=['home','library','match','radar','plan','stats','settings','admin'];
   const DEFAULT_LABELS={
     home:'首页',library:'影视库',match:'匹配中心',radar:'电影雷达',plan:'月度计划',
-    watched:'已观看',stats:'统计分析',settings:'设置',admin:'管理后台'
+    stats:'观影分析',settings:'设置',admin:'管理后台'
   };
   const FRONT_PAGE=!/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname);
   let observer=null;
