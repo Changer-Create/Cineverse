@@ -14,6 +14,11 @@
       asset:'assets/theme-bg-ocean-sunny.webp',
       overlay:'linear-gradient(145deg,rgba(2,28,39,.18),rgba(3,38,52,.28) 46%,rgba(2,25,35,.42))',
       position:'center center'
+    },
+    snow:{
+      asset:'assets/theme-bg-snow-misty.webp',
+      overlay:'linear-gradient(145deg,rgba(20,35,52,.20),rgba(30,48,68,.30) 46%,rgba(13,24,36,.46))',
+      position:'center center'
     }
   };
 
