@@ -19,6 +19,11 @@
       asset:'assets/theme-bg-snow-dawn.webp',
       overlay:'linear-gradient(145deg,rgba(18,31,44,.18),rgba(22,40,58,.28) 46%,rgba(13,25,38,.44))',
       position:'center center'
+    },
+    forest:{
+      asset:'assets/theme-bg-forest-green.webp',
+      overlay:'linear-gradient(145deg,rgba(5,31,13,.10),rgba(7,45,19,.18) 46%,rgba(4,28,12,.32))',
+      position:'center center'
     }
   };
 
