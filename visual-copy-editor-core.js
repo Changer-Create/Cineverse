@@ -87,22 +87,48 @@
 
   function refreshMarkers(){
     if(!runtime) return;
-    document.querySelectorAll('.cc-visual-target').forEach(el=>el.classList.remove('cc-visual-target'));
-    runtime.layer.innerHTML='';
+    const seen=new Set();
     let count=0;
     for(const item of schema){
       const el=document.querySelector(item.selector);
-      if(!el) continue;
+      let btn=runtime.markerMap.get(item.key);
+      if(!el){
+        if(btn){btn._ccTarget?.classList.remove('cc-visual-target');btn.remove();runtime.markerMap.delete(item.key)}
+        continue;
+      }
       const r=el.getBoundingClientRect();
       const css=getComputedStyle(el);
-      if(r.width<2||r.height<2||css.display==='none'||css.visibility==='hidden'||r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth) continue;
+      const visible=!(r.width<2||r.height<2||css.display==='none'||css.visibility==='hidden'||r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth);
+      if(!visible){
+        if(btn){btn._ccTarget?.classList.remove('cc-visual-target');btn.remove();runtime.markerMap.delete(item.key)}
+        continue;
+      }
+      seen.add(item.key);count++;
       el.classList.add('cc-visual-target');
-      const btn=document.createElement('button');
-      btn.type='button';btn.className='cc-visual-marker';btn.textContent='✎';btn.title=`修改：${item.label}`;
+      if(!btn){
+        btn=document.createElement('button');
+        btn.type='button';btn.className='cc-visual-marker';btn.textContent='✎';
+        btn.addEventListener('pointerdown',e=>e.stopPropagation());
+        btn.addEventListener('click',e=>{
+          e.preventDefault();e.stopPropagation();
+          const current=schema.find(x=>x.key===btn.dataset.copyKey);
+          if(current)openEditor(current);
+        });
+        runtime.layer.appendChild(btn);
+        runtime.markerMap.set(item.key,btn);
+      }
+      if(btn._ccTarget&&btn._ccTarget!==el)btn._ccTarget.classList.remove('cc-visual-target');
+      btn._ccTarget=el;
+      btn.dataset.copyKey=item.key;
+      btn.title=`修改：${item.label}`;
       btn.style.left=`${Math.max(14,Math.min(innerWidth-14,r.right-2))}px`;
       btn.style.top=`${Math.max(14,Math.min(innerHeight-14,r.top+2))}px`;
-      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openEditor(item)});
-      runtime.layer.appendChild(btn);count++;
+    }
+    for(const [key,btn] of [...runtime.markerMap]){
+      if(seen.has(key)) continue;
+      btn._ccTarget?.classList.remove('cc-visual-target');
+      btn.remove();
+      runtime.markerMap.delete(key);
     }
     const custom=Object.keys(CC.load().values||{}).length;
     const label=runtime.toolbar.querySelector('#ccVisualCount');
@@ -123,7 +149,7 @@
     const layer=document.createElement('div');layer.id='ccVisualMarkerLayer';document.body.appendChild(layer);
     const toolbar=document.createElement('div');toolbar.id='ccVisualToolbar';toolbar.innerHTML='<b>✎ 文案编辑模式</b><span id="ccVisualCount">0 项可编辑</span><button type="button" id="ccVisualBackAdmin">返回后台</button><button type="button" class="cc-exit" id="ccVisualExit">退出编辑</button>';document.body.appendChild(toolbar);
     const dialog=document.createElement('dialog');dialog.id='ccVisualDialog';dialog.innerHTML='<div class="cc-ve-head"><small id="ccVeGroup">—</small><b id="ccVeLabel">修改文案</b></div><div class="cc-ve-body"><textarea id="ccVeInput"></textarea><div class="cc-ve-default" id="ccVeDefault"></div></div><div class="cc-ve-actions"><button type="button" class="reset" id="ccVeReset">恢复默认</button><button type="button" id="ccVeCancel">取消</button><button type="button" class="primary" id="ccVeSave">保存修改</button></div>';document.body.appendChild(dialog);
-    runtime={layer,toolbar,dialog,item:null,observer:null,timer:0};
+    runtime={layer,toolbar,dialog,item:null,observer:null,timer:0,markerMap:new Map()};
     const schedule=()=>{if(!runtime)return;clearTimeout(runtime.timer);runtime.timer=setTimeout(refreshMarkers,70)};
     toolbar.querySelector('#ccVisualBackAdmin').addEventListener('click',()=>{location.href='admin.html'});
     toolbar.querySelector('#ccVisualExit').addEventListener('click',()=>{try{sessionStorage.removeItem(SESSION_KEY)}catch{}destroy()});
