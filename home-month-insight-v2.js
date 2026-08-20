@@ -26,9 +26,7 @@
 
   function ratingOf(row) {
     const watchRating = Number(row?.watch?.rating);
-    if (Number.isFinite(watchRating) && watchRating > 0) return watchRating;
-    const movieRating = Number(row?.movie?.personal?.rating);
-    return Number.isFinite(movieRating) && movieRating > 0 ? movieRating : null;
+    return Number.isFinite(watchRating) && watchRating > 0 ? watchRating : null;
   }
 
   function compute() {
