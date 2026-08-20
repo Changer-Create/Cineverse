@@ -404,6 +404,41 @@
   @media(max-width:760px){.theme-presets{grid-template-columns:1fr 1fr}.setting-row{grid-template-columns:1fr}.setting-control{justify-content:flex-start}.setting-control input[type="range"]{width:100%}.storage-grid{grid-template-columns:1fr 1fr}}
 
 
+  /* ===== Settings aligned 2x2 grid ===== */
+  .settings-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:16px 20px;
+    align-items:stretch;
+    width:100%;
+  }
+  .settings-layout>.settings-stack{display:contents}
+  .settings-layout>.settings-stack:first-child>.settings-card:nth-child(1){grid-column:1;grid-row:1}
+  .settings-layout>.settings-stack:nth-child(2)>.settings-card:nth-child(1){grid-column:2;grid-row:1}
+  .settings-layout>.settings-stack:first-child>.settings-card:nth-child(2){grid-column:1;grid-row:2}
+  .settings-layout>.settings-stack:nth-child(2)>.settings-card:nth-child(2){grid-column:2;grid-row:2}
+  .settings-layout>.settings-stack:nth-child(2)>.settings-card:nth-child(n+3){grid-column:1/-1}
+  .settings-layout .settings-card{height:100%;display:flex;flex-direction:column;min-width:0}
+  .settings-layout .settings-card-head{min-height:60px;padding:16px 18px;flex:0 0 auto}
+  .settings-layout .settings-card-body{flex:1;min-height:0}
+  .settings-layout .settings-card-body>.settings-actions{margin-top:auto}
+  .settings-layout .profile-editor{height:100%;align-items:stretch}
+  .settings-layout .profile-fields{height:100%;display:flex;flex-direction:column;gap:10px}
+  .settings-layout .profile-fields>.settings-actions:last-child{margin-top:auto}
+  .settings-layout .tmdb-status{min-height:46px;display:flex;align-items:center}
+
+  @media(max-width:980px){
+    .settings-layout{grid-template-columns:1fr;gap:16px}
+    .settings-layout>.settings-stack{display:contents}
+    .settings-layout>.settings-stack:first-child>.settings-card:nth-child(1){grid-column:1;grid-row:1}
+    .settings-layout>.settings-stack:nth-child(2)>.settings-card:nth-child(1){grid-column:1;grid-row:2}
+    .settings-layout>.settings-stack:first-child>.settings-card:nth-child(2){grid-column:1;grid-row:3}
+    .settings-layout>.settings-stack:nth-child(2)>.settings-card:nth-child(2){grid-column:1;grid-row:4}
+    .settings-layout>.settings-stack:nth-child(2)>.settings-card:nth-child(n+3){grid-column:1;grid-row:auto}
+    .settings-layout .settings-card{height:auto}
+  }
+
+
   /* Batch TMDb completion */
   .tmdb-batch-btn{border-color:rgba(122,198,255,.24)!important;background:linear-gradient(135deg,rgba(75,91,190,.22),rgba(67,143,187,.13))!important;color:#d8ecff!important}.tmdb-batch-btn:hover{border-color:rgba(128,211,255,.48)!important;box-shadow:0 0 24px rgba(89,174,255,.10)}.tmdb-batch-btn:disabled{opacity:.5;cursor:wait}
   .batch-tmdb-inline{margin:0 14px 14px;border:1px solid rgba(115,184,255,.16);border-radius:12px;background:rgba(9,22,52,.64);padding:9px 12px;display:grid;grid-template-columns:minmax(180px,1fr) minmax(160px,320px);gap:12px;align-items:center}.batch-tmdb-inline-copy{display:flex;gap:8px;align-items:center;color:#aebddc;font-size:10px}.batch-tmdb-pulse{color:#8ed7ff;text-shadow:0 0 14px currentColor;animation:batchPulse 1.2s ease-in-out infinite}.batch-tmdb-inline-track,.batch-tmdb-progress-track{height:6px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}.batch-tmdb-inline-track i,.batch-tmdb-progress-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7560ef,#6fbce8,#f5c66c);transition:width .25s ease}@keyframes batchPulse{50%{opacity:.35;transform:scale(.82)}}
