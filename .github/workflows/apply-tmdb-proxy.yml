@@ -1,0 +1,56 @@
+name: Apply TMDb proxy migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/apply_tmdb_proxy.py'
+      - '.github/workflows/apply-tmdb-proxy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply migration
+        run: python tools/apply_tmdb_proxy.py
+      - name: Validate page
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          m=re.search(r'<script>\s*(.*?)\s*</script>',s,re.S)
+          if not m:
+              raise SystemExit('script block not found')
+          Path('/tmp/app.js').write_text(m.group(1),encoding='utf-8')
+          ids=re.findall(r'\bid="([A-Za-z][A-Za-z0-9_-]*)"',s)
+          if len(ids)!=len(set(ids)):
+              raise SystemExit('duplicate static DOM id detected')
+          if 'TMDb API Key / Read Access Token' in s or 'id="settingsTmdbKey"' in s:
+              raise SystemExit('credential UI residue detected')
+          if 'api.themoviedb.org/3' in s:
+              raise SystemExit('direct TMDb API residue detected')
+          if 'functions/v1/tmdb-proxy' not in s:
+              raise SystemExit('proxy URL missing')
+          print('static ids:',len(ids))
+          PY
+          node --check /tmp/app.js
+      - name: Commit migrated app
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: route TMDb through Supabase proxy'
+          git push
