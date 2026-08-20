@@ -9,36 +9,42 @@ s=s.replace(
     '.settings-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}',
     '.settings-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;width:100%}'
 )
-# Make sure no older three-column override survives.
-s=re.sub(r'\.settings-layout\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\);([^}]*)\}',
-         r'.settings-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);\1}',s)
-# Keep responsive single-column behavior.
-s=s.replace('@media(max-width:1180px){.settings-layout{grid-template-columns:1fr}',
-            '@media(max-width:980px){.settings-layout{grid-template-columns:1fr}')
+s=re.sub(
+    r'\.settings-layout\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\);([^}]*)\}',
+    r'.settings-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);\1}',
+    s
+)
+s=s.replace(
+    '@media(max-width:1180px){.settings-layout{grid-template-columns:1fr}',
+    '@media(max-width:980px){.settings-layout{grid-template-columns:1fr}'
+)
 
-# 2) Remove the entire collection-brand customization card.
+# 2) Remove the collection-brand customization card if still present.
 pat=r'\n\s*<section class="settings-card">\s*<div class="settings-card-head"><h3>收藏夹品牌 · 左侧导航</h3></div>.*?</section>\s*\n'
-s,n=re.subn(pat,'\n',s,count=1,flags=re.S)
-if n!=1:
-    raise SystemExit(f'brand card removal failed: {n}')
+s=re.sub(pat,'\n',s,count=1,flags=re.S)
+s=re.sub(
+    r'\s*\.brand-setting-preview\{[^}]*\}\.brand-setting-preview \.brand-mark\{[^}]*\}\.brand-setting-preview b\{[^}]*\}\.brand-setting-preview span\{[^}]*\}',
+    '',s,count=1
+)
 
-# Remove now-unused brand settings preview CSS.
-s=re.sub(r'\s*\.brand-setting-preview\{[^}]*\}\.brand-setting-preview \.brand-mark\{[^}]*\}\.brand-setting-preview b\{[^}]*\}\.brand-setting-preview span\{[^}]*\}', '', s, count=1)
-
-# 3) Brand is now fixed, not user-configurable.
+# 3) Brand is fixed, not user-configurable.
 s=s.replace("brandTitle:'影视收藏夹',brandSubtitle:'你的光影宇宙',brandLogoDataUrl:'',",'')
 
-# normalizeSettings should discard old saved/imported brand overrides.
-old="function normalizeSettings(v){const out={...DEFAULT_SETTINGS,...(v||{})};delete out.tmdbKey;return out}"
-new="function normalizeSettings(v){const out={...DEFAULT_SETTINGS,...(v||{})};delete out.tmdbKey;delete out.brandTitle;delete out.brandSubtitle;delete out.brandLogoDataUrl;return out}"
-if old in s:
-    s=s.replace(old,new)
-elif 'function normalizeSettings(v){return {...DEFAULT_SETTINGS,...(v||{})}}' in s:
-    s=s.replace('function normalizeSettings(v){return {...DEFAULT_SETTINGS,...(v||{})}}',new)
-else:
-    s=re.sub(r'function normalizeSettings\(v\)\{(.*?)return out\}',
-             lambda m: 'function normalizeSettings(v){'+m.group(1)+"delete out.brandTitle;delete out.brandSubtitle;delete out.brandLogoDataUrl;return out}",
-             s,count=1,flags=re.S)
+# Discard old saved/imported brand overrides.
+if 'function normalizeSettings(v){return {...DEFAULT_SETTINGS,...(v||{})}}' in s:
+    s=s.replace(
+        'function normalizeSettings(v){return {...DEFAULT_SETTINGS,...(v||{})}}',
+        "function normalizeSettings(v){const out={...DEFAULT_SETTINGS,...(v||{})};delete out.tmdbKey;delete out.brandTitle;delete out.brandSubtitle;delete out.brandLogoDataUrl;return out}"
+    )
+elif 'function normalizeSettings(v){const out=' in s:
+    m=re.search(r'function normalizeSettings\(v\)\{(.*?)return out\}',s,re.S)
+    if m:
+        body=m.group(1)
+        for field in ['tmdbKey','brandTitle','brandSubtitle','brandLogoDataUrl']:
+            token=f'delete out.{field};'
+            if token not in body:
+                body+=token
+        s=s[:m.start()]+f'function normalizeSettings(v){{{body}return out}}'+s[m.end():]
 
 # Remove brand-setting DOM refs, keep fixed sidebar refs.
 for frag in [
@@ -53,15 +59,16 @@ for frag in [
 ]:
     s=s.replace(frag,'')
 
-# Replace configurable brand application with a fixed brand.
-s,n=re.subn(
-    r'  function applyBrand\(\)\{.*?\n  \}\n  function updateBrandSettingsUI\(\)\{.*?\}\n  function saveBrandFromControls\(\)\{.*?\}\n',
-    "  function applyBrand(){\n    if(els.sidebarBrandTitle)els.sidebarBrandTitle.textContent='影视收藏夹';\n    if(els.sidebarBrandSubtitle){els.sidebarBrandSubtitle.textContent='你的光影宇宙';els.sidebarBrandSubtitle.classList.remove('hidden')}\n    if(els.sidebarBrandMark){els.sidebarBrandMark.classList.remove('has-image');els.sidebarBrandMark.style.backgroundImage='';els.sidebarBrandMark.textContent='◉'}\n    document.title='影视收藏夹 V2';\n  }\n",
-    s,count=1,flags=re.S)
-if n!=1:
-    raise SystemExit(f'brand JS function cleanup failed: {n}')
+# Replace configurable brand application with fixed display.
+if 'function updateBrandSettingsUI' in s or 'function saveBrandFromControls' in s:
+    s,n=re.subn(
+        r'  function applyBrand\(\)\{.*?\n  \}\n  function updateBrandSettingsUI\(\)\{.*?\}\n  function saveBrandFromControls\(\)\{.*?\}\n',
+        "  function applyBrand(){\n    if(els.sidebarBrandTitle)els.sidebarBrandTitle.textContent='影视收藏夹';\n    if(els.sidebarBrandSubtitle){els.sidebarBrandSubtitle.textContent='你的光影宇宙';els.sidebarBrandSubtitle.classList.remove('hidden')}\n    if(els.sidebarBrandMark){els.sidebarBrandMark.classList.remove('has-image');els.sidebarBrandMark.style.backgroundImage='';els.sidebarBrandMark.textContent='◉'}\n    document.title='影视收藏夹 V2';\n  }\n",
+        s,count=1,flags=re.S
+    )
+    if n!=1:
+        raise SystemExit(f'brand JS function cleanup failed: {n}')
 
-# renderSettings no longer needs brand-settings UI sync.
 s=s.replace('updateProfileSettingsUI();updateBrandSettingsUI();','updateProfileSettingsUI();')
 s=s.replace('updateBrandSettingsUI();','')
 
@@ -71,15 +78,22 @@ s=s.replace("els.imageCropTitle.textContent=target==='brand'?'裁切品牌图标
 s=re.sub(
     r"if\(s\.target==='brand'\)\{appState\.settings=normalizeSettings\(\{\.\.\.appState\.settings,brandLogoDataUrl:data\}\);save\(\);applyBrand\(\);.*?\}else\{appState\.settings=normalizeSettings\(\{\.\.\.appState\.settings,profileAvatarDataUrl:data\}\);save\(\);applyProfile\(\);updateProfileSettingsUI\(\);toastMsg\('头像已裁切并保存 ✦'\)\}",
     "appState.settings=normalizeSettings({...appState.settings,profileAvatarDataUrl:data});save();applyProfile();updateProfileSettingsUI();toastMsg('头像已裁切并保存 ✦')",
-    s,count=1,flags=re.S)
+    s,count=1,flags=re.S
+)
 
 # Remove brand listeners.
-s=re.sub(r"\n\s*if\(els\.settingsSaveBrand\).*?toastMsg\('已恢复默认品牌图标'\)\}\);",'',s,count=1,flags=re.S)
+s=re.sub(
+    r"\n\s*if\(els\.settingsSaveBrand\).*?toastMsg\('已恢复默认品牌图标'\)\}\);",
+    '',s,count=1,flags=re.S
+)
 
 # Appearance reset should not preserve removed brand settings.
-s=s.replace('brandTitle:appState.settings.brandTitle,brandSubtitle:appState.settings.brandSubtitle,brandLogoDataUrl:appState.settings.brandLogoDataUrl,','')
+s=s.replace(
+    'brandTitle:appState.settings.brandTitle,brandSubtitle:appState.settings.brandSubtitle,brandLogoDataUrl:appState.settings.brandLogoDataUrl,',
+    ''
+)
 
-# Final safety checks.
+# Final checks.
 for forbidden in [
     '收藏夹品牌 · 左侧导航','settingsBrandTitle','settingsBrandSubtitle','settingsBrandLogoFile',
     'settingsBrandLogoClear','settingsBrandLogoPreview','settingsSaveBrand','updateBrandSettingsUI','saveBrandFromControls'
@@ -93,4 +107,3 @@ if "sidebarBrandTitle.textContent='影视收藏夹'" not in s:
 
 p.write_text(s,encoding='utf-8')
 print('settings layout cleanup applied')
-# trigger v2
