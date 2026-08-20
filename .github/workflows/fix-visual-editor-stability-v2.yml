@@ -1,0 +1,129 @@
+name: Fix Visual Editor Stability V2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Patch observer loop and persistent markers
+        shell: python
+        run: |
+          from pathlib import Path
+
+          p=Path('content-center-core.js')
+          s=p.read_text(encoding='utf-8')
+          a=s.index('  function applyItem(item,value){')
+          b=s.index('\n\n  let applying = false;',a)
+          new_apply=r'''  function applyItem(item,value){
+    const el = document.querySelector(item.selector);
+    if(!el) return false;
+    const finalValue = String(value ?? item.defaultValue ?? '');
+    if(item.prop==='placeholder'){
+      if(el.getAttribute('placeholder')!==finalValue) el.setAttribute('placeholder', finalValue);
+    }else if(item.prop==='ownText'){
+      const node = ownTextNode(el);
+      if(node){
+        const next=` ${finalValue} `;
+        if(node.nodeValue!==next) node.nodeValue=next;
+      }
+    }else if(item.prop==='textIfEmpty'){
+      if(!el.dataset.contentCenterTouched && (!el.textContent.trim() || el.textContent.trim()===item.defaultValue) && el.textContent!==finalValue) el.textContent=finalValue;
+    }else if(el.textContent!==finalValue) el.textContent=finalValue;
+    if(el.dataset.contentKey!==item.key) el.dataset.contentKey=item.key;
+    return true;
+  }'''
+          s=s[:a]+new_apply+s[b:]
+
+          old=r'''    let timer=0;
+    const observer=new MutationObserver(()=>{
+      if(applying) return;
+      clearTimeout(timer);
+      timer=setTimeout(()=>{applyCopy();enhanceQuoteCard()},80);
+    });
+    observer.observe(document.body,{childList:true,subtree:true});'''
+          new=r'''    let timer=0;
+    const isEditorMutationTarget=node=>{
+      const el=node?.nodeType===1?node:node?.parentElement;
+      return !!el?.closest?.('#ccVisualMarkerLayer,#ccVisualToolbar,#ccVisualDialog');
+    };
+    const observer=new MutationObserver(records=>{
+      if(applying) return;
+      if(records.length && records.every(record=>isEditorMutationTarget(record.target))) return;
+      clearTimeout(timer);
+      timer=setTimeout(()=>{applyCopy();enhanceQuoteCard()},80);
+    });
+    observer.observe(document.body,{childList:true,subtree:true});'''
+          if old not in s: raise SystemExit('content observer marker not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('visual-copy-editor-core.js')
+          s=p.read_text(encoding='utf-8')
+          a=s.index('  function refreshMarkers(){')
+          b=s.index('\n\n  function destroy(){',a)
+          new_refresh=r'''  function refreshMarkers(){
+    if(!runtime) return;
+    const seen=new Set();
+    let count=0;
+    for(const item of schema){
+      const el=document.querySelector(item.selector);
+      let btn=runtime.markerMap.get(item.key);
+      if(!el){
+        if(btn){btn._ccTarget?.classList.remove('cc-visual-target');btn.remove();runtime.markerMap.delete(item.key)}
+        continue;
+      }
+      const r=el.getBoundingClientRect();
+      const css=getComputedStyle(el);
+      const visible=!(r.width<2||r.height<2||css.display==='none'||css.visibility==='hidden'||r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth);
+      if(!visible){
+        if(btn){btn._ccTarget?.classList.remove('cc-visual-target');btn.remove();runtime.markerMap.delete(item.key)}
+        continue;
+      }
+      seen.add(item.key);count++;
+      el.classList.add('cc-visual-target');
+      if(!btn){
+        btn=document.createElement('button');
+        btn.type='button';btn.className='cc-visual-marker';btn.textContent='✎';
+        btn.addEventListener('pointerdown',e=>{e.stopPropagation()});
+        btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();const key=btn.dataset.copyKey;const current=schema.find(x=>x.key===key);if(current)openEditor(current)});
+        runtime.layer.appendChild(btn);runtime.markerMap.set(item.key,btn);
+      }
+      if(btn._ccTarget&&btn._ccTarget!==el)btn._ccTarget.classList.remove('cc-visual-target');
+      btn._ccTarget=el;btn.dataset.copyKey=item.key;btn.title=`修改：${item.label}`;
+      btn.style.left=`${Math.max(14,Math.min(innerWidth-14,r.right-2))}px`;
+      btn.style.top=`${Math.max(14,Math.min(innerHeight-14,r.top+2))}px`;
+    }
+    for(const [key,btn] of [...runtime.markerMap]){
+      if(seen.has(key))continue;
+      btn._ccTarget?.classList.remove('cc-visual-target');btn.remove();runtime.markerMap.delete(key);
+    }
+    const custom=Object.keys(CC.load().values||{}).length;
+    const label=runtime.toolbar.querySelector('#ccVisualCount');
+    if(label) label.textContent=`当前页 ${count} 项 · 已改 ${custom} 项`;
+  }'''
+          s=s[:a]+new_refresh+s[b:]
+          s=s.replace("runtime={layer,toolbar,dialog,item:null,observer:null,timer:0};","runtime={layer,toolbar,dialog,item:null,observer:null,timer:0,markerMap:new Map()};",1)
+          p.write_text(s,encoding='utf-8')
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          node --check content-center-core.js
+          node --check visual-copy-editor-core.js
+      - name: Commit and remove workflow
+        shell: bash
+        run: |
+          rm -f .github/workflows/fix-visual-editor-stability-v2.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add content-center-core.js visual-copy-editor-core.js .github/workflows/fix-visual-editor-stability-v2.yml
+          git commit -m 'fix: stabilize visual copy editor interactions'
+          git push origin HEAD:main
