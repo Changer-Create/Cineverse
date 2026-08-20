@@ -10,7 +10,9 @@
   };
 
   const clone=v=>JSON.parse(JSON.stringify(v));
-  const isAdmin=/\/(?:admin|admin-console)\.html$/i.test(location.pathname);
+  const isAdmin=/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname);
+  let guardObserver=null;
+  let guardTimer=0;
 
   function load(){
     try{
@@ -63,10 +65,11 @@
       brand.insertBefore(img,brand.firstChild);
     }
     const state=load();
-    img.src=currentLogo(state);
-    title.textContent=state.title;
-    subtitle.textContent=state.subtitle;
-    document.title=state.title;
+    const logo=currentLogo(state);
+    if(img.getAttribute('src')!==logo)img.src=logo;
+    if(title.textContent!==state.title)title.textContent=state.title;
+    if(subtitle.textContent!==state.subtitle)subtitle.textContent=state.subtitle;
+    if(document.title!==state.title)document.title=state.title;
     return true;
   }
 
@@ -97,6 +100,28 @@
     return save(state);
   }
 
+  function ensureGuard(){
+    if(isAdmin||guardObserver)return;
+    const brand=document.querySelector('.sidebar .brand');
+    if(!brand)return;
+    guardObserver=new MutationObserver(()=>{
+      clearTimeout(guardTimer);
+      guardTimer=setTimeout(()=>{
+        const state=load();
+        const title=document.querySelector('#sidebarBrandTitle');
+        const subtitle=document.querySelector('#sidebarBrandSubtitle');
+        const logo=document.querySelector('#sidebarBrandLogo');
+        if(!logo||title?.textContent!==state.title||subtitle?.textContent!==state.subtitle||document.title!==state.title)apply();
+      },0);
+    });
+    guardObserver.observe(brand,{subtree:true,childList:true,characterData:true});
+  }
+
+  function boot(){
+    apply();
+    ensureGuard();
+  }
+
   window.MovieCollectionBrand={
     key:KEY,
     defaults:clone(DEFAULTS),
@@ -109,8 +134,8 @@
   };
 
   if(!isAdmin){
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});
-    else apply();
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+    else boot();
     window.addEventListener('storage',e=>{if(e.key===KEY)apply()});
     window.addEventListener('movie-collection:brand-updated',apply);
   }
