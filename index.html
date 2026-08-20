@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark" />
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
-<title>影视收藏夹 V2</title>
+<title>光影宇宙</title>
 <style>
   :root{
     --bg-0:#040817;
@@ -83,14 +83,9 @@
     border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(7,14,32,.92),rgba(8,17,38,.78));
     backdrop-filter:blur(24px);display:flex;flex-direction:column;z-index:20;
   }
-  .brand{display:flex;align-items:center;gap:12px;padding:0 8px 22px}
-  .brand-mark{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;
-    background:radial-gradient(circle at 35% 35%,#fff2c2 0 8%,var(--gold) 9% 25%,rgba(245,198,108,.18) 26% 100%);
-    box-shadow:0 0 28px rgba(245,198,108,.22);font-size:20px;color:#241a08;background-size:cover;background-position:center;background-repeat:no-repeat;overflow:hidden}
-  .brand-mark.has-image{color:transparent;background-color:#111a31}
+  .brand{display:block;padding:0 8px 22px}
   .brand h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.06em}
   .brand small{display:block;color:var(--muted-2);margin-top:3px;font-size:12px}
-  .v2{font-size:11px;color:#cabdff;border:1px solid rgba(159,124,255,.36);padding:3px 7px;border-radius:999px;background:rgba(159,124,255,.12);margin-left:auto}
   .nav{display:grid;gap:7px}
   .nav a{color:#cfd5e8;text-decoration:none;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:14px;border:1px solid transparent;transition:.22s ease;position:relative;overflow:hidden}
   .nav a:hover{background:rgba(255,255,255,.04);color:#fff}
@@ -465,10 +460,7 @@
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark" id="sidebarBrandMark">◉</div>
-      <div><h1 id="sidebarBrandTitle">影视收藏夹</h1><small id="sidebarBrandSubtitle">你的光影宇宙</small></div><span class="v2">V2</span>
-    </div>
+    <div class="brand"><div><h1 id="sidebarBrandTitle">光影宇宙</h1><small id="sidebarBrandSubtitle">定制化影视收藏夹</small></div></div>
     <nav class="nav" aria-label="主导航">
       <a class="active" href="#home" data-view="home"><span class="ico">⌂</span><span>首页</span></a>
       <a href="#library" data-view="library"><span class="ico">▣</span><span>影视库</span></a>
@@ -1140,7 +1132,7 @@
     statsView:$('statsView'),statsYear:$('statsYear'),statsPaceTitle:$('statsPaceTitle'),statsPaceLegend:$('statsPaceLegend'),statsInsightsTitle:$('statsInsightsTitle'),statsPreferenceNote:$('statsPreferenceNote'),statsTopTitle:$('statsTopTitle'),statsTopNote:$('statsTopNote'),statsSummaryTitle:$('statsSummaryTitle'),statsMovieCount:$('statsMovieCount'),statsTvCount:$('statsTvCount'),statsCopySummary:$('statsCopySummary'),statsFilmCount:$('statsFilmCount'),statsSessionCount:$('statsSessionCount'),statsSeasonMarks:$('statsSeasonMarks'),statsTotalHours:$('statsTotalHours'),statsTotalHoursNote:$('statsTotalHoursNote'),statsAvgRating:$('statsAvgRating'),statsNinePlus:$('statsNinePlus'),statsRewatch:$('statsRewatch'),statsYearCompare:$('statsYearCompare'),statsMonthlyChart:$('statsMonthlyChart'),statsRatedCount:$('statsRatedCount'),statsRatingDonut:$('statsRatingDonut'),statsDonutAvg:$('statsDonutAvg'),statsRatingLegend:$('statsRatingLegend'),statsInsights:$('statsInsights'),statsDirectors:$('statsDirectors'),statsCountries:$('statsCountries'),statsGenres:$('statsGenres'),statsTags:$('statsTags'),statsTopFilms:$('statsTopFilms'),statsSummaryCopy:$('statsSummaryCopy'),
     matchView:$('matchView'),matchLastScan:$('matchLastScan'),matchStartScan:$('matchStartScan'),matchRetryProblems:$('matchRetryProblems'),matchResetSkipped:$('matchResetSkipped'),matchDedupSeasons:$('matchDedupSeasons'),matchPauseResume:$('matchPauseResume'),matchProgress:$('matchProgress'),matchProgressText:$('matchProgressText'),matchProgressPct:$('matchProgressPct'),matchProgressBar:$('matchProgressBar'),matchStatTotal:$('matchStatTotal'),matchStatAuto:$('matchStatAuto'),matchStatPending:$('matchStatPending'),matchStatNoResult:$('matchStatNoResult'),matchStatFailed:$('matchStatFailed'),matchTabs:$('matchTabs'),matchKeyword:$('matchKeyword'),matchList:$('matchList'),
     radarView:$('radarView'),radarTotal:$('radarTotal'),radarStrong:$('radarStrong'),radarHigh:$('radarHigh'),radarCollected:$('radarCollected'),radarKeyword:$('radarKeyword'),radarMatch:$('radarMatch'),radarSort:$('radarSort'),radarPageGrid:$('radarPageGrid'),radarEmpty:$('radarEmpty'),radarTasteTags:$('radarTasteTags'),radarPulseCopy:$('radarPulseCopy'),radarPulseBar:$('radarPulseBar'),radarSignalList:$('radarSignalList'),radarAutoUpdateBtn:$('radarAutoUpdateBtn'),radarImportBtn:$('radarImportBtn'),radarGoLibrary:$('radarGoLibrary'),radarImportDialog:$('radarImportDialog'),radarImportForm:$('radarImportForm'),radarImportClose:$('radarImportClose'),radarImportCancel:$('radarImportCancel'),radarImportText:$('radarImportText'),
-    sidebarBrandMark:$('sidebarBrandMark'),sidebarBrandTitle:$('sidebarBrandTitle'),sidebarBrandSubtitle:$('sidebarBrandSubtitle'),settingsView:$('settingsView'),settingsProfileName:$('settingsProfileName'),settingsProfileRole:$('settingsProfileRole'),settingsProfileAvatarFile:$('settingsProfileAvatarFile'),settingsProfileAvatarClear:$('settingsProfileAvatarClear'),settingsProfileAvatarPreview:$('settingsProfileAvatarPreview'),settingsProfilePreviewName:$('settingsProfilePreviewName'),settingsProfilePreviewRole:$('settingsProfilePreviewRole'),settingsSaveProfile:$('settingsSaveProfile'),themePresets:$('themePresets'),settingsAccent:$('settingsAccent'),settingsAccentValue:$('settingsAccentValue'),settingsPanelOpacity:$('settingsPanelOpacity'),settingsPanelOpacityValue:$('settingsPanelOpacityValue'),settingsStarDensity:$('settingsStarDensity'),settingsMotion:$('settingsMotion'),settingsWallpaperFile:$('settingsWallpaperFile'),settingsWallpaperClear:$('settingsWallpaperClear'),settingsWallpaperPreview:$('settingsWallpaperPreview'),settingsSaveAppearance:$('settingsSaveAppearance'),settingsResetAppearance:$('settingsResetAppearance'),settingsTmdbLanguage:$('settingsTmdbLanguage'),settingsTmdbStatus:$('settingsTmdbStatus'),settingsTestTmdb:$('settingsTestTmdb'),settingsSelfTestTmdb:$('settingsSelfTestTmdb'),settingsExportJson:$('settingsExportJson'),settingsImportJson:$('settingsImportJson'),settingsExportCsv:$('settingsExportCsv'),settingsImportCsv:$('settingsImportCsv'),settingsDoubanMode:$('settingsDoubanMode'),settingsDoubanAutoTmdb:$('settingsDoubanAutoTmdb'),settingsDoubanSyncWatchDate:$('settingsDoubanSyncWatchDate'),settingsDoubanDrop:$('settingsDoubanDrop'),settingsDoubanFiles:$('settingsDoubanFiles'),settingsDoubanFileList:$('settingsDoubanFileList'),settingsDoubanLast:$('settingsDoubanLast'),settingsDoubanStatus:$('settingsDoubanStatus'),settingsDoubanImport:$('settingsDoubanImport'),settingsDoubanClear:$('settingsDoubanClear'),settingsStorageCopy:$('settingsStorageCopy'),imageCropDialog:$('imageCropDialog'),imageCropTitle:$('imageCropTitle'),imageCropStage:$('imageCropStage'),imageCropImage:$('imageCropImage'),imageCropZoom:$('imageCropZoom'),imageCropReset:$('imageCropReset'),imageCropClose:$('imageCropClose'),imageCropCancel:$('imageCropCancel'),imageCropApply:$('imageCropApply')
+    sidebarBrandTitle:$('sidebarBrandTitle'),sidebarBrandSubtitle:$('sidebarBrandSubtitle'),settingsView:$('settingsView'),settingsProfileName:$('settingsProfileName'),settingsProfileRole:$('settingsProfileRole'),settingsProfileAvatarFile:$('settingsProfileAvatarFile'),settingsProfileAvatarClear:$('settingsProfileAvatarClear'),settingsProfileAvatarPreview:$('settingsProfileAvatarPreview'),settingsProfilePreviewName:$('settingsProfilePreviewName'),settingsProfilePreviewRole:$('settingsProfilePreviewRole'),settingsSaveProfile:$('settingsSaveProfile'),themePresets:$('themePresets'),settingsAccent:$('settingsAccent'),settingsAccentValue:$('settingsAccentValue'),settingsPanelOpacity:$('settingsPanelOpacity'),settingsPanelOpacityValue:$('settingsPanelOpacityValue'),settingsStarDensity:$('settingsStarDensity'),settingsMotion:$('settingsMotion'),settingsWallpaperFile:$('settingsWallpaperFile'),settingsWallpaperClear:$('settingsWallpaperClear'),settingsWallpaperPreview:$('settingsWallpaperPreview'),settingsSaveAppearance:$('settingsSaveAppearance'),settingsResetAppearance:$('settingsResetAppearance'),settingsTmdbLanguage:$('settingsTmdbLanguage'),settingsTmdbStatus:$('settingsTmdbStatus'),settingsTestTmdb:$('settingsTestTmdb'),settingsSelfTestTmdb:$('settingsSelfTestTmdb'),settingsExportJson:$('settingsExportJson'),settingsImportJson:$('settingsImportJson'),settingsExportCsv:$('settingsExportCsv'),settingsImportCsv:$('settingsImportCsv'),settingsDoubanMode:$('settingsDoubanMode'),settingsDoubanAutoTmdb:$('settingsDoubanAutoTmdb'),settingsDoubanSyncWatchDate:$('settingsDoubanSyncWatchDate'),settingsDoubanDrop:$('settingsDoubanDrop'),settingsDoubanFiles:$('settingsDoubanFiles'),settingsDoubanFileList:$('settingsDoubanFileList'),settingsDoubanLast:$('settingsDoubanLast'),settingsDoubanStatus:$('settingsDoubanStatus'),settingsDoubanImport:$('settingsDoubanImport'),settingsDoubanClear:$('settingsDoubanClear'),settingsStorageCopy:$('settingsStorageCopy'),imageCropDialog:$('imageCropDialog'),imageCropTitle:$('imageCropTitle'),imageCropStage:$('imageCropStage'),imageCropImage:$('imageCropImage'),imageCropZoom:$('imageCropZoom'),imageCropReset:$('imageCropReset'),imageCropClose:$('imageCropClose'),imageCropCancel:$('imageCropCancel'),imageCropApply:$('imageCropApply')
   };
 
   const libraryState={view:'card',multi:false,selected:new Set(),editingId:null,page:1,pageSize:[30,60,100].includes(Number(appState.settings.libraryPageSize))?Number(appState.settings.libraryPageSize):30,exclude:{year:false,director:false,country:false,tag:false,plan:false}};
@@ -1567,10 +1559,9 @@
     if(els.profileAvatar){els.profileAvatar.classList.toggle('has-image',Boolean(avatar));els.profileAvatar.style.backgroundImage=avatar?`url(${JSON.stringify(avatar)})`:''}
   }
   function applyBrand(){
-    if(els.sidebarBrandTitle)els.sidebarBrandTitle.textContent='影视收藏夹';
-    if(els.sidebarBrandSubtitle){els.sidebarBrandSubtitle.textContent='你的光影宇宙';els.sidebarBrandSubtitle.classList.remove('hidden')}
-    if(els.sidebarBrandMark){els.sidebarBrandMark.classList.remove('has-image');els.sidebarBrandMark.style.backgroundImage='';els.sidebarBrandMark.textContent='◉'}
-    document.title='影视收藏夹 V2';
+    if(els.sidebarBrandTitle)els.sidebarBrandTitle.textContent='光影宇宙';
+    if(els.sidebarBrandSubtitle){els.sidebarBrandSubtitle.textContent='定制化影视收藏夹';els.sidebarBrandSubtitle.classList.remove('hidden')}
+    document.title='光影宇宙';
   }
   function updateProfileSettingsUI(){const st=normalizeSettings(appState.settings),name=String(st.profileName||'电影爱好者'),role=String(st.profileRole??''),avatar=String(st.profileAvatarDataUrl||'');if(els.settingsProfileName)els.settingsProfileName.value=name;if(els.settingsProfileRole)els.settingsProfileRole.value=role;if(els.settingsProfilePreviewName)els.settingsProfilePreviewName.textContent=name||'电影爱好者';if(els.settingsProfilePreviewRole){els.settingsProfilePreviewRole.textContent=role;els.settingsProfilePreviewRole.classList.toggle('hidden',!role)}if(els.settingsProfileAvatarPreview){els.settingsProfileAvatarPreview.classList.toggle('has-image',Boolean(avatar));els.settingsProfileAvatarPreview.style.backgroundImage=avatar?`url(${JSON.stringify(avatar)})`:''}}
   const imageCropState={target:'',source:null,zoom:1,offsetX:0,offsetY:0,dragging:false,lastX:0,lastY:0,stageSize:0,baseScale:1,outputSize:320};
