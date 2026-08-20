@@ -5,7 +5,6 @@
   const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
   const TOTAL_TARGET = 20;
   const WANT_TARGET = 10;
-  const GENERATED_SOURCES = new Set(['想看片单', 'TMDb 自动雷达']);
   let generating = false;
 
   const pad = n => String(n).padStart(2, '0');
@@ -77,8 +76,7 @@
         counts.set(genre, (counts.get(genre) || 0) + weight);
       }
     }
-    const names = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(x => x[0]);
-    return new Set(names);
+    return new Set([...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(x => x[0]));
   }
 
   function matchScoreForGenres(genres, publicScore, voteCount, prefs) {
@@ -139,86 +137,133 @@
     return body || {};
   }
 
+  async function optionalTmdb(path, params = {}) {
+    try { return await tmdbFetch(path, params); }
+    catch { return null; }
+  }
+
   function tmdbImage(path, size = 'w500') {
     return path ? `https://image.tmdb.org/t/p/${size}${path}` : '';
+  }
+
+  function appendTmdbPool(target, seen, list, poolName, genreMap, prefs, ignoredKeys, selectedWantKeys, movies) {
+    for (const x of (list || [])) {
+      if (!x?.id || !(x.title || x.original_title)) continue;
+      const title = x.title || x.original_title;
+      const year = Number(String(x.release_date || '').slice(0, 4)) || null;
+      const genres = (x.genre_ids || []).map(id => genreMap.get(id)).filter(Boolean);
+      const score = matchScoreForGenres(genres, x.vote_average, x.vote_count, prefs);
+      const radar = {
+        id: `tmdb-week-${x.id}-${localToday()}`,
+        title,
+        year,
+        releaseDate: x.release_date || '',
+        meta: [year, poolName].filter(Boolean).join(' · '),
+        public: x.vote_average != null ? Number(x.vote_average) : null,
+        match: score,
+        badge: score >= 90 ? '强烈推荐' : Number(x.vote_average) >= 8.5 ? '高口碑' : '值得关注',
+        kind: score >= 93 ? 'hot' : Number(x.vote_average) >= 9 ? 'good' : 'focus',
+        poster: `p${(target.length % 4) + 1}`,
+        posterUrl: tmdbImage(x.poster_path, 'w500'),
+        category: 'week',
+        reason: `TMDb 自动雷达：${prefs.size ? '与你高评分/收藏作品的类型偏好进行匹配；' : ''}${poolName}热度与公开评分共同排序。`,
+        discoveredAt: localToday(),
+        source: 'TMDb 自动雷达',
+        ignored: false,
+        runtime: null,
+        directors: [],
+        countries: [],
+        genres,
+        tmdbId: x.id,
+      };
+      const key = radarKey(radar);
+      if (seen.has(key) || ignoredKeys.has(key) || selectedWantKeys.has(key)) continue;
+      if (alreadyWatched(radar, movies)) continue;
+      seen.add(key);
+      target.push(radar);
+    }
+  }
+
+  function previousTmdbFallback(state, seen, ignoredKeys, selectedWantKeys, movies) {
+    const rows = Array.isArray(state?.home?.radar) ? state.home.radar : [];
+    return rows
+      .filter(r => r && r.source === 'TMDb 自动雷达' && !r.ignored && r.title)
+      .filter(r => {
+        const key = radarKey(r);
+        if (seen.has(key) || ignoredKeys.has(key) || selectedWantKeys.has(key)) return false;
+        if (alreadyWatched(r, movies)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((r, i) => ({
+        ...r,
+        id: `tmdb-week-${r.tmdbId || normalizeText(r.title)}-${localToday()}-fallback-${i}`,
+        category: 'week',
+        discoveredAt: localToday(),
+        source: 'TMDb 自动雷达',
+        ignored: false,
+      }));
   }
 
   async function buildTmdbCandidates(state, prefs, ignoredKeys, selectedWantKeys, needed) {
     if (needed <= 0) return [];
     const language = state?.settings?.tmdbLanguage || 'zh-CN';
-    const [trend, upcoming1, upcoming2, popular, topRated, genres] = await Promise.all([
+    const movies = Array.isArray(state.movies) ? state.movies : [];
+
+    // 先使用旧版雷达已经验证稳定的 3 个 TMDb 请求；任何一个失败都不再拖垮整次生成。
+    const [trendResult, upcomingResult, genreResult] = await Promise.allSettled([
       tmdbFetch('/trending/movie/week', { language }),
       tmdbFetch('/movie/upcoming', { language, region: 'CN', page: 1 }),
-      tmdbFetch('/movie/upcoming', { language, region: 'CN', page: 2 }),
-      tmdbFetch('/movie/popular', { language, region: 'CN', page: 1 }),
-      tmdbFetch('/movie/top_rated', { language, region: 'CN', page: 1 }),
       tmdbFetch('/genre/movie/list', { language }),
     ]);
-    const genreMap = new Map((genres.genres || []).map(g => [g.id, g.name]));
-    const movies = Array.isArray(state.movies) ? state.movies : [];
-    const pools = [
-      ['趋势', trend.results || []],
-      ['即将上映', upcoming1.results || []],
-      ['即将上映', upcoming2.results || []],
-      ['热门', popular.results || []],
-      ['高分', topRated.results || []],
-    ];
+
+    const trend = trendResult.status === 'fulfilled' ? trendResult.value : null;
+    const upcoming = upcomingResult.status === 'fulfilled' ? upcomingResult.value : null;
+    const genreData = genreResult.status === 'fulfilled' ? genreResult.value : null;
+    if (!trend && !upcoming) {
+      const reason = trendResult.status === 'rejected' ? trendResult.reason?.message : upcomingResult.reason?.message;
+      throw new Error(reason || 'TMDb 暂时无法连接');
+    }
+
+    const genreMap = new Map((genreData?.genres || []).map(g => [g.id, g.name]));
     const seen = new Set();
     const all = [];
-    for (const [poolName, list] of pools) {
-      for (const x of list) {
-        if (!x?.id || !(x.title || x.original_title)) continue;
-        const title = x.title || x.original_title;
-        const year = Number(String(x.release_date || '').slice(0, 4)) || null;
-        const genres = (x.genre_ids || []).map(id => genreMap.get(id)).filter(Boolean);
-        const score = matchScoreForGenres(genres, x.vote_average, x.vote_count, prefs);
-        const radar = {
-          id: `tmdb-week-${x.id}-${localToday()}`,
-          title,
-          year,
-          releaseDate: x.release_date || '',
-          meta: [year, poolName].filter(Boolean).join(' · '),
-          public: x.vote_average != null ? Number(x.vote_average) : null,
-          match: score,
-          badge: score >= 90 ? '强烈推荐' : Number(x.vote_average) >= 8.5 ? '高口碑' : '值得关注',
-          kind: score >= 93 ? 'hot' : Number(x.vote_average) >= 9 ? 'good' : 'focus',
-          poster: `p${(all.length % 4) + 1}`,
-          posterUrl: tmdbImage(x.poster_path, 'w500'),
-          category: 'week',
-          reason: `TMDb 自动雷达：${prefs.size ? '与你高评分/收藏作品的类型偏好进行匹配；' : ''}${poolName}热度与公开评分共同排序。`,
-          discoveredAt: localToday(),
-          source: 'TMDb 自动雷达',
-          ignored: false,
-          runtime: null,
-          directors: [],
-          countries: [],
-          genres,
-          tmdbId: x.id,
-          _pool: poolName,
-        };
-        const key = radarKey(radar);
-        if (seen.has(key) || ignoredKeys.has(key) || selectedWantKeys.has(key)) continue;
-        if (alreadyWatched(radar, movies)) continue;
-        seen.add(key);
-        all.push(radar);
-      }
+    appendTmdbPool(all, seen, trend?.results, '本周趋势', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
+    appendTmdbPool(all, seen, upcoming?.results, '即将上映', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
+
+    // 不足时再逐步请求补充池。补充接口失败会被忽略，不影响已经得到的结果。
+    if (all.length < needed) {
+      const upcoming2 = await optionalTmdb('/movie/upcoming', { language, region: 'CN', page: 2 });
+      appendTmdbPool(all, seen, upcoming2?.results, '即将上映', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
+    }
+    if (all.length < needed) {
+      const popular = await optionalTmdb('/movie/popular', { language, region: 'CN', page: 1 });
+      appendTmdbPool(all, seen, popular?.results, '热门', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
+    }
+    if (all.length < needed) {
+      const topRated = await optionalTmdb('/movie/top_rated', { language, region: 'CN', page: 1 });
+      appendTmdbPool(all, seen, topRated?.results, '高分', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
     }
 
     all.sort((a, b) => {
       const scoreDiff = (b.match || 0) - (a.match || 0);
       if (scoreDiff) return scoreDiff;
-      const voteDiff = (b.public || 0) - (a.public || 0);
-      if (voteDiff) return voteDiff;
-      return Math.random() - 0.5;
+      return (b.public || 0) - (a.public || 0);
     });
+
+    if (all.length < needed) {
+      all.push(...previousTmdbFallback(state, seen, ignoredKeys, selectedWantKeys, movies));
+    }
     return all.slice(0, needed);
   }
 
-  function showToast(message) {
+  function showToast(message, duration = 3600) {
     const toast = document.getElementById('toast');
     if (!toast) return;
     toast.textContent = message;
     toast.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(() => toast.classList.remove('show'), duration);
   }
 
   function setBusy(busy) {
@@ -228,10 +273,6 @@
       button.disabled = busy;
       button.textContent = busy ? '正在生成 20 部…' : '✦ 重新生成 20 部';
     }
-    document.querySelectorAll('[data-view="radar"],[data-view-link="radar"]').forEach(el => {
-      el.style.pointerEvents = busy ? 'none' : '';
-      el.style.opacity = busy ? '.65' : '';
-    });
   }
 
   async function generateRadar20({ reload = true } = {}) {
@@ -242,7 +283,7 @@
       return;
     }
     setBusy(true);
-    showToast('正在生成 20 部电影雷达：想看 10 + TMDb 10…');
+    showToast('正在生成 20 部电影雷达：想看 + TMDb…', 10000);
     try {
       state.home = state.home || {};
       const allRadar = Array.isArray(state.home.radar) ? state.home.radar : [];
@@ -255,7 +296,7 @@
       const tmdbSelected = await buildTmdbCandidates(state, prefs, ignoredKeys, selectedWantKeys, tmdbNeeded);
 
       if (tmdbSelected.length < tmdbNeeded) {
-        throw new Error(`TMDb 当前只补足了 ${tmdbSelected.length}/${tmdbNeeded} 部，请稍后再试`);
+        throw new Error(`可用 TMDb 推荐不足：需要 ${tmdbNeeded} 部，目前得到 ${tmdbSelected.length} 部`);
       }
 
       const retained = allRadar.filter(r => !isCurrentWeek(r?.discoveredAt));
@@ -270,12 +311,13 @@
         location.reload();
       }
     } catch (err) {
-      showToast(`电影雷达生成失败：${err?.message || err}`);
+      showToast(`电影雷达生成失败：${err?.message || err}`, 6000);
       setBusy(false);
     }
   }
 
   function injectStyles() {
+    if (document.getElementById('radar-20-layout')) return;
     const style = document.createElement('style');
     style.id = 'radar-20-layout';
     style.textContent = `
@@ -302,23 +344,22 @@
     const updateButton = document.getElementById('radarAutoUpdateBtn');
     if (updateButton) updateButton.textContent = '✦ 重新生成 20 部';
 
+    // 更新按钮需要拦截旧版“只从 TMDb 更新”的处理，避免一次点击发起两套请求。
     document.addEventListener('click', event => {
-      const radarTrigger = event.target.closest?.('[data-view="radar"],[data-view-link="radar"]');
-      if (radarTrigger) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-        generateRadar20();
-        return;
-      }
       const button = event.target.closest?.('#radarAutoUpdateBtn');
-      if (button) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-        generateRadar20();
-      }
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      generateRadar20();
     }, true);
+
+    // 导航先让主程序正常进入电影雷达页面，再在后台生成新一批；即使生成失败也不会卡在上一页。
+    document.addEventListener('click', event => {
+      const trigger = event.target.closest?.('[data-view="radar"],[data-view-link="radar"]');
+      if (!trigger || event.target.closest?.('#radarAutoUpdateBtn')) return;
+      setTimeout(() => generateRadar20(), 0);
+    });
   }
 
   injectStyles();
