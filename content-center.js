@@ -56,7 +56,7 @@
     {key:'settings.profile.title',group:'设置',label:'个人资料卡标题',selector:'#settingsView .settings-stack:first-child .settings-card:nth-child(1) .settings-card-head h3',prop:'text',defaultValue:'个人资料 · 你的影视名片'},
     {key:'settings.brand.title',group:'设置',label:'收藏夹品牌卡标题',selector:'#settingsView .settings-stack:first-child .settings-card:nth-child(2) .settings-card-head h3',prop:'text',defaultValue:'收藏夹品牌 · 左侧导航'},
     {key:'settings.appearance.title',group:'设置',label:'外观卡标题',selector:'#settingsView .settings-stack:first-child .settings-card:nth-child(3) .settings-card-head h3',prop:'text',defaultValue:'外观 · 星空主题'},
-    {key:'settings.tmdb.title',group:'设置',label:'TMDb 卡标题',selector:'#settingsView .settings-stack:nth-child(2) .settings-card:nth-child(1) .settings-card-head h3',prop:'text',defaultValue:'TMDb · 影视资料补全'},
+    {key:'settings.tmdb.title',group:'设置',label:'TMDb 卡标题',selector:'#settingsView .settings-stack:nth-child(2) .settings-card:nth-child(1) .settings-card-head h3',prop:'text',defaultValue:'TMDb · 影视资料服务'},
     {key:'settings.douban.title',group:'设置',label:'豆瓣导入卡标题',selector:'#settingsView .settings-stack:nth-child(2) .settings-card:nth-child(2) .settings-card-head h3',prop:'text',defaultValue:'豆瓣片单 · 本地导入'}
   ];
 
