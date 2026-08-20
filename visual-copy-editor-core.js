@@ -131,7 +131,7 @@
     dialog.querySelector('#ccVeSave').addEventListener('click',()=>{const item=runtime?.item;if(!item)return;const input=dialog.querySelector('#ccVeInput');const value=input.value.trim();if(!value){input.focus();return}const state=CC.load();state.values=state.values||{};if(value===item.defaultValue)delete state.values[item.key];else state.values[item.key]=value;CC.save(state);applyItem(item,value);dialog.close();runtime.item=null;schedule()});
     dialog.querySelector('#ccVeReset').addEventListener('click',()=>{const item=runtime?.item;if(!item)return;const state=CC.load();state.values=state.values||{};delete state.values[item.key];CC.save(state);applyItem(item,item.defaultValue);dialog.close();runtime.item=null;schedule()});
     window.addEventListener('resize',schedule,{passive:true});window.addEventListener('scroll',schedule,{passive:true,capture:true});window.addEventListener('hashchange',schedule);document.addEventListener('click',schedule,true);
-    const main=document.querySelector('.main');if(main){runtime.observer=new MutationObserver(schedule);runtime.observer.observe(main,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']})}
+    const main=document.querySelector('.main');if(main){runtime.observer=new MutationObserver(schedule);runtime.observer.observe(main,{subtree:true,childList:true})}
     refreshMarkers();
   }
 
