@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Trigger workflow after workflow file exists.
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 marker='/* ===== Random panel bottom alignment ===== */'
