@@ -1,0 +1,50 @@
+name: Apply random panel dual alignment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/fix_random_panel_dual_alignment.py'
+      - '.github/workflows/apply-random-panel-dual-alignment.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply dual-edge alignment
+        run: python tools/fix_random_panel_dual_alignment.py
+      - name: Validate page
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          required=['/* ===== Random panel dual-edge alignment ===== */','align-self:stretch','height:100%','justify-content:center','object-fit:cover']
+          for token in required:
+              if token not in s:
+                  raise SystemExit('missing '+token)
+          m=re.search(r'<script>\s*(.*?)\s*</script>',s,re.S)
+          if not m:
+              raise SystemExit('script block not found')
+          Path('/tmp/app.js').write_text(m.group(1),encoding='utf-8')
+          PY
+          node --check /tmp/app.js
+      - name: Commit page update
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: align random poster with title and actions'
+          git push
