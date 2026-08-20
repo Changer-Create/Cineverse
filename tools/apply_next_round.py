@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+# trigger: 2026-08-20 next-round refresh
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 
