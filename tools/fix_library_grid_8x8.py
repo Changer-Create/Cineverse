@@ -49,3 +49,4 @@ for forbidden in ['id="libPageSize"', "libPageSize:$('libPageSize')", 'els.libPa
 
 p.write_text(s,encoding='utf-8')
 print('library grid changed to 8 columns and fixed 64 items/page')
+# trigger 2026-08-20
