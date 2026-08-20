@@ -1,0 +1,33 @@
+name: Apply next-round movie collection refresh
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/apply_next_round.py'
+      - '.github/workflows/apply-next-round.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Apply refresh
+        run: python tools/apply_next_round.py
+      - name: Commit refreshed index
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "feat: improve home alignment and bulk TMDb import"
+          git push
