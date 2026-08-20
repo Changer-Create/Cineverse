@@ -768,6 +768,67 @@
   .quote-source-link{display:inline-flex;align-items:center;gap:6px;color:#e8c776;text-decoration:none;border-bottom:1px dashed rgba(232,199,118,.35);width:max-content;max-width:100%}
   .quote-source-link:hover{color:#ffe2a0}
 
+
+
+  /* ===== Stable settings named grid ===== */
+  .settings-layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-template-areas:
+      "profile tmdb"
+      "appearance douban"
+      "data data"!important;
+    gap:18px 20px!important;
+    align-items:stretch!important;
+    width:100%;
+  }
+  .settings-layout>.settings-stack{display:contents!important}
+  .settings-card-profile{grid-area:profile!important}
+  .settings-card-tmdb{grid-area:tmdb!important}
+  .settings-card-appearance{grid-area:appearance!important}
+  .settings-card-douban{grid-area:douban!important}
+  .settings-card-data{grid-area:data!important}
+  .settings-layout .settings-card{
+    min-width:0;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .settings-layout .settings-card-head{
+    min-height:58px;
+    flex:0 0 auto;
+  }
+  .settings-layout .settings-card-body{
+    flex:1 1 auto;
+    min-height:0;
+  }
+  .settings-card-profile .profile-fields,
+  .settings-card-tmdb .settings-card-body{
+    height:100%;
+  }
+  .settings-card-profile .profile-fields{
+    display:flex;
+    flex-direction:column;
+  }
+  .settings-card-profile .profile-fields>.settings-actions:last-child,
+  .settings-card-tmdb .settings-card-body>.settings-actions:last-child{
+    margin-top:auto;
+  }
+
+  @media(max-width:980px){
+    .settings-layout{
+      grid-template-columns:1fr!important;
+      grid-template-areas:
+        "profile"
+        "tmdb"
+        "appearance"
+        "douban"
+        "data"!important;
+      gap:16px!important;
+    }
+    .settings-layout .settings-card{height:auto!important}
+  }
+
 </style>
 </head>
 <body>
@@ -1175,7 +1236,7 @@
         </section>
         <div class="settings-layout">
           <div class="settings-stack">
-            <section class="settings-card">
+            <section class="settings-card settings-card-profile">
               <div class="settings-card-head"><h3>个人资料 · 你的影视名片</h3></div>
               <div class="settings-card-body">
                 <div class="profile-editor">
@@ -1189,7 +1250,7 @@
                 </div>
               </div>
             </section>
-            <section class="settings-card">
+            <section class="settings-card settings-card-appearance">
               <div class="settings-card-head"><h3>外观 · 星空主题</h3></div>
               <div class="settings-card-body">
                 <div class="theme-presets" id="themePresets">
@@ -1210,7 +1271,7 @@
 
           </div>
           <div class="settings-stack">
-            <section class="settings-card">
+            <section class="settings-card settings-card-tmdb">
               <div class="settings-card-head"><h3>TMDb · 影视资料服务</h3></div>
               <div class="settings-card-body">
                 <div class="setting-row"><div class="setting-copy"><b>测试版资料服务</b><span>已通过服务端代理连接 TMDb，无需在浏览器填写 API Key。</span></div><div class="setting-control"><span class="douban-chip">● 已配置</span></div></div>
@@ -1220,7 +1281,7 @@
               </div>
             </section>
 
-            <section class="settings-card">
+            <section class="settings-card settings-card-douban">
               <div class="settings-card-head"><h3>豆瓣片单 · 本地导入</h3></div>
               <div class="settings-card-body">
                 <div class="data-note">支持导入豆瓣“想看 / 看过”HTML、CSV 或 JSON，文件仅在本地解析。</div>
@@ -1241,7 +1302,7 @@
               </div>
             </section>
 
-            <section class="settings-card">
+            <section class="settings-card settings-card-data">
               <div class="settings-card-head"><h3>数据 · 导入与导出</h3></div>
               <div class="settings-card-body">
                 <div class="data-note">JSON 用于完整备份；CSV 用于表格整理。</div><div class="data-note" id="settingsStorageCopy" style="margin-top:8px">当前本地数据约 — · 建议定期导出完整备份。</div>
