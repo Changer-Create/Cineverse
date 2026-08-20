@@ -1,0 +1,54 @@
+name: Apply movie collection refresh
+
+on:
+  push:
+    paths:
+      - 'tools/apply_test_refresh.py'
+      - '.github/workflows/apply-test-refresh.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply refresh
+        run: python tools/apply_test_refresh.py
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          m=re.search(r'<script>\s*(.*?)\s*</script>',s,re.S)
+          if not m:
+              raise SystemExit('script block not found')
+          Path('/tmp/app.js').write_text(m.group(1),encoding='utf-8')
+          ids=re.findall(r'\bid="([A-Za-z][A-Za-z0-9_-]*)"',s)
+          if len(ids)!=len(set(ids)):
+              raise SystemExit('duplicate static DOM id detected')
+          print('static ids:',len(ids))
+          PY
+          node --check /tmp/app.js
+
+      - name: Commit refreshed app
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: refresh test UI and import flows'
+          git push
