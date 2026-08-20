@@ -6,6 +6,7 @@
   const OWNER_KEY = 'movie-cloud-owner-v1';
   const LAST_SYNC_KEY = 'movie-cloud-last-sync-v1';
   const DIRTY_KEY = 'movie-cloud-dirty-v1';
+  const PENDING_KEY = 'movie-cloud-pending-v1';
   const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
   const APP_URL = 'https://cj956151388-png.github.io/movie-collection/';
@@ -17,6 +18,7 @@
   let syncing = false;
   let lastSyncError = '';
   let pendingApply = false;
+  let pendingConflict = false;
 
   const $ = id => document.getElementById(id);
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
@@ -26,6 +28,41 @@
     const n = Date.parse(value || '');
     return Number.isFinite(n) ? n : 0;
   };
+  const stateSignature = data => JSON.stringify({ data });
+
+  function readPendingCloud(userId=currentUser?.id) {
+    const pending = safeParse(localStorage.getItem(PENDING_KEY));
+    if (!pending || !userId || pending.userId !== userId || !hasUsableData(pending.data_json)) return null;
+    return pending;
+  }
+
+  function restorePendingCloud(userId=currentUser?.id) {
+    const pending = readPendingCloud(userId);
+    pendingApply = Boolean(pending);
+    pendingConflict = Boolean(pending?.conflict);
+    return pending;
+  }
+
+  function clearPendingCloud(userId=currentUser?.id) {
+    const pending = safeParse(localStorage.getItem(PENDING_KEY));
+    if (!pending || (userId && pending.userId === userId)) localStorage.removeItem(PENDING_KEY);
+    pendingApply = false;
+    pendingConflict = false;
+  }
+
+  function markPendingConflict() {
+    const pending = readPendingCloud();
+    if (!pending) return false;
+    if (!pending.conflict) {
+      pending.conflict = true;
+      localStorage.setItem(PENDING_KEY,JSON.stringify(pending));
+    }
+    pendingApply = true;
+    pendingConflict = true;
+    renderProfile();
+    if ($('movieAccountDialog')?.open) renderSignedIn();
+    return true;
+  }
 
   function toast(message) {
     const el = $('toast');
@@ -97,7 +134,7 @@
       .movie-auth-submit{width:100%;height:42px;margin-top:17px;border:1px solid rgba(168,143,255,.35);border-radius:12px;background:linear-gradient(135deg,rgba(111,97,244,.82),rgba(91,75,204,.9));color:#fff;font-weight:600}.movie-auth-submit:disabled{opacity:.55;cursor:wait}
       .movie-auth-status{min-height:19px;margin-top:10px;color:#919dbb;font-size:11px;line-height:1.6}.movie-auth-status.error{color:#ff9aae}
       .movie-account-card{border:1px solid rgba(161,179,255,.14);border-radius:16px;background:rgba(13,25,55,.52);padding:16px}.movie-account-email{font-size:14px;color:#f0eff8;word-break:break-all}.movie-account-syncstate{margin-top:6px;color:#8e9ab8;font-size:11px}
-      .movie-account-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.movie-account-actions button{height:38px;border-radius:11px;border:1px solid rgba(161,179,255,.17);background:rgba(18,31,67,.75);color:#dce2f5}.movie-account-actions button.primary{border-color:rgba(159,124,255,.32);background:rgba(111,97,244,.25);color:#fff}.movie-account-actions button.danger{color:#ff9aae}
+      .movie-account-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.movie-account-actions button{height:38px;border-radius:11px;border:1px solid rgba(161,179,255,.17);background:rgba(18,31,67,.75);color:#dce2f5}.movie-account-actions button.primary{border-color:rgba(159,124,255,.32);background:rgba(111,97,244,.25);color:#fff}.movie-account-actions button.danger{color:#ff9aae}.movie-account-actions.has-conflict .danger{grid-column:1/-1}
       .movie-cloud-note{margin-top:13px;padding:11px 12px;border-radius:11px;background:rgba(100,167,255,.07);color:#8996b6;font-size:10px;line-height:1.7}
       @media(max-width:560px){#movieAccountDialog{width:calc(100vw - 18px)}.movie-account-head,.movie-account-body{padding-left:18px;padding-right:18px}}
     `;
@@ -128,7 +165,7 @@
     if (currentUser) {
       const stateName = localData()?.profile?.name || localData()?.settings?.profileName || '';
       if (name && !stateName) name.textContent = currentUser.email?.split('@')[0] || '我的光影宇宙';
-      if (role) role.textContent = syncing ? '云端同步中…' : (lastSyncError ? '云端同步待重试' : (pendingApply ? '云端更新待应用' : '云端已同步'));
+      if (role) role.textContent = syncing ? '云端同步中…' : (lastSyncError ? '云端同步待重试' : (pendingConflict ? '云端与本机冲突' : (pendingApply ? '云端更新待应用' : '云端已同步')));
     } else if (role) role.textContent = '本机数据 · 点击登录';
   }
 
@@ -142,8 +179,15 @@
     const body = $('movieAccountBody');
     if (!body || !currentUser) return;
     const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
-    const primary = pendingApply ? '<button class="primary" type="button" data-account-apply>应用云端数据</button>' : '<button class="primary" type="button" data-account-sync>立即同步</button>';
-    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email">${String(currentUser.email || '').replace(/[&<>]/g,'')}</div><div class="movie-account-syncstate" id="movieAccountSyncState">${pendingApply?'云端数据已下载，等待应用':(syncing?'正在同步…':(lastSyncError?`同步失败：${friendlyError(lastSyncError)}`:formatTime(lastSync)))}</div><div class="movie-account-actions">${primary}<button class="danger" type="button" data-account-logout>退出登录</button></div></div><div class="movie-cloud-note">为避免自动刷新循环，云端数据下载后不会自动刷新页面；只有你点击“应用云端数据”时才会刷新一次。</div>`;
+    const conflict = pendingConflict || Boolean(readPendingCloud(currentUser.id)?.conflict);
+    const actions = conflict
+      ? '<button class="primary" type="button" data-account-apply>使用云端</button><button type="button" data-account-force-upload>保留本机</button><button class="danger" type="button" data-account-logout>退出登录</button>'
+      : `${pendingApply ? '<button class="primary" type="button" data-account-apply>应用云端数据</button>' : '<button class="primary" type="button" data-account-sync>立即同步</button>'}<button class="danger" type="button" data-account-logout>退出登录</button>`;
+    const stateText = conflict ? '云端与本机都有更新，需要选择保留版本' : (pendingApply ? '云端数据已暂存，等待应用' : (syncing ? '正在同步…' : (lastSyncError ? `同步失败：${friendlyError(lastSyncError)}` : formatTime(lastSync))));
+    const note = conflict
+      ? '“使用云端”会放弃本机尚未上传的更改；“保留本机”会覆盖云端较新的版本。两种操作都会再次确认。'
+      : (pendingApply ? '云端更新暂存在独立缓存中，尚未改写当前页面数据；只有点击“应用云端数据”时才会替换本机数据并刷新一次。' : '自动同步会在上传前检查云端是否有更新，避免旧设备静默覆盖新数据。');
+    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email">${String(currentUser.email || '').replace(/[&<>]/g,'')}</div><div class="movie-account-syncstate" id="movieAccountSyncState">${stateText}</div><div class="movie-account-actions ${conflict?'has-conflict':''}">${actions}</div></div><div class="movie-cloud-note">${note}</div>`;
   }
 
   function openDialog() {
@@ -158,20 +202,83 @@
     return data || null;
   }
 
-  async function uploadCurrentData({ silent=false }={}) {
-    if (!currentUser || syncing || pendingApply) return false;
+  function stageCloudData(user,row,{ conflict=false }={}) {
+    const cloud = row?.data_json;
+    if (!hasUsableData(cloud)) return false;
+    const local = localData();
+    const changed = stateSignature(cloud) !== stateSignature(local);
+    if (!changed) {
+      clearPendingCloud(user.id);
+      return false;
+    }
+    localStorage.setItem(PENDING_KEY,JSON.stringify({
+      userId:user.id,
+      data_json:cloud,
+      updated_at:row.updated_at || new Date().toISOString(),
+      conflict:Boolean(conflict),
+      staged_at:new Date().toISOString()
+    }));
+    pendingApply = true;
+    pendingConflict = Boolean(conflict);
+    renderProfile();
+    if ($('movieAccountDialog')?.open) renderSignedIn();
+    return true;
+  }
+
+  function applyPendingCloud() {
+    const pending = readPendingCloud();
+    if (!pending) {
+      pendingApply = false;
+      pendingConflict = false;
+      renderProfile();
+      if ($('movieAccountDialog')?.open) renderSignedIn();
+      return false;
+    }
+    if (pending.conflict && !confirm('云端和本机都有尚未合并的更新。使用云端将放弃本机未上传的更改，继续吗？')) return false;
+    suppressUpload = true;
+    try {
+      localStorage.setItem(APP_KEY,JSON.stringify(pending.data_json));
+      localStorage.setItem(OWNER_KEY,currentUser.id);
+      localStorage.setItem(LAST_SYNC_KEY,pending.updated_at || new Date().toISOString());
+      localStorage.removeItem(DIRTY_KEY);
+      localStorage.removeItem(PENDING_KEY);
+    } finally { suppressUpload = false; }
+    pendingApply = false;
+    pendingConflict = false;
+    location.reload();
+    return true;
+  }
+
+  async function uploadCurrentData({ silent=false, force=false }={}) {
+    if (!currentUser || syncing || (pendingApply && !force)) return false;
     const data = localData();
     if (!hasUsableData(data)) return false;
     syncing = true;
     lastSyncError = '';
     renderProfile();
     try {
+      const owner = localStorage.getItem(OWNER_KEY) || '';
+      const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
+      if (!force && owner && owner !== currentUser.id) {
+        throw new Error('本机数据属于另一个账号，已阻止自动上传');
+      }
+      if (!force) {
+        const row = await fetchCloudRow(currentUser.id);
+        const cloudNewer = hasUsableData(row?.data_json) && owner === currentUser.id && ts(row.updated_at) > ts(lastSync) + 500;
+        if (cloudNewer) {
+          localStorage.setItem(DIRTY_KEY,'1');
+          stageCloudData(currentUser,row,{ conflict:true });
+          if (!silent) toast('云端也有更新，已暂停上传，请选择保留版本');
+          return false;
+        }
+      }
       const now = new Date().toISOString();
       const { error } = await client.from('user_data').upsert({ user_id:currentUser.id, data_json:data, updated_at:now }, { onConflict:'user_id' });
       if (error) throw error;
       localStorage.setItem(OWNER_KEY,currentUser.id);
       localStorage.setItem(LAST_SYNC_KEY,now);
       localStorage.removeItem(DIRTY_KEY);
+      clearPendingCloud(currentUser.id);
       if (!silent) toast('云端数据已同步');
       return true;
     } catch (error) {
@@ -186,39 +293,32 @@
     }
   }
 
+  async function forceUploadLocal() {
+    const pending = readPendingCloud();
+    if (pending?.conflict && !confirm('这会用本机当前数据覆盖云端较新的版本。确认保留本机并覆盖云端吗？')) return false;
+    return uploadCurrentData({ force:true });
+  }
+
   function queueUpload() {
-    if (!currentUser || suppressUpload || pendingApply) return;
+    if (!currentUser || suppressUpload) return;
     localStorage.setItem(DIRTY_KEY,'1');
+    if (pendingApply) {
+      markPendingConflict();
+      return;
+    }
     clearTimeout(uploadTimer);
     uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),1200);
   }
 
   function installStorageHook() {
-    if (Storage.prototype.__movieCloudAuthPatchedV3) return;
+    if (Storage.prototype.__movieCloudAuthPatchedV4) return;
     const previousSetItem = Storage.prototype.setItem;
-    Object.defineProperty(Storage.prototype,'__movieCloudAuthPatchedV3',{ value:true, configurable:true });
+    Object.defineProperty(Storage.prototype,'__movieCloudAuthPatchedV4',{ value:true, configurable:true });
     Storage.prototype.setItem = function(key,value) {
       const result = previousSetItem.call(this,key,value);
       if (this === localStorage && key === APP_KEY && !suppressUpload) queueUpload();
       return result;
     };
-  }
-
-  function cacheCloudData(user,row) {
-    const cloud = row?.data_json;
-    if (!hasUsableData(cloud)) return false;
-    const local = localData();
-    const changed = JSON.stringify(cloud) !== JSON.stringify(local);
-    suppressUpload = true;
-    try {
-      if (changed) localStorage.setItem(APP_KEY,JSON.stringify(cloud));
-      localStorage.setItem(OWNER_KEY,user.id);
-      localStorage.setItem(LAST_SYNC_KEY,row.updated_at || new Date().toISOString());
-      localStorage.removeItem(DIRTY_KEY);
-    } finally { suppressUpload = false; }
-    pendingApply = changed;
-    renderProfile();
-    return changed;
   }
 
   async function reconcileUserData(user) {
@@ -230,44 +330,54 @@
     const cloud = row?.data_json;
 
     if (!hasUsableData(cloud)) {
-      pendingApply = false;
-      if (hasUsableData(local)) await uploadCurrentData({ silent:true });
+      clearPendingCloud(user.id);
+      if (hasUsableData(local)) {
+        if (owner && owner !== user.id) {
+          lastSyncError = new Error('本机数据属于另一个账号，已阻止自动上传');
+          renderProfile();
+          toast('检测到其他账号的本机数据，已阻止自动上传');
+          return;
+        }
+        await uploadCurrentData({ silent:true });
+      }
       return;
     }
 
     if (!hasUsableData(local) || owner !== user.id) {
-      if (cacheCloudData(user,row)) toast('已下载这个账号的云端数据，请在账户面板点击“应用云端数据”');
+      if (stageCloudData(user,row)) toast('已暂存这个账号的云端数据，请在账户面板点击“应用云端数据”');
       return;
     }
 
     const cloudNewer = ts(row.updated_at) > ts(lastSync) + 500;
-    if (cloudNewer && !dirty) {
-      if (cacheCloudData(user,row)) toast('检测到更新的云端数据，请在账户面板点击“应用云端数据”');
+    if (cloudNewer) {
+      const conflict = dirty;
+      if (stageCloudData(user,row,{ conflict })) toast(conflict ? '云端与本机都有更新，请在账户面板选择保留版本' : '检测到更新的云端数据，请在账户面板点击“应用云端数据”');
       return;
     }
 
     if (dirty) {
-      pendingApply = false;
+      clearPendingCloud(user.id);
       await uploadCurrentData({ silent:true });
       return;
     }
 
-    const same = JSON.stringify(cloud) === JSON.stringify(local);
+    const same = stateSignature(cloud) === stateSignature(local);
     if (same) {
-      pendingApply = false;
+      clearPendingCloud(user.id);
       localStorage.setItem(OWNER_KEY,user.id);
       localStorage.setItem(LAST_SYNC_KEY,row.updated_at || lastSync || new Date().toISOString());
       return;
     }
 
-    pendingApply = false;
-    await uploadCurrentData({ silent:true });
+    if (stageCloudData(user,row,{ conflict:true })) toast('本机与云端版本不一致，请在账户面板选择保留版本');
   }
 
   async function setUser(user,{ reconcile=true }={}) {
     currentUser = user || null;
     lastSyncError = '';
     pendingApply = false;
+    pendingConflict = false;
+    if (currentUser) restorePendingCloud(currentUser.id);
     renderProfile();
     if (!currentUser || !reconcile) return;
     try { await reconcileUserData(currentUser); }
@@ -293,7 +403,7 @@
         if (error) throw error;
         await setUser(data.user,{ reconcile:true });
         renderSignedIn();
-        toast(pendingApply ? '已登录，云端数据等待应用' : '已登录光影宇宙');
+        toast(pendingConflict ? '已登录，云端与本机数据需要处理' : (pendingApply ? '已登录，云端数据等待应用' : '已登录光影宇宙'));
       } else {
         const { data,error } = await client.auth.signUp({ email,password,options:{ emailRedirectTo:APP_URL } });
         if (error) throw error;
@@ -319,6 +429,7 @@
     if (error) return toast(`退出失败：${friendlyError(error)}`);
     currentUser = null;
     pendingApply = false;
+    pendingConflict = false;
     renderProfile();
     renderSignedOut('login','已退出账号。本机数据仍保留在当前浏览器。');
     toast('已退出光影账户');
@@ -332,7 +443,8 @@
       if (mode) { event.preventDefault(); renderSignedOut(mode.dataset.authMode === 'signup' ? 'signup':'login'); return; }
       if (event.target.closest?.('[data-account-close]')) { event.preventDefault(); $('movieAccountDialog')?.close(); return; }
       if (event.target.closest?.('[data-account-sync]')) { event.preventDefault(); uploadCurrentData(); return; }
-      if (event.target.closest?.('[data-account-apply]')) { event.preventDefault(); pendingApply = false; location.reload(); return; }
+      if (event.target.closest?.('[data-account-apply]')) { event.preventDefault(); applyPendingCloud(); return; }
+      if (event.target.closest?.('[data-account-force-upload]')) { event.preventDefault(); forceUploadLocal(); return; }
       if (event.target.closest?.('[data-account-logout]')) { event.preventDefault(); logout(); }
     });
     document.addEventListener('submit',event => {
