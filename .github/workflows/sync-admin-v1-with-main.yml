@@ -1,0 +1,40 @@
+name: Sync Admin V1 With Main
+
+on:
+  push:
+    branches:
+      - feat/admin-content-center-v1
+
+permissions:
+  contents: write
+
+jobs:
+  sync-main:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/admin-content-center-v1
+          fetch-depth: 0
+      - name: Merge latest main
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git merge --no-edit origin/main
+      - name: Validate integration
+        shell: bash
+        run: |
+          node --check content-center.js
+          grep -q '<title>影视收藏夹管理后台 V1</title>' admin.html
+          test "$(grep -o '<script src="content-center.js"></script>' index.html | wc -l)" -eq 1
+          grep -q 'MovieCollectionContentCenter' content-center.js
+      - name: Self-clean and push
+        shell: bash
+        run: |
+          rm -f .github/workflows/sync-admin-v1-with-main.yml
+          git add -- .github/workflows/sync-admin-v1-with-main.yml
+          if ! git diff --cached --quiet; then git commit -m 'chore: remove one-time admin sync workflow'; fi
+          git push origin HEAD:feat/admin-content-center-v1
