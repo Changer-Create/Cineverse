@@ -1,8 +1,9 @@
 (() => {
   'use strict';
-  if (/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname)) return;
 
+  const IS_ADMIN = /(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname);
   const STORAGE_KEY = 'movie-collection-v2';
+  const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';
   let activeMovieId = '';
   let decorateFrame = 0;
 
@@ -20,19 +21,91 @@
   const saveState = state => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   const esc = value => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  function migrateFollowStatuses() {
+  function normalizeLegacyStatuses() {
     const state = getState();
     if (!state || !Array.isArray(state.movies)) return false;
     let changed = false;
     for (const movie of state.movies) {
-      if (movie?.personal?.status === 'follow') {
-        movie.personal.status = 'want';
+      movie.personal = movie?.personal && typeof movie.personal === 'object' ? movie.personal : {};
+      const current = movie.personal.status || 'want';
+      let next = current;
+      if (current === 'follow') next = 'want';
+      if (movie?.mediaType === 'tv') {
+        if (!['want','watching','watched','paused','dropped'].includes(next)) next = 'want';
+      } else if (!['want','watched'].includes(next)) {
+        next = Array.isArray(movie?.watchHistory) && movie.watchHistory.length ? 'watched' : 'want';
+      }
+      if (next !== current) {
+        movie.personal.status = next;
         movie.updatedAt = new Date().toISOString();
         changed = true;
       }
     }
-    if (changed) saveState(state);
+    if (changed) {
+      saveState(state);
+      localStorage.setItem(CLOUD_DIRTY_KEY, '1');
+    }
     return changed;
+  }
+
+  function setSelectOptions(select, options, current) {
+    if (!select) return;
+    const fallback = options.some(([value]) => value === current) ? current : 'want';
+    select.innerHTML = options.map(([value,label]) => `<option value="${esc(value)}" ${value===fallback?'selected':''}>${esc(label)}</option>`).join('');
+    select.value = fallback;
+  }
+
+  function cleanAdminStatusControls() {
+    for (const id of ['movieAdminStatus','meStatus']) {
+      const select = document.getElementById(id);
+      if (!select) continue;
+      select.querySelectorAll('option').forEach(option => {
+        if (option.value === 'follow' || option.textContent.trim() === '关注') option.remove();
+      });
+      if (select.value === 'follow') select.value = id === 'movieAdminStatus' ? '' : 'want';
+    }
+  }
+
+  function syncAdminEditorStatusOptions() {
+    const type = document.getElementById('meType');
+    const status = document.getElementById('meStatus');
+    if (!status) return;
+    let current = status.value === 'follow' ? 'want' : (status.value || 'want');
+    const options = type?.value === 'tv'
+      ? [['want','想看'],['watching','在看'],['watched','已看完'],['paused','暂停'],['dropped','弃剧']]
+      : [['want','想看'],['watched','已看']];
+    if (!options.some(([value]) => value === current) && type?.value !== 'tv') {
+      const id = document.getElementById('meId')?.value || '';
+      const movie = getState()?.movies?.find(item => String(item?.id || '') === String(id));
+      current = Array.isArray(movie?.watchHistory) && movie.watchHistory.length ? 'watched' : 'want';
+    }
+    setSelectOptions(status, options, current);
+  }
+
+  if (IS_ADMIN) {
+    // admin-data.js 会在 content-center.js 之后执行，因此先迁移数据，确保后台读到的就是新状态模型。
+    normalizeLegacyStatuses();
+    const bootAdmin = () => {
+      cleanAdminStatusControls();
+      document.addEventListener('change', event => {
+        if (event.target?.id === 'meType') syncAdminEditorStatusOptions();
+      });
+      document.addEventListener('click', event => {
+        if (event.target.closest?.('[data-edit-movie],#movieAdd')) queueMicrotask(syncAdminEditorStatusOptions);
+      });
+      document.addEventListener('focusin', event => {
+        if (event.target?.id === 'meTitle') syncAdminEditorStatusOptions();
+      });
+      document.addEventListener('submit', event => {
+        if (event.target?.id !== 'movieEditor') return;
+        syncAdminEditorStatusOptions();
+        const status = document.getElementById('meStatus');
+        if (status?.value === 'follow') status.value = 'want';
+      }, true);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootAdmin, { once: true });
+    else bootAdmin();
+    return;
   }
 
   function injectStyles() {
@@ -239,11 +312,29 @@
 
     movie.updatedAt = new Date().toISOString();
     saveState(state);
-    location.hash = 'library';
+    location.hash = location.hash.startsWith('#detail/') ? location.hash.slice(1) : 'library';
     location.reload();
   }
 
+  function currentDetailMovieId() {
+    const raw = location.hash.replace(/^#/, '');
+    if (!raw.startsWith('detail/')) return '';
+    try { return decodeURIComponent(raw.slice(7)); } catch { return raw.slice(7); }
+  }
+
   document.addEventListener('click', event => {
+    const detailStatus = event.target.closest?.('#detailStatusBtn');
+    if (detailStatus) {
+      const id = currentDetailMovieId();
+      if (id) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        toggleStatus(id);
+      }
+      return;
+    }
+
     const statusButton = event.target.closest?.('[data-library-status]');
     if (statusButton && statusButton.closest('#libraryGrid')) {
       event.preventDefault();
@@ -262,7 +353,7 @@
       return;
     }
 
-    if (event.target.closest?.('[data-edit-id]')) {
+    if (event.target.closest?.('[data-edit-id],#detailEditBtn,[data-match-edit],#addMovieBtn')) {
       queueMicrotask(cleanFollowControls);
     }
 
@@ -278,6 +369,21 @@
     }
   }, true);
 
+  document.addEventListener('change', event => {
+    if (event.target?.id === 'movieMediaTypeInput') queueMicrotask(cleanFollowControls);
+  }, true);
+
+  document.addEventListener('submit', event => {
+    if (event.target?.id !== 'movieForm') return;
+    const status = document.getElementById('movieStatusInput');
+    if (status?.value === 'follow') status.value = 'want';
+  }, true);
+
+  document.addEventListener('input', event => {
+    if (event.target?.id !== 'libStatus') return;
+    if (event.target.value === '关注' || event.target.value === 'follow') event.target.value = '';
+  }, true);
+
   document.addEventListener('keydown', event => {
     const poster = event.target.closest?.('#libraryGrid .lib-poster[data-open-detail]');
     if (!poster || (event.key !== 'Enter' && event.key !== ' ')) return;
@@ -288,7 +394,11 @@
   function boot() {
     injectStyles();
     ensureDialog();
-    migrateFollowStatuses();
+    const migrated = normalizeLegacyStatuses();
+    if (migrated) {
+      location.reload();
+      return;
+    }
     decorateLibraryCards();
 
     const grid = document.getElementById('libraryGrid');
