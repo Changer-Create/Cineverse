@@ -1,0 +1,43 @@
+name: Install Visual Copy Editor
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    if: github.head_ref == 'feat/visual-copy-edit-mode'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/visual-copy-edit-mode
+          fetch-depth: 0
+      - name: Wire visual editor into content center
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('content-center.js')
+          s=p.read_text(encoding='utf-8')
+          marker="  const IS_ADMIN_PAGE = /(?:^|\\/)admin\\.html$/i.test(location.pathname);"
+          loader="  if(!document.querySelector('script[data-visual-copy-editor]')){const visualScript=document.createElement('script');visualScript.src='visual-copy-editor.js';visualScript.dataset.visualCopyEditor='1';document.head.appendChild(visualScript);}\n\n"
+          if 'visual-copy-editor.js' not in s:
+              if marker not in s:
+                  raise SystemExit('content center marker not found')
+              s=s.replace(marker,loader+marker,1)
+              p.write_text(s,encoding='utf-8')
+      - name: Validate and self-clean
+        shell: bash
+        run: |
+          node --check content-center.js
+          node --check visual-copy-editor.js
+          grep -q 'visual-copy-editor.js' content-center.js
+          rm -f .github/workflows/install-visual-copy-editor.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: enable front-end visual copy editing'
+          git push origin HEAD:feat/visual-copy-edit-mode
