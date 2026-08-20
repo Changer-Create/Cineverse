@@ -6,7 +6,6 @@
   const OWNER_KEY = 'movie-cloud-owner-v1';
   const LAST_SYNC_KEY = 'movie-cloud-last-sync-v1';
   const DIRTY_KEY = 'movie-cloud-dirty-v1';
-  const RELOAD_STAMP_KEY = 'movie-cloud-reload-stamp-v1';
   const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
   const APP_URL = 'https://cj956151388-png.github.io/movie-collection/';
@@ -17,6 +16,7 @@
   let uploadTimer = 0;
   let syncing = false;
   let lastSyncError = '';
+  let pendingApply = false;
 
   const $ = id => document.getElementById(id);
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
@@ -128,7 +128,7 @@
     if (currentUser) {
       const stateName = localData()?.profile?.name || localData()?.settings?.profileName || '';
       if (name && !stateName) name.textContent = currentUser.email?.split('@')[0] || '我的光影宇宙';
-      if (role) role.textContent = syncing ? '云端同步中…' : (lastSyncError ? '云端同步待重试' : '云端已同步');
+      if (role) role.textContent = syncing ? '云端同步中…' : (lastSyncError ? '云端同步待重试' : (pendingApply ? '云端更新待应用' : '云端已同步'));
     } else if (role) role.textContent = '本机数据 · 点击登录';
   }
 
@@ -142,7 +142,8 @@
     const body = $('movieAccountBody');
     if (!body || !currentUser) return;
     const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
-    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email">${String(currentUser.email || '').replace(/[&<>]/g,'')}</div><div class="movie-account-syncstate" id="movieAccountSyncState">${syncing?'正在同步…':(lastSyncError?`同步失败：${friendlyError(lastSyncError)}`:formatTime(lastSync))}</div><div class="movie-account-actions"><button class="primary" type="button" data-account-sync>立即同步</button><button class="danger" type="button" data-account-logout>退出登录</button></div></div><div class="movie-cloud-note">当前使用账号隔离的云端数据。云端是跨设备同步源，本机保留一份缓存。</div>`;
+    const primary = pendingApply ? '<button class="primary" type="button" data-account-apply>应用云端数据</button>' : '<button class="primary" type="button" data-account-sync>立即同步</button>';
+    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email">${String(currentUser.email || '').replace(/[&<>]/g,'')}</div><div class="movie-account-syncstate" id="movieAccountSyncState">${pendingApply?'云端数据已下载，等待应用':(syncing?'正在同步…':(lastSyncError?`同步失败：${friendlyError(lastSyncError)}`:formatTime(lastSync)))}</div><div class="movie-account-actions">${primary}<button class="danger" type="button" data-account-logout>退出登录</button></div></div><div class="movie-cloud-note">为避免自动刷新循环，云端数据下载后不会自动刷新页面；只有你点击“应用云端数据”时才会刷新一次。</div>`;
   }
 
   function openDialog() {
@@ -158,7 +159,7 @@
   }
 
   async function uploadCurrentData({ silent=false }={}) {
-    if (!currentUser || syncing) return false;
+    if (!currentUser || syncing || pendingApply) return false;
     const data = localData();
     if (!hasUsableData(data)) return false;
     syncing = true;
@@ -171,7 +172,6 @@
       localStorage.setItem(OWNER_KEY,currentUser.id);
       localStorage.setItem(LAST_SYNC_KEY,now);
       localStorage.removeItem(DIRTY_KEY);
-      sessionStorage.removeItem(RELOAD_STAMP_KEY);
       if (!silent) toast('云端数据已同步');
       return true;
     } catch (error) {
@@ -182,22 +182,21 @@
     } finally {
       syncing = false;
       renderProfile();
-      const state = $('movieAccountSyncState');
-      if (state) state.textContent = lastSyncError ? `同步失败：${friendlyError(lastSyncError)}` : formatTime(localStorage.getItem(LAST_SYNC_KEY));
+      if ($('movieAccountDialog')?.open) renderSignedIn();
     }
   }
 
   function queueUpload() {
-    if (!currentUser || suppressUpload) return;
+    if (!currentUser || suppressUpload || pendingApply) return;
     localStorage.setItem(DIRTY_KEY,'1');
     clearTimeout(uploadTimer);
     uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),1200);
   }
 
   function installStorageHook() {
-    if (Storage.prototype.__movieCloudAuthPatchedV2) return;
+    if (Storage.prototype.__movieCloudAuthPatchedV3) return;
     const previousSetItem = Storage.prototype.setItem;
-    Object.defineProperty(Storage.prototype,'__movieCloudAuthPatchedV2',{ value:true, configurable:true });
+    Object.defineProperty(Storage.prototype,'__movieCloudAuthPatchedV3',{ value:true, configurable:true });
     Storage.prototype.setItem = function(key,value) {
       const result = previousSetItem.call(this,key,value);
       if (this === localStorage && key === APP_KEY && !suppressUpload) queueUpload();
@@ -205,28 +204,21 @@
     };
   }
 
-  async function applyCloudAndReload(user,row) {
+  function cacheCloudData(user,row) {
     const cloud = row?.data_json;
     if (!hasUsableData(cloud)) return false;
-    const stamp = `${user.id}|${row.updated_at || ''}`;
-    const alreadyReloaded = sessionStorage.getItem(RELOAD_STAMP_KEY) === stamp;
+    const local = localData();
+    const changed = JSON.stringify(cloud) !== JSON.stringify(local);
     suppressUpload = true;
     try {
-      localStorage.setItem(APP_KEY,JSON.stringify(cloud));
+      if (changed) localStorage.setItem(APP_KEY,JSON.stringify(cloud));
       localStorage.setItem(OWNER_KEY,user.id);
       localStorage.setItem(LAST_SYNC_KEY,row.updated_at || new Date().toISOString());
       localStorage.removeItem(DIRTY_KEY);
     } finally { suppressUpload = false; }
-
-    if (!alreadyReloaded) {
-      sessionStorage.setItem(RELOAD_STAMP_KEY,stamp);
-      location.reload();
-      return true;
-    }
-    // 已经为同一份云端数据刷新过一次，绝不再次刷新。
-    // 如果主程序启动时对数据做了规范化，直接把规范化后的本机版本回写云端。
-    await uploadCurrentData({ silent:true });
-    return false;
+    pendingApply = changed;
+    renderProfile();
+    return changed;
   }
 
   async function reconcileUserData(user) {
@@ -238,44 +230,44 @@
     const cloud = row?.data_json;
 
     if (!hasUsableData(cloud)) {
+      pendingApply = false;
       if (hasUsableData(local)) await uploadCurrentData({ silent:true });
       return;
     }
 
-    // 新设备、切换账号或没有本地数据：云端优先，只允许触发一次页面刷新。
     if (!hasUsableData(local) || owner !== user.id) {
-      await applyCloudAndReload(user,row);
+      if (cacheCloudData(user,row)) toast('已下载这个账号的云端数据，请在账户面板点击“应用云端数据”');
       return;
     }
 
     const cloudNewer = ts(row.updated_at) > ts(lastSync) + 500;
     if (cloudNewer && !dirty) {
-      await applyCloudAndReload(user,row);
+      if (cacheCloudData(user,row)) toast('检测到更新的云端数据，请在账户面板点击“应用云端数据”');
       return;
     }
 
     if (dirty) {
-      // 本机有明确未同步改动时，本机优先；避免登录后被旧云端反复覆盖。
+      pendingApply = false;
       await uploadCurrentData({ silent:true });
       return;
     }
 
     const same = JSON.stringify(cloud) === JSON.stringify(local);
     if (same) {
+      pendingApply = false;
       localStorage.setItem(OWNER_KEY,user.id);
       localStorage.setItem(LAST_SYNC_KEY,row.updated_at || lastSync || new Date().toISOString());
-      sessionStorage.removeItem(RELOAD_STAMP_KEY);
       return;
     }
 
-    // 同一账号、云端并不更新，但两边仅因启动时规范化等产生差异：
-    // 回写本机版本，不再用 reload 解决差异，从根源上消除刷新循环。
+    pendingApply = false;
     await uploadCurrentData({ silent:true });
   }
 
   async function setUser(user,{ reconcile=true }={}) {
     currentUser = user || null;
     lastSyncError = '';
+    pendingApply = false;
     renderProfile();
     if (!currentUser || !reconcile) return;
     try { await reconcileUserData(currentUser); }
@@ -301,7 +293,7 @@
         if (error) throw error;
         await setUser(data.user,{ reconcile:true });
         renderSignedIn();
-        toast('已登录光影宇宙');
+        toast(pendingApply ? '已登录，云端数据等待应用' : '已登录光影宇宙');
       } else {
         const { data,error } = await client.auth.signUp({ email,password,options:{ emailRedirectTo:APP_URL } });
         if (error) throw error;
@@ -315,16 +307,18 @@
       renderSignedOut(mode,friendlyError(error),true);
       const input = $('movieAuthEmail');
       if (input) input.value = email;
+    } finally {
+      if (button) button.disabled = false;
     }
   }
 
   async function logout() {
     if (!client || !currentUser) return;
-    if (localStorage.getItem(DIRTY_KEY) === '1') await uploadCurrentData({ silent:true });
+    if (!pendingApply && localStorage.getItem(DIRTY_KEY) === '1') await uploadCurrentData({ silent:true });
     const { error } = await client.auth.signOut();
     if (error) return toast(`退出失败：${friendlyError(error)}`);
     currentUser = null;
-    sessionStorage.removeItem(RELOAD_STAMP_KEY);
+    pendingApply = false;
     renderProfile();
     renderSignedOut('login','已退出账号。本机数据仍保留在当前浏览器。');
     toast('已退出光影账户');
@@ -338,6 +332,7 @@
       if (mode) { event.preventDefault(); renderSignedOut(mode.dataset.authMode === 'signup' ? 'signup':'login'); return; }
       if (event.target.closest?.('[data-account-close]')) { event.preventDefault(); $('movieAccountDialog')?.close(); return; }
       if (event.target.closest?.('[data-account-sync]')) { event.preventDefault(); uploadCurrentData(); return; }
+      if (event.target.closest?.('[data-account-apply]')) { event.preventDefault(); pendingApply = false; location.reload(); return; }
       if (event.target.closest?.('[data-account-logout]')) { event.preventDefault(); logout(); }
     });
     document.addEventListener('submit',event => {
@@ -347,10 +342,10 @@
       handleAuthSubmit(form);
     });
     window.addEventListener('online',() => {
-      if (currentUser && localStorage.getItem(DIRTY_KEY) === '1') uploadCurrentData({ silent:true });
+      if (currentUser && !pendingApply && localStorage.getItem(DIRTY_KEY) === '1') uploadCurrentData({ silent:true });
     });
     document.addEventListener('visibilitychange',() => {
-      if (document.visibilityState === 'hidden' && currentUser && localStorage.getItem(DIRTY_KEY) === '1') uploadCurrentData({ silent:true });
+      if (document.visibilityState === 'hidden' && currentUser && !pendingApply && localStorage.getItem(DIRTY_KEY) === '1') uploadCurrentData({ silent:true });
     });
   }
 
@@ -367,7 +362,7 @@
       const { data:{ session } } = await client.auth.getSession();
       await setUser(session?.user || null,{ reconcile:true });
       client.auth.onAuthStateChange((event,session) => {
-        if (event === 'TOKEN_REFRESHED') return;
+        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
         const next = session?.user || null;
         if (next?.id === currentUser?.id) { renderProfile(); return; }
         setUser(next,{ reconcile:Boolean(next) });
