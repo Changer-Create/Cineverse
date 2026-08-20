@@ -4,7 +4,7 @@
 
   const STORAGE_KEY = 'movie-collection-v2';
   let activeMovieId = '';
-  let migrationScheduled = false;
+  let decorateFrame = 0;
 
   const safeParse = raw => {
     try { return JSON.parse(raw); } catch { return null; }
@@ -20,7 +20,7 @@
   const saveState = state => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   const esc = value => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  function migrateFollowStatuses({ reload = false } = {}) {
+  function migrateFollowStatuses() {
     const state = getState();
     if (!state || !Array.isArray(state.movies)) return false;
     let changed = false;
@@ -31,23 +31,8 @@
         changed = true;
       }
     }
-    if (!changed) return false;
-    saveState(state);
-    if (reload) {
-      const hash = location.hash || '#library';
-      location.replace(`${location.pathname}${location.search}${hash}`);
-      location.reload();
-    }
-    return true;
-  }
-
-  function scheduleMigrationCheck() {
-    if (migrationScheduled) return;
-    migrationScheduled = true;
-    queueMicrotask(() => {
-      migrationScheduled = false;
-      migrateFollowStatuses({ reload: true });
-    });
+    if (changed) saveState(state);
+    return changed;
   }
 
   function injectStyles() {
@@ -136,9 +121,7 @@
     return status === 'watched' ? ['watched', '已看'] : ['want', '想看'];
   }
 
-  function rebuildCardActions(card) {
-    card.querySelectorAll('.status-pill').forEach(node => node.remove());
-
+  function rebuildCardActions(card, movieMap) {
     const edit = card.querySelector('[data-edit-id]');
     const cycle = card.querySelector('[data-cycle-status]');
     const existingStatus = card.querySelector('[data-library-status]');
@@ -146,21 +129,21 @@
     if (!id) return;
 
     const poster = card.querySelector('.lib-poster');
-    if (poster) {
+    if (poster && poster.dataset.openDetail !== id) {
       poster.dataset.openDetail = id;
       poster.setAttribute('role', 'button');
       poster.setAttribute('tabindex', '0');
       poster.setAttribute('aria-label', '打开作品详情');
     }
 
-    const state = getState();
-    const movie = state?.movies?.find(m => String(m.id) === String(id));
+    const movie = movieMap.get(String(id));
     const [statusClass, statusLabel] = statusInfo(movie);
-
     const actions = card.querySelector('.lib-actions');
     if (!actions) return;
+
     const signature = `${id}|${statusClass}`;
     if (actions.dataset.libraryActionsV2 === signature && actions.children.length === 3) return;
+
     actions.dataset.libraryActionsV2 = signature;
     actions.innerHTML = `
       <button type="button" class="library-status-btn ${esc(statusClass)}" data-library-status="${esc(id)}">${esc(statusLabel)}</button>
@@ -169,9 +152,26 @@
   }
 
   function decorateLibraryCards() {
-    document.querySelectorAll('#libraryGrid .lib-card').forEach(rebuildCardActions);
-    document.querySelectorAll('#libraryGrid .status-pill').forEach(node => node.remove());
+    const grid = document.getElementById('libraryGrid');
+    if (!grid) return;
+    const cards = grid.querySelectorAll('.lib-card');
+    if (!cards.length) {
+      cleanFollowControls();
+      return;
+    }
+
+    const state = getState();
+    const movieMap = new Map((state?.movies || []).map(movie => [String(movie.id), movie]));
+    cards.forEach(card => rebuildCardActions(card, movieMap));
     cleanFollowControls();
+  }
+
+  function scheduleDecorate() {
+    if (decorateFrame) return;
+    decorateFrame = requestAnimationFrame(() => {
+      decorateFrame = 0;
+      decorateLibraryCards();
+    });
   }
 
   function openPlan(movieId) {
@@ -220,6 +220,7 @@
     const movie = state?.movies?.find(m => String(m.id) === String(movieId));
     if (!movie) return;
     movie.personal = movie.personal || {};
+
     if (movie.mediaType === 'tv') {
       const order = ['want', 'watching', 'watched', 'paused', 'dropped'];
       const current = movie.personal.status === 'follow' ? 'want' : (movie.personal.status || 'want');
@@ -235,6 +236,7 @@
         }
       }
     }
+
     movie.updatedAt = new Date().toISOString();
     saveState(state);
     location.hash = 'library';
@@ -250,6 +252,7 @@
       toggleStatus(statusButton.dataset.libraryStatus);
       return;
     }
+
     const planButton = event.target.closest?.('[data-library-plan],[data-cycle-status]');
     if (planButton && planButton.closest('#libraryGrid')) {
       event.preventDefault();
@@ -258,11 +261,17 @@
       openPlan(planButton.dataset.libraryPlan || planButton.dataset.cycleStatus);
       return;
     }
+
+    if (event.target.closest?.('[data-edit-id]')) {
+      queueMicrotask(cleanFollowControls);
+    }
+
     if (event.target.closest?.('[data-library-plan-cancel]')) {
       event.preventDefault();
       document.getElementById('libraryPlanDialog')?.close();
       return;
     }
+
     if (event.target.closest?.('[data-library-plan-save]')) {
       event.preventDefault();
       savePlan();
@@ -276,17 +285,17 @@
     poster.click();
   });
 
-  const observer = new MutationObserver(() => {
-    decorateLibraryCards();
-    scheduleMigrationCheck();
-  });
-
   function boot() {
     injectStyles();
     ensureDialog();
-    if (migrateFollowStatuses({ reload: true })) return;
+    migrateFollowStatuses();
     decorateLibraryCards();
-    observer.observe(document.body, { childList: true, subtree: true });
+
+    const grid = document.getElementById('libraryGrid');
+    if (grid) {
+      const observer = new MutationObserver(scheduleDecorate);
+      observer.observe(grid, { childList: true });
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
