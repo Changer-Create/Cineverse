@@ -8,8 +8,19 @@
 
   let requested=false;
   try{
-    const p=new URLSearchParams(location.search);
-    requested=p.get('contentEdit')==='1'||sessionStorage.getItem(EDIT_KEY)==='1';
+    const url=new URL(location.href);
+    requested=url.searchParams.get('contentEdit')==='1';
+    if(requested){
+      // Treat visual edit as a one-shot entry. Keep a short handoff flag only
+      // long enough for visual-copy-editor-core.js to initialize, then remove
+      // the query parameter so a normal refresh returns to browsing mode.
+      sessionStorage.setItem(EDIT_KEY,'1');
+      url.searchParams.delete('contentEdit');
+      history.replaceState(history.state,'',`${url.pathname}${url.search}${url.hash}`);
+    }else{
+      // Clean up edit state left behind by older versions.
+      sessionStorage.removeItem(EDIT_KEY);
+    }
   }catch{}
   if(!requested)return;
 
