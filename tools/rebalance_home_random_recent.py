@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Trigger: rebalance the home random pick and recent watched modules.
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 marker='/* ===== Home random/recent rebalance ===== */'
@@ -150,7 +151,6 @@ if anchor not in s:
     anchor='\n\n  /* ===== Settings aligned 2x2 grid ===== */'
 if anchor not in s:
     raise SystemExit('CSS anchor not found')
-# Insert after the stable block region by placing before settings, so this override wins.
 settings_anchor='\n\n  /* ===== Settings aligned 2x2 grid ===== */'
 if settings_anchor in s:
     s=s.replace(settings_anchor,css+settings_anchor,1)
