@@ -265,6 +265,8 @@
     quote:{load:getQuoteState,save:saveQuoteState,pool:quotePool,random:randomQuote,showSource:showQuoteSource}
   };
 
+  if(!document.querySelector('script[data-visual-copy-editor]')){const visualScript=document.createElement('script');visualScript.src='visual-copy-editor.js';visualScript.dataset.visualCopyEditor='1';document.head.appendChild(visualScript);}
+
   const IS_ADMIN_PAGE = /(?:^|\/)admin\.html$/i.test(location.pathname);
   if(!IS_ADMIN_PAGE){
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
