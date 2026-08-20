@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>影视收藏夹管理后台 V1</title>
+<style>
+:root{--bg:#050a18;--panel:#0d1730;--panel2:#111d3b;--line:rgba(166,182,255,.16);--text:#f5f2ff;--muted:#8f9ab8;--purple:#9f7cff;--gold:#f5c66c;--green:#74d8aa;--red:#ff879f;--r:18px}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 80% 4%,rgba(127,84,255,.18),transparent 28%),linear-gradient(150deg,#030714,#071128 55%,#091630);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif}.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}.side{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);padding:24px 16px;background:rgba(5,11,26,.88);backdrop-filter:blur(18px)}.brand{padding:0 8px 22px}.brand b{font:600 18px "Songti SC","STSong",serif;color:#fff0cf}.brand span{display:block;color:var(--muted);font-size:11px;margin-top:5px}.nav{display:grid;gap:7px}.nav button,.back{border:1px solid transparent;background:transparent;color:#cbd3e9;text-align:left;padding:11px 12px;border-radius:12px;cursor:pointer}.nav button.active{background:rgba(128,91,235,.18);border-color:rgba(159,124,255,.28);color:#fff}.back{display:block;text-decoration:none;margin-top:16px;border-color:var(--line);font-size:11px}.main{padding:26px 30px 50px}.hero{border:1px solid var(--line);border-radius:22px;padding:25px 28px;background:radial-gradient(circle at 85% 20%,rgba(159,124,255,.2),transparent 26%),linear-gradient(145deg,rgba(13,29,65,.9),rgba(9,20,47,.86));margin-bottom:18px}.eyebrow{font-size:11px;color:#9da8c7;letter-spacing:.12em}.hero h1{margin:6px 0 7px;font:600 31px "Songti SC","STSong",serif;color:#fff0cf}.hero p{margin:0;color:#aeb8d1;font-size:13px}.panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(155deg,rgba(13,25,55,.9),rgba(8,18,42,.84));overflow:hidden}.panel-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-head h2{font-size:15px;margin:0}.panel-body{padding:18px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{border:1px solid rgba(255,255,255,.05);border-radius:15px;padding:16px;background:rgba(255,255,255,.022)}.stat span{font-size:10px;color:var(--muted)}.stat b{display:block;font:600 26px Georgia,serif;margin-top:5px}.stat small{display:block;color:#6f7c9c;margin-top:4px}.view{display:none}.view.active{display:block}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select,.field input,.field textarea,.field select{border:1px solid var(--line);background:#08132d;color:var(--text);border-radius:11px;padding:9px 11px;outline:none}.toolbar input{min-width:280px;flex:1}.toolbar select{min-width:150px}.btn{border:1px solid var(--line);background:rgba(23,38,77,.8);color:#e0e6f6;border-radius:10px;padding:9px 12px;cursor:pointer}.btn.primary{background:linear-gradient(135deg,rgba(119,83,224,.66),rgba(67,98,204,.55));border-color:rgba(159,124,255,.42)}.btn.danger{color:#ff9bae;border-color:rgba(255,135,159,.24);background:rgba(106,33,52,.16)}.btn.gold{color:#f7d993;border-color:rgba(245,198,108,.3);background:rgba(97,70,24,.16)}.copy-list{display:grid;gap:10px}.copy-row{display:grid;grid-template-columns:210px minmax(0,1fr) 90px;gap:14px;align-items:start;padding:14px;border:1px solid rgba(255,255,255,.055);border-radius:14px;background:rgba(255,255,255,.018)}.copy-meta b{display:block;font-size:12px}.copy-meta span{display:block;color:var(--muted);font-size:9px;margin-top:4px}.copy-input{width:100%;min-height:40px;resize:vertical}.status{font-size:9px;border-radius:999px;padding:5px 8px;text-align:center;border:1px solid var(--line);color:var(--muted)}.status.custom{color:#d9ccff;border-color:rgba(159,124,255,.32);background:rgba(159,124,255,.08)}.quote-list{display:grid;gap:11px}.quote-row{border:1px solid rgba(255,255,255,.055);border-radius:14px;padding:15px;background:rgba(255,255,255,.018);display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:16px}.quote-text{font-family:"Songti SC","STSong",serif;font-size:16px;line-height:1.75;color:#f0e7d8}.quote-credit{font-size:10px;color:#9aa6c4;margin-top:7px}.quote-meta{display:grid;gap:5px;color:#8490ad;font-size:9px}.quote-meta b{color:#cdd5e8}.quote-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.quote-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-bottom:18px;padding:16px;border:1px dashed rgba(159,124,255,.25);border-radius:15px;background:rgba(159,124,255,.035)}.field{display:grid;gap:6px}.field.wide{grid-column:1/-1}.field label{font-size:10px;color:#9da7c0}.field textarea{min-height:78px;resize:vertical}.note{color:#8792af;font-size:10px;line-height:1.7}.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.danger-box{border:1px solid rgba(255,127,154,.16);border-radius:15px;padding:16px;background:rgba(92,26,48,.1)}.toast{position:fixed;right:24px;bottom:24px;padding:10px 14px;border-radius:11px;background:#15254c;border:1px solid rgba(159,124,255,.34);box-shadow:0 18px 50px rgba(0,0,0,.35);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;font-size:11px}.toast.show{opacity:1;transform:none}.hidden-frame{position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-10px;top:-10px}.empty{padding:28px;text-align:center;color:var(--muted);font-size:11px}@media(max-width:1000px){.app{grid-template-columns:1fr}.side{position:relative;height:auto}.nav{grid-template-columns:repeat(4,1fr)}.main{padding:18px}.stats{grid-template-columns:1fr 1fr}.copy-row{grid-template-columns:1fr}.quote-row{grid-template-columns:1fr}.data-grid{grid-template-columns:1fr}}@media(max-width:650px){.quote-form{grid-template-columns:1fr}.field.wide{grid-column:auto}.nav{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>管理后台 V1</b><span>影视收藏夹 · Content Console</span></div>
+    <div class="nav">
+      <button class="active" data-tab="overview">◇ 总览</button>
+      <button data-tab="copy">✎ 全站文案</button>
+      <button data-tab="quotes">❝ 格言库</button>
+      <button data-tab="data">▣ 数据与版本</button>
+    </div>
+    <a class="back" href="index.html">← 返回影视收藏夹</a>
+  </aside>
+  <main class="main">
+    <section class="hero"><div class="eyebrow">MOVIE COLLECTION · ADMIN CONSOLE</div><h1>影视收藏夹管理后台 V1</h1><p>把前台体验与内容维护拆开：这里负责文案、格言与内容资产，普通设置页只负责你的个人使用偏好。</p></section>
+
+    <section class="view active" id="view-overview">
+      <div class="stats">
+        <div class="stat"><span>可管理文案</span><b id="statCopyTotal">0</b><small>全站静态文案字段</small></div>
+        <div class="stat"><span>已自定义</span><b id="statCopyCustom">0</b><small>覆盖默认值</small></div>
+        <div class="stat"><span>格言总数</span><b id="statQuoteTotal">—</b><small>默认 + 自定义</small></div>
+        <div class="stat"><span>最近保存</span><b id="statUpdated">—</b><small>内容中心更新时间</small></div>
+      </div>
+      <div style="height:14px"></div>
+      <section class="panel"><div class="panel-head"><h2>V1 管理范围</h2></div><div class="panel-body note">当前 V1 先解决两件最影响后续维护的问题：第一，首页、导航、影视库、雷达、计划、已观看、详情页、设置页的核心静态文案统一收口；第二，格言库继续坚持“真实来源可核验”的规则，默认库只读，自定义新增必须填写来源。技术提示、危险操作确认、错误提示等运行时文案暂不放入内容中心，避免误改导致功能含义不清。</div></section>
+    </section>
+
+    <section class="view" id="view-copy">
+      <section class="panel"><div class="panel-head"><h2>全站文案内容中心</h2><div><button class="btn" id="copyResetAll">恢复全部默认</button> <button class="btn primary" id="copySave">保存全部修改</button></div></div><div class="panel-body">
+        <div class="toolbar"><input id="copySearch" placeholder="搜索字段、页面或文案…"><select id="copyGroup"><option value="">全部页面</option></select></div>
+        <div class="copy-list" id="copyList"></div>
+      </div></section>
+    </section>
+
+    <section class="view" id="view-quotes">
+      <section class="panel"><div class="panel-head"><h2>格言库</h2><span class="note">默认库遵循可核验来源协议</span></div><div class="panel-body">
+        <div class="quote-form">
+          <div class="field wide"><label>中文展示文本 *</label><textarea id="qText" placeholder="请输入核验后的中文翻译/意译"></textarea></div>
+          <div class="field"><label>类型</label><select id="qType"><option value="filmmaker_quote">影人原话</option><option value="movie_line">电影台词</option></select></div>
+          <div class="field"><label>核验等级</label><select id="qVerification"><option value="A">A · 强核验</option><option value="B">B · 剧本 / 权威转录核验</option></select></div>
+          <div class="field"><label>影人 / 作者</label><input id="qAuthor" placeholder="影人原话时必填"></div>
+          <div class="field"><label>影片</label><input id="qFilm" placeholder="电影台词时必填"></div>
+          <div class="field"><label>角色</label><input id="qCharacter" placeholder="可留空"></div>
+          <div class="field"><label>分类</label><input id="qCategory" placeholder="如：创作 / 电影与生活"></div>
+          <div class="field"><label>来源标题 *</label><input id="qSourceTitle" placeholder="如：BFI｜…"></div>
+          <div class="field"><label>来源类型 *</label><input id="qSourceType" placeholder="原始采访 / 剧本核验 / 权威引录"></div>
+          <div class="field wide"><label>来源 URL *</label><input id="qSourceUrl" placeholder="https://…"></div>
+          <div class="field wide"><label>翻译说明</label><input id="qTranslation" value="中文为收藏夹展示用自译/意译，不声称为官方译文。"></div>
+          <div class="field wide"><div><button class="btn gold" id="qAdd">＋ 新增到自定义格言库</button></div></div>
+        </div>
+        <div class="toolbar"><input id="quoteSearch" placeholder="搜索格言、影人、影片或来源…"><select id="quoteFilter"><option value="">全部格言</option><option value="default">默认库</option><option value="custom">自定义</option><option value="disabled">已停用默认项</option></select></div>
+        <div class="quote-list" id="quoteList"><div class="empty">正在读取格言库…</div></div>
+      </div></section>
+    </section>
+
+    <section class="view" id="view-data">
+      <div class="data-grid">
+        <section class="panel"><div class="panel-head"><h2>内容中心数据</h2></div><div class="panel-body note">文案与格言单独保存在浏览器 localStorage 中，不写入 TMDb Key。可以单独导出内容中心配置，便于在不同设备间迁移。</div><div class="panel-body"><button class="btn" id="exportContent">导出内容中心 JSON</button> <label class="btn">导入内容中心 JSON<input id="importContent" type="file" accept="application/json" hidden></label></div></section>
+        <section class="danger-box"><b>重置内容中心</b><p class="note">只清除自定义文案、自定义格言和默认格言停用状态，不会删除影视库、观看记录、计划或 TMDb 设置。</p><button class="btn danger" id="resetContent">清除内容中心自定义数据</button></section>
+      </div>
+    </section>
+  </main>
+</div>
+<iframe src="index.html" class="hidden-frame" id="sourceFrame" title="读取前台内容"></iframe>
+<div class="toast" id="toast"></div>
+<script src="content-center.js"></script>
+<script>
+(() => {
+  const CC=window.MovieCollectionContentCenter;
+  const $=s=>document.querySelector(s);
+  const toast=msg=>{const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),1800)};
+  let draft=CC.load();
+  let defaults=[];
+  let customQuotes=[];
+  let disabledDefaultIds=[];
+
+  document.querySelectorAll('.nav button').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===btn));
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${btn.dataset.tab}`));
+    if(btn.dataset.tab==='quotes') renderQuotes();
+  }));
+
+  const groups=[...new Set(CC.schema.map(x=>x.group))];
+  groups.forEach(g=>$('#copyGroup').insertAdjacentHTML('beforeend',`<option value="${g}">${g}</option>`));
+
+  function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function renderCopy(){
+    const q=$('#copySearch').value.trim().toLowerCase(),group=$('#copyGroup').value;
+    const rows=CC.schema.filter(item=>(!group||item.group===group)&&(!q||`${item.label} ${item.group} ${item.defaultValue}`.toLowerCase().includes(q)));
+    $('#copyList').innerHTML=rows.map(item=>{
+      const custom=Object.prototype.hasOwnProperty.call(draft.values,item.key);
+      const value=custom?draft.values[item.key]:item.defaultValue;
+      return `<div class="copy-row" data-key="${escapeHtml(item.key)}"><div class="copy-meta"><b>${escapeHtml(item.label)}</b><span>${escapeHtml(item.group)} · ${escapeHtml(item.key)}</span></div><textarea class="copy-input" rows="2">${escapeHtml(value)}</textarea><div><div class="status ${custom?'custom':''}">${custom?'已自定义':'默认'}</div><button class="btn" data-reset-copy style="margin-top:7px;width:100%;padding:6px 8px">恢复</button></div></div>`
+    }).join('')||'<div class="empty">没有匹配的文案字段。</div>';
+    document.querySelectorAll('.copy-row').forEach(row=>{
+      const key=row.dataset.key,item=CC.schema.find(x=>x.key===key),input=row.querySelector('.copy-input');
+      input.addEventListener('input',()=>{if(input.value===item.defaultValue)delete draft.values[key];else draft.values[key]=input.value;renderOverview();row.querySelector('.status').textContent=Object.prototype.hasOwnProperty.call(draft.values,key)?'已自定义':'默认';row.querySelector('.status').classList.toggle('custom',Object.prototype.hasOwnProperty.call(draft.values,key))});
+      row.querySelector('[data-reset-copy]').addEventListener('click',()=>{delete draft.values[key];input.value=item.defaultValue;row.querySelector('.status').textContent='默认';row.querySelector('.status').classList.remove('custom');renderOverview()});
+    });
+  }
+
+  $('#copySearch').addEventListener('input',renderCopy);$('#copyGroup').addEventListener('change',renderCopy);
+  $('#copySave').addEventListener('click',()=>{draft=CC.save(draft);renderCopy();renderOverview();toast('全站文案已保存')});
+  $('#copyResetAll').addEventListener('click',()=>{if(!confirm('恢复全部文案为默认值？'))return;draft.values={};renderCopy();renderOverview();toast('已恢复默认，点击“保存全部修改”后生效')});
+
+  function frameDefaults(){
+    try{return $('#sourceFrame').contentWindow?.MovieQuoteEngine?.getAll?.()||[]}catch{return []}
+  }
+  $('#sourceFrame').addEventListener('load',()=>{setTimeout(()=>{defaults=frameDefaults();renderOverview();renderQuotes()},100)});
+
+  function loadQuoteState(){const st=CC.quote.load();customQuotes=st.custom||[];disabledDefaultIds=st.disabledDefaultIds||[]}
+  loadQuoteState();
+
+  function quoteCredit(q){return q.type==='movie_line'?`《${q.film||'未知影片'}》${q.character?` · ${q.character}`:''}`:(q.author||'未知影人')}
+  function renderQuotes(){
+    if(!defaults.length)defaults=frameDefaults();
+    loadQuoteState();
+    const q=$('#quoteSearch').value.trim().toLowerCase(),filter=$('#quoteFilter').value,disabled=new Set(disabledDefaultIds);
+    const all=[...defaults.map(x=>({...x,_origin:'default',_disabled:disabled.has(x.id)})),...customQuotes.map(x=>({...x,_origin:'custom',_disabled:x.enabled===false}))];
+    const rows=all.filter(x=>{
+      if(filter==='default'&&x._origin!=='default')return false;if(filter==='custom'&&x._origin!=='custom')return false;if(filter==='disabled'&&!x._disabled)return false;
+      return !q||`${x.textZh} ${x.author||''} ${x.film||''} ${x.sourceTitle||''}`.toLowerCase().includes(q)
+    });
+    $('#quoteList').innerHTML=rows.map(x=>`<div class="quote-row"><div><div class="quote-text">“${escapeHtml(x.textZh)}”</div><div class="quote-credit">— ${escapeHtml(quoteCredit(x))}</div><div class="quote-actions">${x.sourceUrl?`<a class="btn" target="_blank" rel="noopener" href="${escapeHtml(x.sourceUrl)}">查看来源 ↗</a>`:''}${x._origin==='default'?`<button class="btn ${x._disabled?'gold':''}" data-toggle-default="${escapeHtml(x.id)}">${x._disabled?'重新启用':'停用此条'}</button>`:`<button class="btn danger" data-delete-custom="${escapeHtml(x.id)}">删除自定义</button>`}</div></div><div class="quote-meta"><span><b>${x._origin==='default'?'默认库':'自定义'}</b>${x._disabled?' · 已停用':''}</span><span>核验：<b>${escapeHtml(x.verification||'—')}</b></span><span>分类：<b>${escapeHtml(x.category||'—')}</b></span><span>来源：<b>${escapeHtml(x.sourceType||'—')}</b></span><span>${escapeHtml(x.sourceTitle||'—')}</span></div></div>`).join('')||'<div class="empty">没有匹配的格言。</div>';
+    document.querySelectorAll('[data-toggle-default]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.toggleDefault,set=new Set(disabledDefaultIds);set.has(id)?set.delete(id):set.add(id);disabledDefaultIds=[...set];CC.quote.save({custom:customQuotes,disabledDefaultIds});renderQuotes();renderOverview();toast('格言状态已更新')}));
+    document.querySelectorAll('[data-delete-custom]').forEach(btn=>btn.addEventListener('click',()=>{if(!confirm('删除这条自定义格言？'))return;customQuotes=customQuotes.filter(x=>x.id!==btn.dataset.deleteCustom);CC.quote.save({custom:customQuotes,disabledDefaultIds});renderQuotes();renderOverview();toast('已删除自定义格言')}));
+  }
+  $('#quoteSearch').addEventListener('input',renderQuotes);$('#quoteFilter').addEventListener('change',renderQuotes);
+
+  $('#qAdd').addEventListener('click',()=>{
+    const type=$('#qType').value,textZh=$('#qText').value.trim(),author=$('#qAuthor').value.trim(),film=$('#qFilm').value.trim(),sourceTitle=$('#qSourceTitle').value.trim(),sourceType=$('#qSourceType').value.trim(),sourceUrl=$('#qSourceUrl').value.trim();
+    if(!textZh||!sourceTitle||!sourceType||!sourceUrl)return toast('请补齐文本与来源信息');
+    if(type==='filmmaker_quote'&&!author)return toast('影人原话必须填写影人 / 作者');
+    if(type==='movie_line'&&!film)return toast('电影台词必须填写影片');
+    try{const u=new URL(sourceUrl);if(!/^https?:$/.test(u.protocol))throw 0}catch{return toast('来源 URL 格式不正确')}
+    const item={id:`C${Date.now()}`,type,textZh,author:author||null,film:film||null,character:$('#qCharacter').value.trim()||null,category:$('#qCategory').value.trim()||'未分类',verification:$('#qVerification').value,sourceTitle,sourceUrl,sourceType,translationNote:$('#qTranslation').value.trim()||'中文为收藏夹展示用自译/意译，不声称为官方译文。',enabled:true};
+    customQuotes.push(item);CC.quote.save({custom:customQuotes,disabledDefaultIds});['#qText','#qAuthor','#qFilm','#qCharacter','#qCategory','#qSourceTitle','#qSourceType','#qSourceUrl'].forEach(s=>$(s).value='');renderQuotes();renderOverview();toast('自定义格言已加入')
+  });
+
+  function renderOverview(){
+    const state=draft||CC.load(),quoteState=CC.quote.load();
+    $('#statCopyTotal').textContent=CC.schema.length;$('#statCopyCustom').textContent=Object.keys(state.values||{}).length;
+    $('#statQuoteTotal').textContent=defaults.length?defaults.length+(quoteState.custom||[]).length:'—';
+    const ts=[state.updatedAt,quoteState.updatedAt].filter(Boolean).sort().at(-1);$('#statUpdated').textContent=ts?ts.slice(5,16).replace('T',' '):'—';
+  }
+
+  $('#exportContent').addEventListener('click',()=>{const payload={schemaVersion:1,exportedAt:new Date().toISOString(),app:'影视收藏夹内容中心',copy:CC.load(),quotes:CC.quote.load()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`影视收藏夹_内容中心_${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);toast('内容中心 JSON 已导出')});
+  $('#importContent').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const p=JSON.parse(await f.text());if(!p.copy||!p.quotes)throw new Error();draft=CC.save(p.copy);CC.quote.save(p.quotes);loadQuoteState();renderCopy();renderQuotes();renderOverview();toast('内容中心数据已导入')}catch{toast('导入失败：文件格式不正确')}e.target.value=''});
+  $('#resetContent').addEventListener('click',()=>{if(!confirm('确认清除全部内容中心自定义数据？影视数据不会受影响。'))return;localStorage.removeItem(CC.key);localStorage.removeItem(CC.quoteKey);draft=CC.load();loadQuoteState();renderCopy();renderQuotes();renderOverview();toast('内容中心已恢复默认')});
+
+  renderCopy();renderOverview();
+})();
+</script>
+</body>
+</html>
