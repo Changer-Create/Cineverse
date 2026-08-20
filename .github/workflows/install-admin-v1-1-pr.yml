@@ -20,19 +20,17 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import re, base64, gzip
-          workflow=Path('.github/workflows/install-admin-v1-1.yml').read_text(encoding='utf-8')
-          m=re.search(r"cat > /tmp/admin-data\.js\.gz\.b64 <<'EOF'\n(.*?)\nEOF",workflow,re.S)
-          if not m:
-              raise SystemExit('staged admin payload not found')
-          Path('admin-data.js').write_bytes(gzip.decompress(base64.b64decode(m.group(1).strip())))
+          import base64, gzip
+          payload=''.join(Path(f'.v11-payload/part{i}').read_text(encoding='utf-8').strip() for i in range(1,5))
+          Path('admin-data.js').write_bytes(gzip.decompress(base64.b64decode(payload)))
 
           admin=Path('admin.html')
           a=admin.read_text(encoding='utf-8')
           marker='<script src="admin-data.js"></script>'
           if marker not in a:
-              a=a.replace('</body>',marker+'\n</body>',1)
-              admin.write_text(a,encoding='utf-8')
+              if '</body>' not in a:
+                  raise SystemExit('admin body marker missing')
+              admin.write_text(a.replace('</body>',marker+'\n</body>',1),encoding='utf-8')
 
           index=Path('index.html')
           s=index.read_text(encoding='utf-8')
@@ -48,6 +46,7 @@ jobs:
           node --check admin-data.js
           grep -q 'admin-data.js' admin.html
           grep -q 'appState.home?.featured' index.html
+          rm -rf .v11-payload
           rm -f .github/workflows/install-admin-v1-1.yml .github/workflows/install-admin-v1-1-pr.yml .admin-v1-1-trigger
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
