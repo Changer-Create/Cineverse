@@ -15,6 +15,31 @@
   };
 
   const sameRating = (a, b) => Object.is(normalRating(a), normalRating(b));
+  let pendingMovieFormRatingEdit = null;
+
+  function captureMovieFormRatingEdit(form) {
+    if (form?.id !== 'movieForm') return;
+    const rawTmdbId = String(document.getElementById('movieTmdbIdInput')?.value || '').trim();
+    const parsedTmdbId = rawTmdbId === '' ? null : Number(rawTmdbId);
+    pendingMovieFormRatingEdit = {
+      rating: normalRating(document.getElementById('movieRatingInput')?.value),
+      mediaType: document.getElementById('movieMediaTypeInput')?.value === 'tv' ? 'tv' : 'movie',
+      tmdbId: Number.isFinite(parsedTmdbId) ? parsedTmdbId : null,
+      title: String(document.getElementById('movieTitleInput')?.value || '').trim(),
+      originalTitle: String(document.getElementById('movieOriginalTitleInput')?.value || '').trim()
+    };
+    queueMicrotask(() => { pendingMovieFormRatingEdit = null; });
+  }
+
+  function isPendingMovieFormTarget(movie, currentRating) {
+    const edit = pendingMovieFormRatingEdit;
+    if (!edit || !sameRating(edit.rating, currentRating)) return false;
+    const mediaType = movie?.mediaType === 'tv' ? 'tv' : 'movie';
+    if (mediaType !== edit.mediaType) return false;
+    if (edit.tmdbId != null) return Number(movie?.info?.tmdbId) === edit.tmdbId;
+    return String(movie?.info?.title || '').trim() === edit.title
+      && String(movie?.info?.originalTitle || '').trim() === edit.originalTitle;
+  }
 
   function historyRows(movie) {
     return Array.isArray(movie?.watchHistory) ? movie.watchHistory : [];
@@ -60,7 +85,9 @@
     const personalChanged = hasPrevious && !sameRating(currentRating, previousMovie?.personal?.rating);
     let changed = false;
 
-    if (hasPrevious && !historyChanged && personalChanged) {
+    // watchHistory 是存在观看记录时的评分事实源。
+    // 仅“编辑影视资料”中的显式评分提交，被解释为修改最新观看记录的命令。
+    if (hasPrevious && !historyChanged && personalChanged && isPendingMovieFormTarget(movie, currentRating)) {
       if (!sameRating(latest.rating, currentRating)) {
         latest.rating = currentRating;
         changed = true;
@@ -157,6 +184,10 @@
     language.dispatchEvent(new Event('change', { bubbles: true }));
     queueMicrotask(renderDetailRatingFromStorage);
   }
+
+  document.addEventListener('submit', e => {
+    if (e.target?.id === 'movieForm') captureMovieFormRatingEdit(e.target);
+  }, true);
 
   document.addEventListener('click', e => {
     if (e.target.closest?.('[data-delete-watch]')) setTimeout(renderDetailRatingFromStorage, 0);
