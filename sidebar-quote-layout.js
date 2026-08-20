@@ -50,7 +50,7 @@
         #sidebarQuoteCard{
           min-height:0!important;
           max-height:none!important;
-          overflow:visible!important;
+          overflow:hidden!important;
           padding:14px 14px 12px!important;
           flex:0 0 auto!important;
         }
