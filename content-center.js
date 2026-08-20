@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const isAdminConsole=/(?:^|\/)admin-console\.html$/i.test(location.pathname);
-  document.write('<script src="site-brand.js"></script><script src="nav-order.js"></script>');
+  document.write('<script src="site-brand.js"></script><script src="nav-order.js"></script><script src="library-pagination-top.js"></script>');
   if(isAdminConsole){
     document.documentElement.style.visibility='hidden';
     let token='';
