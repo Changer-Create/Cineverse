@@ -1869,5 +1869,6 @@
   const initial=location.hash.replace('#','');if(initial.startsWith('detail/')){const id=decodeURIComponent(initial.slice(7));if(appState.movies.some(m=>m.id===id)){detailState.movieId=id;setView('detail')}else setView('library')}else setView(['library','match','radar','plan','watched','stats','settings'].includes(initial)?initial:'home');
 })();
 </script>
+<script src="content-center.js"></script>
 </body>
 </html>
