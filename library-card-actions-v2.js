@@ -18,6 +18,7 @@
   };
   const getState = () => safeParse(localStorage.getItem(STORAGE_KEY));
   const saveState = state => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const esc = value => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
   function migrateFollowStatuses({ reload = false } = {}) {
     const state = getState();
@@ -56,8 +57,14 @@
     style.textContent = `
       #libraryGrid .lib-poster[data-open-detail]{cursor:pointer}
       #libraryGrid .lib-poster[data-open-detail]:focus-visible{outline:2px solid rgba(159,124,255,.8);outline-offset:-2px}
-      #libraryGrid .lib-actions{grid-template-columns:1fr 1fr}
-      #libraryGrid .lib-actions button{min-width:0}
+      #libraryGrid .lib-card > .status-pill{display:none!important}
+      #libraryGrid .lib-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;align-items:stretch!important}
+      #libraryGrid .lib-actions button{width:100%!important;min-width:0!important;height:30px!important;margin:0!important;padding:0 6px!important;display:flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important}
+      #libraryGrid .lib-actions button.library-status-btn.want{color:#d8cfff;border-color:rgba(159,124,255,.28);background:rgba(107,74,200,.18)}
+      #libraryGrid .lib-actions button.library-status-btn.watched{color:#8ce7bb;border-color:rgba(98,210,162,.24);background:rgba(37,128,91,.16)}
+      #libraryGrid .lib-actions button.library-status-btn.watching{color:#9fd4ff;border-color:rgba(100,167,255,.25);background:rgba(46,93,160,.18)}
+      #libraryGrid .lib-actions button.library-status-btn.paused,
+      #libraryGrid .lib-actions button.library-status-btn.dropped{color:#b3bbcf}
       #libraryPlanDialog{width:min(420px,calc(100vw - 28px));border:1px solid rgba(161,179,255,.22);border-radius:20px;background:linear-gradient(160deg,rgba(11,23,52,.98),rgba(7,16,38,.98));color:#f7f3ff;padding:0;box-shadow:0 28px 80px rgba(0,0,0,.5)}
       #libraryPlanDialog::backdrop{background:rgba(2,6,17,.7);backdrop-filter:blur(6px)}
       .library-plan-head{padding:20px 22px 8px}
@@ -115,18 +122,25 @@
       });
       if (movieStatus.value === 'follow' || !movieStatus.value) movieStatus.value = 'want';
     }
+  }
 
-    document.querySelectorAll('.status-pill.follow').forEach(pill => {
-      pill.classList.remove('follow');
-      pill.classList.add('want');
-      pill.textContent = '想看';
-    });
+  function statusInfo(movie) {
+    const status = movie?.personal?.status === 'follow' ? 'want' : (movie?.personal?.status || 'want');
+    if (movie?.mediaType === 'tv') {
+      if (status === 'watching') return ['watching', '在看'];
+      if (status === 'watched') return ['watched', '已看完'];
+      if (status === 'paused') return ['paused', '暂停'];
+      if (status === 'dropped') return ['dropped', '弃剧'];
+      return ['want', '想看'];
+    }
+    return status === 'watched' ? ['watched', '已看'] : ['want', '想看'];
   }
 
   function rebuildCardActions(card) {
     const edit = card.querySelector('[data-edit-id]');
     const cycle = card.querySelector('[data-cycle-status]');
-    const id = edit?.dataset.editId || cycle?.dataset.cycleStatus || card.querySelector('[data-select-id]')?.dataset.selectId || '';
+    const existingStatus = card.querySelector('[data-library-status]');
+    const id = edit?.dataset.editId || cycle?.dataset.cycleStatus || existingStatus?.dataset.libraryStatus || card.querySelector('[data-select-id]')?.dataset.selectId || '';
     if (!id) return;
 
     const poster = card.querySelector('.lib-poster');
@@ -137,13 +151,19 @@
       poster.setAttribute('aria-label', '打开作品详情');
     }
 
+    const state = getState();
+    const movie = state?.movies?.find(m => String(m.id) === String(id));
+    const [statusClass, statusLabel] = statusInfo(movie);
+
     const actions = card.querySelector('.lib-actions');
     if (!actions) return;
-    if (actions.dataset.libraryActionsV2 === id) return;
-    actions.dataset.libraryActionsV2 = id;
+    const signature = `${id}|${statusClass}`;
+    if (actions.dataset.libraryActionsV2 === signature) return;
+    actions.dataset.libraryActionsV2 = signature;
     actions.innerHTML = `
-      <button type="button" data-edit-id="${String(id).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}">编辑</button>
-      <button type="button" data-library-plan="${String(id).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}">计划</button>`;
+      <button type="button" class="library-status-btn ${esc(statusClass)}" data-library-status="${esc(id)}">${esc(statusLabel)}</button>
+      <button type="button" data-edit-id="${esc(id)}">编辑</button>
+      <button type="button" data-library-plan="${esc(id)}">计划</button>`;
   }
 
   function decorateLibraryCards() {
@@ -192,7 +212,41 @@
     location.reload();
   }
 
+  function toggleStatus(movieId) {
+    const state = getState();
+    const movie = state?.movies?.find(m => String(m.id) === String(movieId));
+    if (!movie) return;
+    movie.personal = movie.personal || {};
+    if (movie.mediaType === 'tv') {
+      const order = ['want', 'watching', 'watched', 'paused', 'dropped'];
+      const current = movie.personal.status === 'follow' ? 'want' : (movie.personal.status || 'want');
+      const idx = Math.max(0, order.indexOf(current));
+      movie.personal.status = order[(idx + 1) % order.length];
+    } else {
+      const current = movie.personal.status === 'watched' ? 'watched' : 'want';
+      movie.personal.status = current === 'watched' ? 'want' : 'watched';
+      if (movie.personal.status === 'watched') {
+        movie.watchHistory = Array.isArray(movie.watchHistory) ? movie.watchHistory : [];
+        if (!movie.watchHistory.some(w => w?.date === today())) {
+          movie.watchHistory.push({ date: today(), rating: movie.personal.rating ?? null, note: '', venue: '' });
+        }
+      }
+    }
+    movie.updatedAt = new Date().toISOString();
+    saveState(state);
+    location.hash = 'library';
+    location.reload();
+  }
+
   document.addEventListener('click', event => {
+    const statusButton = event.target.closest?.('[data-library-status]');
+    if (statusButton && statusButton.closest('#libraryGrid')) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      toggleStatus(statusButton.dataset.libraryStatus);
+      return;
+    }
     const planButton = event.target.closest?.('[data-library-plan],[data-cycle-status]');
     if (planButton && planButton.closest('#libraryGrid')) {
       event.preventDefault();
