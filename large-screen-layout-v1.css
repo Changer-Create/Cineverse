@@ -25,4 +25,9 @@
   #matchView .match-panel {
     margin-top: 20px;
   }
+
+  #detailView .detail-shell {
+    width: 100%;
+    max-width: 2200px;
+  }
 }
