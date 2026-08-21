@@ -1,10 +1,12 @@
 const { execFileSync } = require('node:child_process');
+const { existsSync } = require('node:fs');
 const { join } = require('node:path');
 
 const root = join(__dirname, '..');
 const files = execFileSync('git', ['ls-files', '*.js'], { cwd: root, encoding: 'utf8' })
   .split(/\r?\n/)
   .filter(Boolean)
+  .filter(file => existsSync(join(root, file)))
   .sort();
 
 for (const file of files) {
