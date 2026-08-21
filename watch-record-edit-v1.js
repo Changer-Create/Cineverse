@@ -145,13 +145,30 @@
     const style = document.createElement('style');
     style.id = 'watchRecordEditV1Style';
     style.textContent = `
+      #detailWatchList{
+        align-content:start;
+        align-self:start;
+      }
+      #detailWatchList .watch-entry{
+        align-items:start;
+        min-height:0;
+        height:auto;
+        overflow:hidden;
+      }
+      #detailWatchList .watch-entry > *{
+        min-width:0;
+      }
+      #detailWatchList .watch-copy{
+        overflow-wrap:anywhere;
+        word-break:break-word;
+      }
       #detailWatchList .watch-record-actions{
         display:flex;align-items:center;justify-content:flex-end;gap:7px;
-        width:max-content;min-width:max-content;justify-self:end;align-self:center;
+        width:max-content;min-width:max-content;justify-self:end;align-self:start;
       }
       #detailWatchList .watch-record-edit-btn{
-        min-width:48px;height:38px;padding:0 10px;display:inline-grid;place-items:center;flex:0 0 auto;
-        border:1px solid rgba(161,179,255,.18);border-radius:11px;
+        min-width:48px;height:30px;padding:0 10px;display:inline-grid;place-items:center;flex:0 0 auto;
+        border:1px solid rgba(161,179,255,.18);border-radius:9px;
         background:rgba(15,29,63,.7);color:#b9c5df;font-size:11px;line-height:1;
         transition:.16s ease;margin:0;
       }
