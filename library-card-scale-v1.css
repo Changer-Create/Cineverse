@@ -1,0 +1,81 @@
+/* Cineverse library card scale tuning: visual-only overrides. */
+@media (min-width:821px){
+  #libraryGrid:not(.list-view) .lib-card{
+    grid-template-columns:150px minmax(0,1fr)!important;
+    height:226px!important;
+    min-height:226px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-poster{
+    width:140px!important;
+    height:210px!important;
+    aspect-ratio:2/3!important;
+    margin:8px 0 8px 8px!important;
+    border-radius:13px!important;
+  }
+  #libraryGrid:not(.list-view) .poster-title{
+    padding:12px!important;
+    font-size:17px!important;
+    line-height:1.4!important;
+  }
+  #libraryGrid:not(.list-view) .lib-body{
+    padding:13px 13px 11px 10px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-title{
+    font-size:19px!important;
+    line-height:1.34!important;
+    min-height:26px!important;
+  }
+  #libraryGrid:not(.list-view) .media-type-pill{
+    font-size:10px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-meta{
+    margin-top:6px!important;
+    font-size:13px!important;
+    line-height:1.55!important;
+    min-height:20px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-rating.library-score-row{
+    gap:7px!important;
+    margin-top:8px!important;
+  }
+  #libraryGrid:not(.list-view) .library-score-box{
+    padding:7px 9px!important;
+  }
+  #libraryGrid:not(.list-view) .library-score-box span{
+    font-size:10px!important;
+  }
+  #libraryGrid:not(.list-view) .library-score-box b{
+    margin-top:3px!important;
+    font-size:15px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-tags{
+    margin-top:8px!important;
+    min-height:22px!important;
+    max-height:24px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-tag{
+    padding:3px 7px!important;
+    font-size:10px!important;
+  }
+  #libraryGrid:not(.list-view) .lib-actions.library-actions-system-v1>*{
+    height:32px!important;
+    padding:0 7px!important;
+    font-size:11px!important;
+  }
+  #libraryGrid:not(.list-view) .fav-star,
+  #libraryGrid:not(.list-view) .library-delete-btn{
+    width:30px!important;
+    height:30px!important;
+    top:9px!important;
+  }
+  #libraryGrid:not(.list-view) .fav-star{right:43px!important}
+  #libraryGrid:not(.list-view) .library-delete-btn{right:9px!important;font-size:17px!important}
+  #libraryGrid:not(.list-view) .lib-title-wrap{padding-right:72px!important}
+}
+
+/* Keep list view compact, but improve readability slightly. */
+#libraryGrid.list-view .lib-title{font-size:15px!important}
+#libraryGrid.list-view .lib-meta{font-size:11px!important}
+#libraryGrid.list-view .library-score-box span{font-size:9px!important}
+#libraryGrid.list-view .library-score-box b{font-size:12px!important}
+#libraryGrid.list-view .lib-actions.library-actions-system-v1>*{font-size:10px!important}
