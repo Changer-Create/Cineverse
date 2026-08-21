@@ -15,6 +15,10 @@ test('superseded runtime implementations stay removed', () => {
     'library-filter-controls-v3.js',
     'library-filter-experience-v2.js',
     'library-display-experience-v1.js',
+    'cloud-auth-redirect-fix.js',
+    'cloud-local-edit-baseline-guard-v1.js',
+    'cloud-local-edit-baseline-guard-v2.js',
+    'cloud-pending-memory.js',
   ]) {
     assert.equal(existsSync(join(root, file)), false, `${file} must not return to the runtime`);
   }
@@ -28,7 +32,12 @@ test('runtime manifest retains each active replacement', () => {
     'radar-experience-v3.js',
     'rating-sync-v3.js',
     'library-filter-system-v1.js',
+    'cloud-pending-volatile-v1.js',
   ]) {
     assert.ok(runtime.includes(`'${file}`), `Missing active replacement: ${file}`);
   }
+});
+
+test('dated application snapshots are not published as alternate entry points', () => {
+  assert.equal(existsSync(join(root, 'index(20260820-023858).html')), false);
 });

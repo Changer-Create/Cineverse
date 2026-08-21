@@ -81,7 +81,7 @@
     if(!FRONT_PAGE||observer)return;
     const nav=document.querySelector('.sidebar .nav');
     if(!nav)return;
-    observer=new MutationObserver(records=>{
+    observer=new window.MovieMutationObserver(records=>{
       if(records.some(record=>record.type==='childList'))schedule();
     });
     observer.observe(nav,{childList:true});

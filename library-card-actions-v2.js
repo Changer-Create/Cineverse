@@ -420,7 +420,7 @@
 
     const grid = document.getElementById('libraryGrid');
     if (grid) {
-      const observer = new MutationObserver(scheduleDecorate);
+      const observer = new window.MovieMutationObserver(scheduleDecorate);
       observer.observe(grid, { childList: true });
     }
   }

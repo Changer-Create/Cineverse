@@ -277,7 +277,7 @@
     syncPreviewWantUi();
 
     const grid = document.getElementById('radarPageGrid');
-    if (grid) new MutationObserver(enhanceRadarCards).observe(grid, { childList: true, subtree: true });
+    if (grid) new window.MovieMutationObserver(enhanceRadarCards).observe(grid, { childList: true, subtree: true });
   }
 
   document.addEventListener('click', event => {

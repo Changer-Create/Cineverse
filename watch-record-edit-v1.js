@@ -297,7 +297,7 @@
     decorateWatchRows();
     const list = document.getElementById('detailWatchList');
     if (list) {
-      new MutationObserver(() => decorateWatchRows()).observe(list, { childList:true, subtree:true });
+      new window.MovieMutationObserver(() => decorateWatchRows()).observe(list, { childList:true, subtree:true });
     }
     const modal = document.getElementById('watchModal');
     modal?.addEventListener('close', () => {

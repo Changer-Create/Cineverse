@@ -104,7 +104,7 @@
     if(isAdmin||guardObserver)return;
     const brand=document.querySelector('.sidebar .brand');
     if(!brand)return;
-    guardObserver=new MutationObserver(()=>{
+    guardObserver=new window.MovieMutationObserver(()=>{
       clearTimeout(guardTimer);
       guardTimer=setTimeout(()=>{
         const state=load();

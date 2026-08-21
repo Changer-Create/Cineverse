@@ -29,7 +29,7 @@
 
 ### 3.2 未被当前入口加载的候选文件
 
-> 进展：在建立运行时清单、资源存在性和替代模块回归检查后，下表的「旧版本」、「隔离/回滚残留」和「旧筛选链」已按独立提交删除。表格保留初次审计结论，便于追溯删除依据；云同步补丁残留和历史快照仍未处理。
+> 进展：在建立运行时清单、资源存在性和替代模块回归检查后，下表的候选文件已按独立提交全部删除。表格保留初次审计结论，便于追溯删除依据；其中云同步候选均为未装载补丁，现行语义由 `cloud-auth-v5.js` 与 `cloud-pending-volatile-v1.js` 承担。
 
 | 类别 | 文件 | 建议 |
 | --- | --- | --- |
@@ -45,8 +45,8 @@
 
 1. **零自动化测试与零 CI。** 所有行为变更都只能靠人工发现，与近期连续「重构 → hotfix → rollback → quarantine → 重新收口」的提交链相互印证。
 2. **持久化链由多层全局补丁组成。** 当前加载链中，`global-config-sync.js`、`home-month-insight-v2.js`、`cloud-pending-volatile-v1.js` 和 `cloud-auth-v5.js` 都包装 `Storage.prototype`；最终语义取决于脚本顺序。任一模块若保存错误的「previous」函数、抛异常或不传递 `this`，都可能破坏同步。
-3. **序列化是全局副作用。** `rating-sync-v3.js` 直接替换 `JSON.stringify`。这会影响页面上所有业务、第三方 SDK 与后续脚本，也使单元测试隔离困难。
-4. **浏览器原语还有额外替换。** `content-observer-shield.js` 替换 `window.MutationObserver`，`tmdb-alias-match.js` 替换 `window.fetch`。与 Storage/JSON 补丁一样，它们应被视为有明确契约和顺序的基础设施，而不是普通功能脚本。
+3. **全局序列化副作用（已收口）。** 初次审计时 `rating-sync-v3.js` 直接替换 `JSON.stringify`；现已改为由应用 `save()` 边界显式调用 `MovieRatingSync.syncState`，不再影响无关业务或第三方 SDK。
+4. **浏览器原语替换（已收口）。** 初次审计时 `content-observer-shield.js` 替换 `window.MutationObserver`，`tmdb-alias-match.js` 替换 `window.fetch`。现已分别改为显式 `MovieMutationObserver` 和 `MovieTmdbAliasMatch.enrich` 边界，不再改写浏览器全局原语；回归测试会阻止全局替换被重新引入。
 
 ### P1：高回归/冲突风险
 

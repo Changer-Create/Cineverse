@@ -204,7 +204,7 @@
     normalizeVisibleLabels();
     const grid = document.getElementById('libraryGrid');
     if (grid) {
-      new MutationObserver(() => {
+      new window.MovieMutationObserver(() => {
         const changed = normalizeStoredState();
         if (changed) {
           location.reload();

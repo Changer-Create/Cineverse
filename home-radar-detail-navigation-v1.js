@@ -261,11 +261,11 @@
 
     const randomTitle = document.getElementById('randomTitle');
     const randomPoster = document.getElementById('randomPoster');
-    if (randomTitle) new MutationObserver(syncRandomPosterLink).observe(randomTitle, { childList: true, characterData: true, subtree: true });
-    if (randomPoster) new MutationObserver(syncRandomPosterLink).observe(randomPoster, { childList: true, subtree: true });
+    if (randomTitle) new window.MovieMutationObserver(syncRandomPosterLink).observe(randomTitle, { childList: true, characterData: true, subtree: true });
+    if (randomPoster) new window.MovieMutationObserver(syncRandomPosterLink).observe(randomPoster, { childList: true, subtree: true });
 
     const radarGrid = document.getElementById('radarPageGrid');
-    if (radarGrid) new MutationObserver(annotateRadarPosters).observe(radarGrid, { childList: true, subtree: true });
+    if (radarGrid) new window.MovieMutationObserver(annotateRadarPosters).observe(radarGrid, { childList: true, subtree: true });
   }
 
   document.addEventListener('click', event => {

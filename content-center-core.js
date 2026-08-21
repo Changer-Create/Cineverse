@@ -246,7 +246,7 @@
     enhanceQuoteCard();
 
     let timer=0;
-    const observer=new MutationObserver(()=>{
+    const observer=new window.MovieMutationObserver(()=>{
       if(applying) return;
       clearTimeout(timer);
       timer=setTimeout(()=>{applyCopy();enhanceQuoteCard()},80);
