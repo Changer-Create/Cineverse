@@ -1,0 +1,39 @@
+/* Settings responsive guard: switch layout by available settings width, not only viewport width. */
+#settingsView .settings-shell{container-type:inline-size}
+
+@container (max-width:1080px){
+  #settingsView .settings-layout{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:
+      "profile"
+      "tmdb"
+      "appearance"
+      "douban"
+      "data"!important;
+    gap:16px!important;
+  }
+  #settingsView .settings-layout .settings-card{height:auto!important}
+}
+
+@container (max-width:720px){
+  #settingsView .profile-editor{grid-template-columns:1fr!important}
+  #settingsView .setting-row{grid-template-columns:1fr!important}
+  #settingsView .setting-control{justify-content:flex-start!important}
+  #settingsView .setting-control input[type="range"]{width:100%!important}
+}
+
+@supports not (container-type:inline-size){
+  @media (max-width:1400px){
+    #settingsView .settings-layout{
+      grid-template-columns:minmax(0,1fr)!important;
+      grid-template-areas:
+        "profile"
+        "tmdb"
+        "appearance"
+        "douban"
+        "data"!important;
+      gap:16px!important;
+    }
+    #settingsView .settings-layout .settings-card{height:auto!important}
+  }
+}
