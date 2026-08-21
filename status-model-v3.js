@@ -17,6 +17,23 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     localStorage.setItem(CLOUD_DIRTY_KEY, '1');
   };
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  async function waitForCloudAccount(timeout=2200) {
+    const started = Date.now();
+    while (Date.now() - started < timeout) {
+      if (window.MovieCloudAccount?.syncBeforeReload) return window.MovieCloudAccount;
+      await sleep(50);
+    }
+    return window.MovieCloudAccount || null;
+  }
+  async function reloadAfterCloudSync(hash) {
+    if (hash) location.hash = hash;
+    const account = await waitForCloudAccount();
+    if (account?.syncBeforeReload) {
+      try { await Promise.race([account.syncBeforeReload(), sleep(2600)]); } catch {}
+    }
+    location.reload();
+  }
 
   function normalizedStatus(movie, rawStatus) {
     const raw = String(rawStatus || 'want');
@@ -95,7 +112,7 @@
     try { return decodeURIComponent(raw.slice(7)); } catch { return raw.slice(7); }
   }
 
-  function toggleStatus(movieId) {
+  async function toggleStatus(movieId) {
     const state = getState();
     const movie = state?.movies?.find(item => String(item?.id || '') === String(movieId));
     if (!movie) return;
@@ -114,8 +131,8 @@
 
     movie.updatedAt = new Date().toISOString();
     saveState(state);
-    location.hash = location.hash.startsWith('#detail/') ? location.hash.slice(1) : 'library';
-    location.reload();
+    const nextHash = location.hash.startsWith('#detail/') ? location.hash.slice(1) : 'library';
+    await reloadAfterCloudSync(nextHash);
   }
 
   function normalizeVisibleLabels() {
