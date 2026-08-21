@@ -33,3 +33,6 @@ npm run check     # JavaScript syntax plus tests
 
 The tests intentionally avoid network access and external packages. See `REFACTOR_AUDIT.md` for the
 broader risk inventory and staged refactor plan.
+
+The same `npm run check` command runs for pull requests and pushes to `main` through
+`.github/workflows/check.yml`.

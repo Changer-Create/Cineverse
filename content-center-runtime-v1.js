@@ -3,14 +3,52 @@
   if (window.__CINEVERSE_CONTENT_RUNTIME_V1__) return;
   window.__CINEVERSE_CONTENT_RUNTIME_V1__ = true;
 
+  const resource = (type, src, targets, dependsOn = []) => Object.freeze({
+    id:src.split('?')[0].replace(/\.(?:js|css)$/i, ''),
+    type,
+    src,
+    targets:Object.freeze([...targets]),
+    dependsOn:Object.freeze([...dependsOn]),
+  });
+  const sharedTargets = ['app', 'admin'];
+  const appOnlyModuleIds = new Set([
+    'stats-watch-integration',
+    'ui-theme-system',
+    'ui-theme-seasonal',
+    'ui-theme-seasonal-compat',
+    'ui-theme-forest-bright',
+    'ui-theme-default-backgrounds',
+    'sidebar-quote-layout',
+    'home-radar-detail-navigation-v1',
+    'radar-experience-v3',
+    'radar-preview-want-button-v1',
+    'detail-return-context-v1',
+    'library-card-actions-v2',
+    'status-model-v3',
+    'library-filter-system-v1',
+    'home-month-insight-v2',
+    'home-plan-full-list-v1',
+    'home-random-overview-v2',
+    'rating-sync-v3',
+    'watch-record-edit-v1',
+    'watch-scene-label-direct-v1',
+    'detail-layout-unified-v1',
+    'watch-history-pagination-v1',
+    'cloud-pending-volatile-v1',
+    'cloud-auth-v5',
+    'bug-feedback-v1',
+    'feedback-sidebar-entry-v1',
+    'global-tmdb-search-v2',
+  ]);
+
   const sharedHead = [
-    ['style', 'settings-responsive.css?v=20260821-1028'],
-    ['style', 'large-screen-layout-v1.css?v=20260822-0208'],
-    ['script', 'cineverse-config.js'],
-    ['script', 'global-config-sync.js?v=20260821-1149'],
-    ['script', 'site-brand.js'],
-    ['script', 'nav-order.js'],
-    ['script', 'library-pagination-top.js'],
+    resource('style', 'settings-responsive.css?v=20260821-1028', sharedTargets),
+    resource('style', 'large-screen-layout-v1.css?v=20260822-0208', sharedTargets),
+    resource('script', 'cineverse-config.js', sharedTargets),
+    resource('script', 'global-config-sync.js?v=20260821-1149', sharedTargets, ['cineverse-config']),
+    resource('script', 'site-brand.js', sharedTargets, ['global-config-sync']),
+    resource('script', 'nav-order.js', sharedTargets, ['global-config-sync']),
+    resource('script', 'library-pagination-top.js', sharedTargets),
   ];
 
   const applicationModules = [
@@ -51,17 +89,28 @@
     'bug-feedback-v1.js?v=20260822-0242',
     'feedback-sidebar-entry-v1.js?v=20260822-0302',
     'global-tmdb-search-v2.js?v=20260822-0322',
-  ].map(src => ['script', src]);
+  ].map(src => {
+    const id = src.split('?')[0].replace(/\.js$/i, '');
+    return resource('script', src, appOnlyModuleIds.has(id) ? ['app'] : sharedTargets);
+  });
 
+  const adminAuth = resource('script', 'admin-auth.js', ['admin'], ['cineverse-config']);
   const adminModules = [
-    ['script', 'admin-brand.js'],
-    ['script', 'admin-nav.js'],
+    resource('script', 'admin-brand.js', ['admin'], ['site-brand']),
+    resource('script', 'admin-nav.js', ['admin'], ['nav-order']),
   ];
 
-  const renderResources = resources => resources.map(([type, url]) => (
+  window.CineverseRuntimeManifest = Object.freeze([
+    ...sharedHead,
+    adminAuth,
+    ...applicationModules,
+    ...adminModules,
+  ]);
+
+  const renderResources = resources => resources.map(({ type, src }) => (
     type === 'style'
-      ? `<link rel="stylesheet" href="${url}">`
-      : `<script src="${url}"></script>`
+      ? `<link rel="stylesheet" href="${src}">`
+      : `<script src="${src}"></script>`
   )).join('');
 
   const isAdminConsole = /(?:^|\/)(?:admin-console)\.html$/i.test(location.pathname);
@@ -77,9 +126,10 @@
       location.replace('admin.html');
       return;
     }
-    document.write(renderResources([['script', 'admin-auth.js']]));
+    document.write(renderResources([adminAuth]));
   }
 
-  document.write(renderResources(applicationModules));
+  const target = isAdminConsole ? 'admin' : 'app';
+  document.write(renderResources(applicationModules.filter(item => item.targets.includes(target))));
   if (isAdminConsole) document.write(renderResources(adminModules));
 })();

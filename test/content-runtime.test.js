@@ -59,9 +59,13 @@ test('authenticated admin entry preserves its guarded module order', () => {
 
   assert.equal(result.context.document.documentElement.style.visibility, 'hidden');
   assert.deepEqual(result.redirects, []);
-  assert.equal(resources.length, 47);
+  assert.equal(resources.length, 20);
   assert.equal(resources[7], 'admin-auth.js');
   assert.deepEqual(resources.slice(-2), ['admin-brand.js', 'admin-nav.js']);
+  assert.ok(resources.includes('content-center-core.js'));
+  assert.ok(resources.includes('tmdb-alias-match.js?v=20260821-0125'));
+  assert.ok(!resources.includes('cloud-auth-v5.js?v=20260822-0253'));
+  assert.ok(!resources.includes('global-tmdb-search-v2.js?v=20260822-0322'));
 });
 
 test('unauthenticated admin entry redirects before application modules load', () => {
@@ -79,6 +83,34 @@ test('runtime bootstrap is idempotent', () => {
 
   vm.runInNewContext(runtimeSource, result.context, { filename: 'content-center-runtime-v1.js' });
   assert.equal(result.writes.length, initialWriteCount);
+});
+
+test('runtime manifest exposes immutable ownership and dependencies', () => {
+  const result = runRuntime();
+  const manifest = result.context.window.CineverseRuntimeManifest;
+  const ids = new Set(manifest.map(item => item.id));
+
+  assert.equal(Object.isFrozen(manifest), true);
+  assert.equal(ids.size, manifest.length);
+  for (const item of manifest) {
+    assert.equal(Object.isFrozen(item), true);
+    assert.equal(Object.isFrozen(item.targets), true);
+    assert.equal(Object.isFrozen(item.dependsOn), true);
+    assert.ok(item.targets.every(target => target === 'app' || target === 'admin'));
+    for (const dependency of item.dependsOn) assert.ok(ids.has(dependency), `${item.id} depends on missing ${dependency}`);
+  }
+  assert.deepEqual(
+    Array.from(manifest.find(item => item.id === 'admin-auth').targets),
+    ['admin'],
+  );
+});
+
+test('app-only modules explicitly guard admin entry points', () => {
+  const manifest = runRuntime().context.window.CineverseRuntimeManifest;
+  for (const item of manifest.filter(entry => entry.targets.length === 1 && entry.targets[0] === 'app')) {
+    const source = readFileSync(join(root, item.src.split('?')[0]), 'utf8');
+    assert.match(source.slice(0, 500), /admin\|admin-console/, `${item.id} needs an admin guard`);
+  }
 });
 
 test('every local runtime resource exists in the repository', () => {

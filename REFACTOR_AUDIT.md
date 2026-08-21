@@ -25,7 +25,7 @@
 | `admin-console.html` | 先引入 `content-center.js`，后引入 `admin-data.js` | 与用户端共用整条运行时，只在 runtime 中通过 pathname 分支加载管理员模块。 |
 | `admin.html` | 纯内联登录页 | 不进入 content runtime；成功后跳转管理台或视觉编辑模式。 |
 
-`content-center-runtime-v1.js` 的声明式清单当前共有 2 个样式文件和 45 个脚本：用户端路径加载其中 42 个脚本，管理台路径还会加载 `admin-auth.js`、`admin-brand.js` 和 `admin-nav.js`。共享的 `cineverse-config.js` 在所有服务消费者之前加载。`visual-copy-editor.js` 不在该静态清单中，但会由 `content-center-core.js` 在视觉编辑模式动态加载，然后再加载 `visual-copy-editor-core.js`；两者不是废弃文件。
+`content-center-runtime-v1.js` 的声明式清单当前共有 2 个样式文件和 45 个脚本，每项均包含 `id`、`targets` 和 `dependsOn`。用户端路径加载 2 个样式和 42 个脚本；管理台仅加载 2 个样式和 18 个共享/管理脚本，不再下载内部明确跳过管理页的用户端模块。共享的 `cineverse-config.js` 在所有服务消费者之前加载。`visual-copy-editor.js` 不在该静态清单中，但会由 `content-center-core.js` 在视觉编辑模式动态加载，然后再加载 `visual-copy-editor-core.js`；两者不是废弃文件。
 
 ### 3.2 未被当前入口加载的候选文件
 
@@ -43,7 +43,7 @@
 
 ### P0：先建立保护网，暂不重构
 
-1. **零自动化测试与零 CI。** 所有行为变更都只能靠人工发现，与近期连续「重构 → hotfix → rollback → quarantine → 重新收口」的提交链相互印证。
+1. **自动化保护网（已建立基础）。** 初次审计时仓库为零测试、零 CI，与连续「重构 → hotfix → rollback → quarantine → 重新收口」的提交链相互印证。现已加入语法、资源清单、边界契约和安全回归测试，并由 CI 执行 `npm run check`；真实浏览器 E2E 仍是剩余的 P0 缺口。
 2. **多层持久化补丁（已收口）。** 初次审计时 `global-config-sync.js`、`home-month-insight-v2.js`、`cloud-pending-volatile-v1.js` 和 `cloud-auth-v5.js` 都包装 `Storage.prototype`，使语义依赖脚本顺序。现已改为显式的应用保存事件、云同步通知、页签内待处理数据 store 和全局配置持久化 API；生产 JavaScript 不再修改 `Storage.prototype`。
 3. **全局序列化副作用（已收口）。** 初次审计时 `rating-sync-v3.js` 直接替换 `JSON.stringify`；现已改为由应用 `save()` 边界显式调用 `MovieRatingSync.syncState`，不再影响无关业务或第三方 SDK。
 4. **浏览器原语替换（已收口）。** 初次审计时 `content-observer-shield.js` 替换 `window.MutationObserver`，`tmdb-alias-match.js` 替换 `window.fetch`。现已分别改为显式 `MovieMutationObserver` 和 `MovieTmdbAliasMatch.enrich` 边界，不再改写浏览器全局原语；回归测试会阻止全局替换被重新引入。
@@ -52,7 +52,7 @@
 
 1. **加载器是单点故障。** `content-center.js` 每次用 `Date.now()` 绕过 runtime 缓存，runtime 却为子资源混用无版本 URL 和手写时间戳。发布时可能出现 HTML/runtime/子脚本版本错配，也无法证明缓存是否命中。
 2. **`document.write` 限制了启动时机。** 加载器只能在文档解析期安全运行；未来一旦改成 `defer`、动态导入或延迟启动，就可能清空已解析页面。
-3. **管理台与用户端过度共享。** 管理台也会下载雷达、影视库、评分、观影记录、TMDb 搜索和云账户等用户端脚本。即使模块内有 DOM guard，也会执行顶层补丁和注册监听器。
+3. **管理台与用户端过度共享（已部分收口）。** 运行时现会按 `targets` 排除内部明确拒绝管理路径的用户端模块，管理端资源数从 47 降至 20。内容中心、品牌、导航、引语和 TMDb 别名等确有管理用途的共享模块仍保留；后续需由真实浏览器管理回归决定是否进一步拆分。
 4. **过时注释会误导恢复。** `library-filter-experience-v2.js` 声明稳定运行时使用 v1，但实际已使用 `library-filter-system-v1.js`。隔离文件应记录替代者和决策日期，否则会被误加回。
 
 ### P2：重复逻辑与维护成本
