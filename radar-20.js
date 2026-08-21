@@ -271,7 +271,7 @@
     const button = document.getElementById('radarAutoUpdateBtn');
     if (button) {
       button.disabled = busy;
-      button.textContent = busy ? '正在生成 20 部…' : '✦ 重新生成 20 部';
+      button.textContent = busy ? '正在生成 20 部…' : '✦ 生成 20 部推荐';
     }
   }
 
@@ -342,9 +342,9 @@
 
   function wireControls() {
     const updateButton = document.getElementById('radarAutoUpdateBtn');
-    if (updateButton) updateButton.textContent = '✦ 重新生成 20 部';
+    if (updateButton) updateButton.textContent = '✦ 生成 20 部推荐';
 
-    // 更新按钮需要拦截旧版“只从 TMDb 更新”的处理，避免一次点击发起两套请求。
+    // 只在用户主动点击生成按钮时刷新雷达；进入雷达页面本身不再触发推荐生成。
     document.addEventListener('click', event => {
       const button = event.target.closest?.('#radarAutoUpdateBtn');
       if (!button) return;
@@ -353,13 +353,6 @@
       event.stopImmediatePropagation();
       generateRadar20();
     }, true);
-
-    // 导航先让主程序正常进入电影雷达页面，再在后台生成新一批；即使生成失败也不会卡在上一页。
-    document.addEventListener('click', event => {
-      const trigger = event.target.closest?.('[data-view="radar"],[data-view-link="radar"]');
-      if (!trigger || event.target.closest?.('#radarAutoUpdateBtn')) return;
-      setTimeout(() => generateRadar20(), 0);
-    });
   }
 
   injectStyles();
