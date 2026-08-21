@@ -32,7 +32,7 @@
   let applyingRemote = false;
   let pulling = false;
   let pushInFlight = 0;
-  let pushTimer = 0;
+  const pushTimers = new Map();
   let readyResolve;
   const ready = new Promise(resolve => { readyResolve = resolve; });
 
@@ -141,11 +141,13 @@
     if (!IS_ADMIN || applyingRemote) return;
     const key = BY_STORAGE_KEY[storageKey];
     if (!key) return;
-    clearTimeout(pushTimer);
-    pushTimer = setTimeout(() => {
+    clearTimeout(pushTimers.get(storageKey));
+    const timer = setTimeout(() => {
+      pushTimers.delete(storageKey);
       const data = explicitData || safeParse(localStorage.getItem(storageKey)) || fallbackStateForStorage(storageKey);
       if (data) push(key, data);
     }, 180);
+    pushTimers.set(storageKey, timer);
   }
 
   function applyRemoteRow(row) {
