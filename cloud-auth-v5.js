@@ -197,7 +197,10 @@
   function renderSignedOut(mode='login',status='',isError=false) {
     const body = $('movieAccountBody');
     if (!body) return;
-    body.innerHTML = `<div class="movie-auth-tabs"><button type="button" class="movie-auth-tab ${mode==='login'?'active':''}" data-auth-mode="login">登录</button><button type="button" class="movie-auth-tab ${mode==='signup'?'active':''}" data-auth-mode="signup">注册</button></div><form id="movieAuthForm" data-mode="${mode}"><div class="movie-auth-field"><label>邮箱</label><input class="movie-auth-input" id="movieAuthEmail" type="email" autocomplete="email" required placeholder="name@example.com"></div><div class="movie-auth-field"><label>密码</label><input class="movie-auth-input" id="movieAuthPassword" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" minlength="6" required placeholder="至少 6 位"></div><button class="movie-auth-submit" id="movieAuthSubmit" type="submit">${mode==='login'?'登录光影宇宙':'创建光影账户'}</button><div class="movie-auth-status ${isError?'error':''}" id="movieAuthStatus">${status || (mode==='signup'?'注册后请前往邮箱完成验证。':'登录后会自动读取这个账号的云端数据。')}</div></form><div class="movie-cloud-note">云同步保存影视库、评分、观影记录、月度计划、电影雷达和个人设置。每个账号的数据彼此隔离。</div>`;
+    const normalizedMode = mode === 'signup' ? 'signup' : 'login';
+    body.innerHTML = `<div class="movie-auth-tabs"><button type="button" class="movie-auth-tab ${normalizedMode==='login'?'active':''}" data-auth-mode="login">登录</button><button type="button" class="movie-auth-tab ${normalizedMode==='signup'?'active':''}" data-auth-mode="signup">注册</button></div><form id="movieAuthForm" data-mode="${normalizedMode}"><div class="movie-auth-field"><label>邮箱</label><input class="movie-auth-input" id="movieAuthEmail" type="email" autocomplete="email" required placeholder="name@example.com"></div><div class="movie-auth-field"><label>密码</label><input class="movie-auth-input" id="movieAuthPassword" type="password" autocomplete="${normalizedMode==='login'?'current-password':'new-password'}" minlength="6" required placeholder="至少 6 位"></div><button class="movie-auth-submit" id="movieAuthSubmit" type="submit">${normalizedMode==='login'?'登录光影宇宙':'创建光影账户'}</button><div class="movie-auth-status ${isError?'error':''}" id="movieAuthStatus"></div></form><div class="movie-cloud-note">云同步保存影视库、评分、观影记录、月度计划、电影雷达和个人设置。每个账号的数据彼此隔离。</div>`;
+    const statusElement = $('movieAuthStatus');
+    if (statusElement) statusElement.textContent = status || (normalizedMode === 'signup' ? '注册后请前往邮箱完成验证。' : '登录后会自动读取这个账号的云端数据。');
   }
   function renderSignedIn() {
     const body = $('movieAccountBody');
@@ -212,7 +215,11 @@
     const note = pendingConflict
       ? '“使用云端”会放弃本机尚未上传的更改；“保留本机”会覆盖云端较新的版本。两种操作都会再次确认。'
       : (pendingApply ? '这里只在云端内容真的发生变化时出现。应用后会替换本机数据并刷新一次。' : '日常本地修改会自动静默同步；只有另一设备同时修改时才需要手动选择版本。');
-    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email">${String(currentUser.email || '').replace(/[&<>]/g,'')}</div><div class="movie-account-syncstate" id="movieAccountSyncState">${stateText}</div><div class="movie-account-actions ${pendingConflict?'has-conflict':''}">${actions}</div></div><div class="movie-cloud-note">${note}</div>`;
+    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email" id="movieAccountEmail"></div><div class="movie-account-syncstate" id="movieAccountSyncState"></div><div class="movie-account-actions ${pendingConflict?'has-conflict':''}">${actions}</div></div><div class="movie-cloud-note">${note}</div>`;
+    const emailElement = $('movieAccountEmail');
+    const stateElement = $('movieAccountSyncState');
+    if (emailElement) emailElement.textContent = String(currentUser.email || '');
+    if (stateElement) stateElement.textContent = stateText;
   }
   function openDialog() {
     const dialog = ensureDialog();

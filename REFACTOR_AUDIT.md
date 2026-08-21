@@ -12,7 +12,7 @@
 
 - 遍历 Git 跟踪文件，检查 HTML 直接引用、JS 动态引用、文件名反向引用、同名版本文件和最近 15 个提交的文件变化。
 - 搜索对 `Storage.prototype`、`JSON.stringify`、`MutationObserver` 和 `window.fetch` 的全局替换，并检查重叠的全局事件监听。
-- 对全部 61 个顶层 `.js` 文件执行 `node --check`，均通过语法检查。
+- 初次审计对 61 个顶层 `.js` 文件执行了 `node --check`；现行检查命令会覆盖 Git 跟踪的所有 `.js` 文件，包括 `scripts/` 和 `test/`。
 - 仓库没有 `package.json`、测试目录、CI 配置或浏览器测试基础设施；因此「未加载」是静态可达性结论，「可删除」仍需部署日志和浏览器回归证明。
 
 ## 3. 运行时与资源清单
