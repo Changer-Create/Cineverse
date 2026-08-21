@@ -33,6 +33,21 @@
   };
   const readState = () => safeJson(localStorage.getItem(STORAGE_KEY)) || null;
   const writeState = state => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+  async function waitForCloudAccount(timeout=2200) {
+    const started = Date.now();
+    while (Date.now() - started < timeout) {
+      if (window.MovieCloudAccount?.syncBeforeReload) return window.MovieCloudAccount;
+      await sleep(50);
+    }
+    return window.MovieCloudAccount || null;
+  }
+  async function syncBeforeReload() {
+    const account = await waitForCloudAccount();
+    if (!account?.syncBeforeReload) return true;
+    try { return await Promise.race([account.syncBeforeReload(), sleep(2600).then(() => false)]); }
+    catch { return false; }
+  }
   const normalizeText = value => String(value || '')
     .toLowerCase()
     .normalize('NFKC')
@@ -210,7 +225,6 @@
     const language = state?.settings?.tmdbLanguage || 'zh-CN';
     const movies = Array.isArray(state.movies) ? state.movies : [];
 
-    // 先使用旧版雷达已经验证稳定的 3 个 TMDb 请求；任何一个失败都不再拖垮整次生成。
     const [trendResult, upcomingResult, genreResult] = await Promise.allSettled([
       tmdbFetch('/trending/movie/week', { language }),
       tmdbFetch('/movie/upcoming', { language, region: 'CN', page: 1 }),
@@ -231,7 +245,6 @@
     appendTmdbPool(all, seen, trend?.results, '本周趋势', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
     appendTmdbPool(all, seen, upcoming?.results, '即将上映', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
 
-    // 不足时再逐步请求补充池。补充接口失败会被忽略，不影响已经得到的结果。
     if (all.length < needed) {
       const upcoming2 = await optionalTmdb('/movie/upcoming', { language, region: 'CN', page: 2 });
       appendTmdbPool(all, seen, upcoming2?.results, '即将上映', genreMap, prefs, ignoredKeys, selectedWantKeys, movies);
@@ -307,6 +320,7 @@
       sessionStorage.setItem('movie-radar20-last-count', String(batch.length));
       sessionStorage.setItem('movie-radar20-last-want', String(wantSelected.length));
       if (reload) {
+        await syncBeforeReload();
         location.hash = 'radar';
         location.reload();
       }
@@ -344,7 +358,6 @@
     const updateButton = document.getElementById('radarAutoUpdateBtn');
     if (updateButton) updateButton.textContent = '✦ 生成 20 部推荐';
 
-    // 只在用户主动点击生成按钮时刷新雷达；进入雷达页面本身不再触发推荐生成。
     document.addEventListener('click', event => {
       const button = event.target.closest?.('#radarAutoUpdateBtn');
       if (!button) return;
