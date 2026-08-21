@@ -2,7 +2,7 @@
   'use strict';
 
   const STORAGE_KEY = 'movie-collection-v2';
-  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   const TOTAL_TARGET = 20;
   const WANT_TARGET = 10;
   let generating = false;

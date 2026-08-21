@@ -6,6 +6,7 @@
   const sharedHead = [
     ['style', 'settings-responsive.css?v=20260821-1028'],
     ['style', 'large-screen-layout-v1.css?v=20260822-0208'],
+    ['script', 'cineverse-config.js'],
     ['script', 'global-config-sync.js?v=20260821-1149'],
     ['script', 'site-brand.js'],
     ['script', 'nav-order.js'],

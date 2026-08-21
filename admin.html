@@ -30,9 +30,10 @@ button{width:100%;margin-top:18px;border:1px solid rgba(159,124,255,.42);border-
   <div class="note">认证由 Supabase 服务端完成；密码不会写入网页源码或 GitHub 仓库。</div>
   <a class="back" href="index.html">← 返回影视收藏夹</a>
 </main>
+<script src="cineverse-config.js"></script>
 <script>
 (() => {
-  const ENDPOINT='https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/admin-auth';
+  const ENDPOINT=window.CineverseConfig.endpoints.adminAuth;
   const TOKEN_KEY='movie-collection-admin-session-v1';
   const META_KEY='movie-collection-admin-session-meta-v1';
   const next=new URLSearchParams(location.search).get('next')||'';

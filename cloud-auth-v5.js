@@ -8,9 +8,9 @@
   const DIRTY_KEY = 'movie-cloud-dirty-v1';
   const PENDING_KEY = 'movie-cloud-pending-v1';
   const BASELINE_KEY = 'movie-cloud-baseline-fingerprint-v1';
-  const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
-  const APP_URL = 'https://cj956151388-png.github.io/movie-collection/';
+  const SUPABASE_URL = window.CineverseConfig.supabaseUrl;
+  const SUPABASE_PUBLISHABLE_KEY = window.CineverseConfig.supabasePublishableKey;
+  const APP_URL = window.CineverseConfig.publicAppUrl;
 
   let client = null;
   let currentUser = null;

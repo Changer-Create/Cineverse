@@ -1645,10 +1645,9 @@
   function toggleExclude(key,btn){libraryState.exclude[key]=!libraryState.exclude[key];btn.classList.toggle('active',libraryState.exclude[key]);btn.textContent=libraryState.exclude[key]?'排除':'包含';libraryState.page=1;renderLibrary()}
   function clearFilters(){els.libKeyword.value='';[els.libMediaType,els.libYear,els.libDirector,els.libCountry,els.libStatus,els.libTag,els.libPlan].forEach(x=>x.value='');els.libRatingOp.value='all';els.libRatingScore.value='';syncRatingFilterUI();els.libSort.value='最近更新';libraryState.exclude={year:false,director:false,country:false,tag:false,plan:false};document.querySelectorAll('.exclude-toggle').forEach(b=>{b.classList.remove('active');b.textContent='包含'});libraryState.page=1;renderLibrary()}
   function cycleStatus(m){const order=m.mediaType==='tv'?['want','watching','watched','paused','dropped']:['follow','want','watched'];const cur=m.personal?.status||'want';m.personal.status=order[(order.indexOf(cur)+1)%order.length];if(m.personal.status==='watched'&&!m.watchHistory?.length)m.watchHistory=[{date:localToday(),rating:m.personal.rating,note:'',venue:''}];m.updatedAt=new Date().toISOString();save();renderAll();toastMsg(`《${m.info.title}》状态已更新为「${displayStatus(m)[1]}」`)}
-  const TMDB_PROXY_URL='https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
   function tmdbCredential(){return 'proxy'}
   async function tmdbFetch(path,params={}){
-    const response=await fetch(TMDB_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,params})});
+    const response=await fetch(window.CineverseConfig.endpoints.tmdbProxy,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,params})});
     const res=await window.MovieTmdbAliasMatch?.enrich(response,path,params) || response;
     let body=null;try{body=await res.json()}catch{}
     if(!res.ok)throw new Error(body?.message||body?.error||`TMDb 代理 HTTP ${res.status}`);

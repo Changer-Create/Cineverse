@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const TMDB_PROXY_URL='https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL=window.CineverseConfig.endpoints.tmdbProxy;
   const nativeFetch=window.fetch.bind(window);
   const aliasCache=new Map();
 

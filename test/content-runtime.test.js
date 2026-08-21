@@ -38,16 +38,17 @@ test('main entry emits the established resources in order', () => {
 
   assert.equal(result.redirects.length, 0);
   assert.equal(result.writes.length, 2);
-  assert.equal(resources.length, 43);
-  assert.deepEqual(resources.slice(0, 6), [
+  assert.equal(resources.length, 44);
+  assert.deepEqual(resources.slice(0, 7), [
     'settings-responsive.css?v=20260821-1028',
     'large-screen-layout-v1.css?v=20260822-0208',
+    'cineverse-config.js',
     'global-config-sync.js?v=20260821-1149',
     'site-brand.js',
     'nav-order.js',
     'library-pagination-top.js',
   ]);
-  assert.equal(resources[6], 'content-observer-shield.js');
+  assert.equal(resources[7], 'content-observer-shield.js');
   assert.equal(resources.at(-1), 'global-tmdb-search-v2.js?v=20260822-0322');
   assert.ok(!resources.some(url => url.startsWith('admin-')));
 });
@@ -58,8 +59,8 @@ test('authenticated admin entry preserves its guarded module order', () => {
 
   assert.equal(result.context.document.documentElement.style.visibility, 'hidden');
   assert.deepEqual(result.redirects, []);
-  assert.equal(resources.length, 46);
-  assert.equal(resources[6], 'admin-auth.js');
+  assert.equal(resources.length, 47);
+  assert.equal(resources[7], 'admin-auth.js');
   assert.deepEqual(resources.slice(-2), ['admin-brand.js', 'admin-nav.js']);
 });
 
@@ -69,7 +70,7 @@ test('unauthenticated admin entry redirects before application modules load', ()
   assert.deepEqual(result.redirects, ['admin.html']);
   assert.equal(result.context.document.documentElement.style.visibility, 'hidden');
   assert.equal(result.writes.length, 1);
-  assert.equal(resourceUrls(result.markup).length, 6);
+  assert.equal(resourceUrls(result.markup).length, 7);
 });
 
 test('runtime bootstrap is idempotent', () => {

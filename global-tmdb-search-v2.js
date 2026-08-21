@@ -3,7 +3,7 @@
   if (/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname)) return;
 
   const APP_KEY = 'movie-collection-v2';
-  const PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   const LIMIT = 6;
   const PLACEHOLDER = '搜索电影、剧集，点击Enter确认';
   const bundleCache = new Map();

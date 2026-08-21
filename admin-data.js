@@ -2,7 +2,7 @@
   'use strict';
 
   const APP_KEY = 'movie-collection-v2';
-  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   const $ = (s, root=document) => root.querySelector(s);
   const $$ = (s, root=document) => [...root.querySelectorAll(s)];
   const esc = v => String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));

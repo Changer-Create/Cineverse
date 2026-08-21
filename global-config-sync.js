@@ -1,10 +1,9 @@
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
-  const ADMIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/admin-global-config`;
-  const TABLE_URL = `${SUPABASE_URL}/rest/v1/global_site_config?select=config_key,data_json,updated_at&order=config_key.asc`;
+  const SUPABASE_PUBLISHABLE_KEY = window.CineverseConfig.supabasePublishableKey;
+  const ADMIN_FUNCTION_URL = window.CineverseConfig.endpoints.adminGlobalConfig;
+  const TABLE_URL = window.CineverseConfig.endpoints.globalConfigTable;
   const ADMIN_TOKEN_KEY = 'movie-collection-admin-session-v1';
   const ADMIN_RELOAD_KEY = 'movie-global-config-admin-reload-v1';
   const IS_ADMIN = /(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname);

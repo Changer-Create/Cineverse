@@ -4,7 +4,7 @@
 
 ## 1. 执行摘要
 
-当前产品是一个「大型内联单页 + 按顺序注入的全局补丁」架构：`index.html` 约 433 KB，只直接引入 `content-center.js`；后者用 `document.write` 转入 `content-center-runtime-v1.js`，再一次性写入用户端所需的 43 个 CSS/JS 资源。这套机制暂时能工作，但加载顺序已经成为隐式 API，版本后缀、全局 monkey patch 和隔离 stub 使回归风险继续增大。
+当前产品是一个「大型内联单页 + 按顺序注入的功能模块」架构：`index.html` 约 433 KB，只直接引入 `content-center.js`；后者用 `document.write` 转入 `content-center-runtime-v1.js`，再一次性写入用户端所需的 44 个 CSS/JS 资源。加载顺序仍是需要回归测试保护的兼容契约，但初次审计识别的全局 monkey patch 和隔离 stub 已经收口。
 
 建议不立即删除文件或改用 bundler，而是先固化行为基线和资源清单，再以「一次一条链」的方式收口。
 
@@ -13,7 +13,7 @@
 - 遍历 Git 跟踪文件，检查 HTML 直接引用、JS 动态引用、文件名反向引用、同名版本文件和最近 15 个提交的文件变化。
 - 搜索对 `Storage.prototype`、`JSON.stringify`、`MutationObserver` 和 `window.fetch` 的全局替换，并检查重叠的全局事件监听。
 - 初次审计对 61 个顶层 `.js` 文件执行了 `node --check`；现行检查命令会覆盖 Git 跟踪的所有 `.js` 文件，包括 `scripts/` 和 `test/`。
-- 仓库没有 `package.json`、测试目录、CI 配置或浏览器测试基础设施；因此「未加载」是静态可达性结论，「可删除」仍需部署日志和浏览器回归证明。
+- 初次审计时仓库没有 `package.json`、测试目录、CI 配置或浏览器测试基础设施；现已加入零依赖 Node 检查与回归测试，但真实浏览器 E2E 和 CI 仍待建立。
 
 ## 3. 运行时与资源清单
 
@@ -25,7 +25,7 @@
 | `admin-console.html` | 先引入 `content-center.js`，后引入 `admin-data.js` | 与用户端共用整条运行时，只在 runtime 中通过 pathname 分支加载管理员模块。 |
 | `admin.html` | 纯内联登录页 | 不进入 content runtime；成功后跳转管理台或视觉编辑模式。 |
 
-`content-center-runtime-v1.js` 的字面清单当前共有 2 个样式文件和 44 个脚本：用户端路径加载其中 41 个脚本，管理台路径还会加载 `admin-auth.js`、`admin-brand.js` 和 `admin-nav.js`。`visual-copy-editor.js` 不在该静态字符串中，但会由 `content-center-core.js` 在视觉编辑模式动态加载，然后再加载 `visual-copy-editor-core.js`；两者不是废弃文件。
+`content-center-runtime-v1.js` 的声明式清单当前共有 2 个样式文件和 45 个脚本：用户端路径加载其中 42 个脚本，管理台路径还会加载 `admin-auth.js`、`admin-brand.js` 和 `admin-nav.js`。共享的 `cineverse-config.js` 在所有服务消费者之前加载。`visual-copy-editor.js` 不在该静态清单中，但会由 `content-center-core.js` 在视觉编辑模式动态加载，然后再加载 `visual-copy-editor-core.js`；两者不是废弃文件。
 
 ### 3.2 未被当前入口加载的候选文件
 
