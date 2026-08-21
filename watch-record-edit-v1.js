@@ -37,10 +37,22 @@
     };
   }
 
+  function tuneWatchModal() {
+    const { modal, note } = modalParts();
+    if (modal) modal.classList.add('watch-record-expanded');
+    if (note) {
+      note.placeholder = '记录你的感受';
+      note.setAttribute('aria-label', '记录你的感受');
+      note.removeAttribute('maxlength');
+      note.rows = Math.max(Number(note.rows) || 0, 10);
+    }
+  }
+
   function resetModalCopy() {
     const { title, submit } = modalParts();
     if (title && title.textContent !== '记录一次观看') title.textContent = '记录一次观看';
     if (submit && submit.textContent !== '保存观看记录') submit.textContent = '保存观看记录';
+    tuneWatchModal();
   }
 
   function clearEditing() {
@@ -90,6 +102,7 @@
     const { modal, title, submit, date, rating, venue, note } = modalParts();
     if (!modal || !date || !rating || !venue || !note) return;
 
+    tuneWatchModal();
     editing = { movieId, originalIndex };
     date.value = String(target.date || '').slice(0, 10) || today();
     const score = normalizedRating(target.rating);
@@ -178,12 +191,43 @@
       #detailWatchList .watch-record-edit-btn:hover{
         border-color:rgba(159,124,255,.48);background:rgba(111,97,244,.16);color:#fff;
       }
+
+      #watchModal.watch-record-expanded{
+        width:min(1120px,calc(100vw - 36px))!important;
+        max-width:1120px!important;
+        max-height:calc(100vh - 32px)!important;
+      }
+      #watchModal.watch-record-expanded .modal-body{
+        max-height:calc(100vh - 190px);
+        overflow-y:auto;
+      }
+      #watchModal #watchNoteInput{
+        width:100%;
+        min-height:260px!important;
+        height:clamp(240px,34vh,420px);
+        max-height:58vh;
+        resize:vertical!important;
+        line-height:1.8;
+        padding:14px 16px;
+      }
+      #watchModal #watchNoteInput::placeholder{
+        color:#7f8aa8;
+      }
+      @media(max-width:720px){
+        #watchModal.watch-record-expanded{
+          width:calc(100vw - 18px)!important;
+          max-height:calc(100vh - 18px)!important;
+        }
+        #watchModal.watch-record-expanded .modal-body{max-height:calc(100vh - 165px)}
+        #watchModal #watchNoteInput{min-height:180px!important;height:28vh;max-height:46vh}
+      }
     `;
     document.head.appendChild(style);
   }
 
   function boot() {
     injectStyle();
+    tuneWatchModal();
     decorateWatchRows();
     const list = document.getElementById('detailWatchList');
     if (list) {
@@ -202,6 +246,9 @@
       event.stopPropagation();
       event.stopImmediatePropagation();
       openEditor(editButton.dataset.editWatch);
+    }
+    if (event.target.closest?.('#detailAddWatchBtn,#detailAddWatchBtn2')) {
+      requestAnimationFrame(tuneWatchModal);
     }
   }, true);
 
