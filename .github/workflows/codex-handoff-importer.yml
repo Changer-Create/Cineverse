@@ -1,0 +1,182 @@
+name: Codex handoff importer
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - cineverse-codex-handoff-clean.patch
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  import:
+    if: github.head_ref == 'integrate/codex-c43829'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out integration head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Fetch current main
+        run: git fetch origin main:refs/remotes/origin/main
+
+      - name: Verify handoff baseline
+        shell: bash
+        run: |
+          test -f cineverse-codex-handoff-clean.patch
+          test "$(git merge-base HEAD origin/main)" = "2578ad7b77254fdd583b865f2e5601e3a273fe65"
+          git merge-base --is-ancestor 10db6de53e82defe948617388469482c0a67fa20 HEAD
+
+      - name: Apply Codex patch
+        shell: bash
+        run: |
+          set +e
+          git apply --3way cineverse-codex-handoff-clean.patch
+          rc=$?
+          set -e
+          if [[ $rc -ne 0 ]]; then
+            conflicts="$(git diff --name-only --diff-filter=U)"
+            echo "Conflicts after three-way apply:"
+            printf '%s\n' "$conflicts"
+            unexpected="$(printf '%s\n' "$conflicts" | grep -v '^content-center-runtime-v1\.js$' || true)"
+            if [[ -n "$unexpected" ]]; then
+              echo "Unexpected conflicts; refusing to guess."
+              exit 1
+            fi
+            grep -qx 'content-center-runtime-v1.js' <<<"$conflicts"
+            git checkout --theirs -- content-center-runtime-v1.js
+            git add content-center-runtime-v1.js
+          fi
+
+      - name: Reconcile current main additions
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_required(path, old, new, label):
+              p = Path(path)
+              text = p.read_text()
+              if old in text:
+                  text = text.replace(old, new)
+                  p.write_text(text)
+                  return
+              if new not in text:
+                  raise SystemExit(f'{label} anchor missing in {path}')
+
+          # The production Pages URL is the current repository homepage.
+          replace_required(
+              'cineverse-config.js',
+              'https://cj956151388-png.github.io/movie-collection/',
+              'https://changer-create.github.io/Cineverse/',
+              'publicAppUrl',
+          )
+
+          # Preserve the newer library card system introduced on main while keeping
+          # the Codex manifest/governance refactor.
+          runtime = Path('content-center-runtime-v1.js')
+          text = runtime.read_text()
+          text = text.replace("'library-card-actions-v2',", "'library-card-system-v1',")
+          text = text.replace(
+              "'library-card-actions-v2.js?v=20260821-2006',",
+              "'library-card-system-v1.js?v=20260822-0435',",
+          )
+          anchor = "  const adminAuth = resource('script', 'admin-auth.js', ['admin'], ['cineverse-config']);"
+          insert = """  const libraryCardIndex = applicationModules.findIndex(item => item.id === 'library-card-system-v1');\n  if (libraryCardIndex >= 0) {\n    applicationModules.splice(libraryCardIndex + 1, 0, resource('style', 'library-card-scale-v1.css?v=20260822-0444', ['app']));\n  }\n\n"""
+          if 'library-card-scale-v1.css?v=20260822-0444' not in text:
+              if anchor not in text:
+                  raise SystemExit('runtime insertion anchor missing')
+              text = text.replace(anchor, insert + anchor)
+          runtime.write_text(text)
+
+          cards = Path('library-card-system-v1.js')
+          text = cards.read_text()
+          text = text.replace(
+              "  const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';\n",
+              '',
+          )
+          text = text.replace(
+              "  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';",
+              "  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;",
+          )
+          old_save = """  const saveState = state => {\n    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n    localStorage.setItem(CLOUD_DIRTY_KEY, '1');\n  };"""
+          new_save = """  const saveState = state => {\n    window.MovieRatingSync?.syncState?.(state);\n    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n    window.dispatchEvent(new CustomEvent('movie-collection:data-saved'));\n    window.MovieCloudAccount?.markLocalChange?.();\n  };"""
+          if old_save in text:
+              text = text.replace(old_save, new_save)
+          elif new_save not in text:
+              raise SystemExit('library card save boundary anchor missing')
+          text = text.replace('new MutationObserver(', 'new window.MovieMutationObserver(')
+          cards.write_text(text)
+
+          # Keep the new active module covered by Codex's boundary tests.
+          test = Path('test/content-runtime.test.js')
+          text = test.read_text()
+          text = text.replace('assert.equal(resources.length, 44);', 'assert.equal(resources.length, 45);')
+          text = text.replace(
+              "manifest.filter(entry => entry.targets.length === 1 && entry.targets[0] === 'app')",
+              "manifest.filter(entry => entry.type === 'script' && entry.targets.length === 1 && entry.targets[0] === 'app')",
+          )
+          test.write_text(text)
+
+          test = Path('test/mutation-observer-boundary.test.js')
+          text = test.read_text()
+          if "  'library-card-system-v1.js',\n" not in text:
+              text = text.replace(
+                  "  'library-card-actions-v2.js',\n",
+                  "  'library-card-actions-v2.js',\n  'library-card-system-v1.js',\n",
+              )
+          test.write_text(text)
+
+          test = Path('test/config-boundary.test.js')
+          text = test.read_text()
+          if "'library-card-system-v1.js'" not in text:
+              text = text.replace(
+                  "    'home-radar-detail-navigation-v1.js', 'index.html', 'radar-20.js',",
+                  "    'home-radar-detail-navigation-v1.js', 'index.html', 'library-card-system-v1.js', 'radar-20.js',",
+              )
+          test.write_text(text)
+
+          test = Path('test/cloud-save-boundary.test.js')
+          text = test.read_text()
+          text = text.replace(
+              "for (const file of ['index.html', 'watch-record-edit-v1.js'])",
+              "for (const file of ['index.html', 'library-card-system-v1.js', 'watch-record-edit-v1.js'])",
+          )
+          test.write_text(text)
+
+          audit = Path('REFACTOR_AUDIT.md')
+          text = audit.read_text()
+          text = text.replace(
+              '声明式清单当前共有 2 个样式文件和 45 个脚本',
+              '声明式清单当前共有 3 个样式文件和 45 个脚本',
+          ).replace(
+              '用户端路径加载 2 个样式和 42 个脚本',
+              '用户端路径加载 3 个样式和 42 个脚本',
+          )
+          audit.write_text(text)
+          PY
+
+          # Handoff artifacts are transport only, not product code.
+          git rm -f cineverse-codex-handoff-clean.patch
+          git rm -f .github/workflows/import-codex-patch.yml || true
+
+      - name: Run repository checks
+        run: npm run check
+
+      - name: Validate diff whitespace
+        run: git diff --check
+
+      - name: Commit integrated result
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor: integrate Codex governance handoff onto latest main'
+          git push origin HEAD:integrate/codex-c43829
