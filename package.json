@@ -1,0 +1,9 @@
+{
+  "name": "cineverse",
+  "private": true,
+  "scripts": {
+    "check": "npm run check:syntax && npm test",
+    "check:syntax": "node scripts/check-syntax.js",
+    "test": "node --test"
+  }
+}
