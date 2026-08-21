@@ -9,17 +9,14 @@
   if (!statusInput || !sortInput || !statusList || !sortList) return;
 
   const STATUS_OPTIONS = ['全部', '想看', '看过', '在看'];
-  const SORT_OPTIONS = [
-    '标记时间 · 升序', '标记时间 · 降序',
-    '片名（拼音）· 升序', '片名（拼音）· 降序',
-    '评分 · 升序', '评分 · 降序',
-    '时长 · 升序', '时长 · 降序',
-    '年份 · 升序', '年份 · 降序'
-  ];
-  const DEFAULT_SORT = '标记时间 · 降序';
+  const SORT_OPTIONS = ['标记时间', '片名（拼音）', '评分', '时长', '年份'];
+  const DEFAULT_SORT = '标记时间';
   const inputValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
   const nativeGet = input => inputValue.get.call(input);
   const nativeSet = (input, value) => inputValue.set.call(input, value);
+  const initialSortRaw = nativeGet(sortInput).trim();
+  let sortDirection = /升序/.test(initialSortRaw) ? 'asc' : 'desc';
+  let directionButton = null;
 
   const titleCollator = (() => {
     try {
@@ -43,9 +40,42 @@
     return direction === 'desc' ? bv - av : av - bv;
   }
 
-  function markedTime(movie) {
-    const value = Date.parse(movie?.createdAt || movie?.updatedAt || '');
+  function isSeasonSourceWatch(movie, watch) {
+    return movie?.mediaType === 'tv'
+      && Number(watch?.sourceSeason) > 0
+      && Boolean(watch?.sourceDoubanId || String(watch?.venue || '').includes('豆瓣'));
+  }
+
+  function firstWatchTime(movie) {
+    let earliest = null;
+    for (const watch of Array.isArray(movie?.watchHistory) ? movie.watchHistory : []) {
+      if (!watch?.date || isSeasonSourceWatch(movie, watch)) continue;
+      const value = Date.parse(watch.date);
+      if (!Number.isFinite(value)) continue;
+      if (earliest == null || value < earliest) earliest = value;
+    }
+    return earliest;
+  }
+
+  function libraryAddedTime(movie) {
+    const value = Date.parse(movie?.createdAt || '');
     return Number.isFinite(value) ? value : null;
+  }
+
+  function markedTime(movie) {
+    const status = movie?.personal?.status === 'follow' ? 'want' : (movie?.personal?.status || 'want');
+    if (status === 'watched' || status === 'watching') return firstWatchTime(movie);
+    return libraryAddedTime(movie);
+  }
+
+  function normalizeSortLabel(value) {
+    const raw = String(value || '').trim();
+    if (/^标记时间/.test(raw) || raw === '最近更新') return '标记时间';
+    if (/^片名（拼音）/.test(raw) || raw === '片名 A-Z') return '片名（拼音）';
+    if (/^评分/.test(raw)) return '评分';
+    if (/^时长/.test(raw)) return '时长';
+    if (/^年份/.test(raw)) return '年份';
+    return DEFAULT_SORT;
   }
 
   function currentStatus() {
@@ -53,8 +83,11 @@
   }
 
   function currentSort() {
-    const value = nativeGet(sortInput).trim();
-    return SORT_OPTIONS.includes(value) ? value : DEFAULT_SORT;
+    return normalizeSortLabel(nativeGet(sortInput));
+  }
+
+  function currentDirection() {
+    return sortDirection === 'asc' ? 'asc' : 'desc';
   }
 
   function statusMatches(movie, selected) {
@@ -66,18 +99,13 @@
     return true;
   }
 
-  function comparatorFor(label) {
-    if (label === '标记时间 · 升序') return (a,b) => numberCompare(markedTime(a), markedTime(b), 'asc');
-    if (label === '标记时间 · 降序') return (a,b) => numberCompare(markedTime(a), markedTime(b), 'desc');
-    if (label === '片名（拼音）· 升序') return titleCompare;
-    if (label === '片名（拼音）· 降序') return (a,b) => titleCompare(b,a);
-    if (label === '评分 · 升序') return (a,b) => numberCompare(a?.personal?.rating, b?.personal?.rating, 'asc');
-    if (label === '评分 · 降序') return (a,b) => numberCompare(a?.personal?.rating, b?.personal?.rating, 'desc');
-    if (label === '时长 · 升序') return (a,b) => numberCompare(a?.info?.runtime, b?.info?.runtime, 'asc');
-    if (label === '时长 · 降序') return (a,b) => numberCompare(a?.info?.runtime, b?.info?.runtime, 'desc');
-    if (label === '年份 · 升序') return (a,b) => numberCompare(a?.info?.year, b?.info?.year, 'asc');
-    if (label === '年份 · 降序') return (a,b) => numberCompare(a?.info?.year, b?.info?.year, 'desc');
-    return (a,b) => numberCompare(markedTime(a), markedTime(b), 'desc');
+  function comparatorFor(label, direction=currentDirection()) {
+    if (label === '标记时间') return (a,b) => numberCompare(markedTime(a), markedTime(b), direction);
+    if (label === '片名（拼音）') return direction === 'desc' ? (a,b) => titleCompare(b,a) : titleCompare;
+    if (label === '评分') return (a,b) => numberCompare(a?.personal?.rating, b?.personal?.rating, direction);
+    if (label === '时长') return (a,b) => numberCompare(a?.info?.runtime, b?.info?.runtime, direction);
+    if (label === '年份') return (a,b) => numberCompare(a?.info?.year, b?.info?.year, direction);
+    return (a,b) => numberCompare(markedTime(a), markedTime(b), direction);
   }
 
   try {
@@ -97,9 +125,9 @@
     return source.includes("sort==='ratingDesc'") && source.includes("runtimeDesc") && source.includes('updatedAt');
   }
 
-  if (!Array.prototype.__movieLibraryFilterSortV3) {
+  if (!Array.prototype.__movieLibraryFilterSortV4) {
     const previousSort = Array.prototype.sort;
-    Object.defineProperty(Array.prototype, '__movieLibraryFilterSortV3', { value:true, configurable:true });
+    Object.defineProperty(Array.prototype, '__movieLibraryFilterSortV4', { value:true, configurable:true });
     Array.prototype.sort = function(compareFn) {
       if (isCoreLibrarySort(compareFn)) {
         const selectedStatus = currentStatus();
@@ -111,8 +139,7 @@
           }
           this.length = write;
         }
-        const selectedSort = currentSort();
-        const compare = comparatorFor(selectedSort);
+        const compare = comparatorFor(currentSort(), currentDirection());
         return previousSort.call(this, (a,b) => compare(a,b) || titleCompare(a,b));
       }
       return previousSort.call(this, compareFn);
@@ -123,11 +150,52 @@
     list.innerHTML = values.map(value => `<option value="${String(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}"></option>`).join('');
   }
 
+  function ensureDirectionStyle() {
+    if (document.getElementById('librarySortDirectionStyleV4')) return;
+    const style = document.createElement('style');
+    style.id = 'librarySortDirectionStyleV4';
+    style.textContent = `
+      .sort-direction-toggle-v4{margin-top:5px;width:100%;height:25px;border-radius:8px;border:1px solid rgba(156,169,218,.14);background:rgba(255,255,255,.025);color:#8791ac;font-size:10px;transition:.18s ease}
+      .sort-direction-toggle-v4:hover{border-color:rgba(159,124,255,.28);color:#c9c3df;background:rgba(159,124,255,.06)}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function updateDirectionButton() {
+    if (!directionButton) return;
+    const descending = currentDirection() === 'desc';
+    directionButton.textContent = descending ? '降序' : '升序';
+    directionButton.setAttribute('aria-label', `当前${descending ? '降序' : '升序'}，点击切换为${descending ? '升序' : '降序'}`);
+    directionButton.title = descending ? '点击切换为升序' : '点击切换为降序';
+  }
+
+  function ensureDirectionButton() {
+    const cell = sortInput.closest('.filter-cell');
+    if (!cell) return;
+    directionButton = cell.querySelector('.sort-direction-toggle-v4');
+    if (!directionButton) {
+      directionButton = document.createElement('button');
+      directionButton.type = 'button';
+      directionButton.className = 'sort-direction-toggle-v4';
+      directionButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        sortDirection = currentDirection() === 'desc' ? 'asc' : 'desc';
+        updateDirectionButton();
+        sortInput.dispatchEvent(new Event('input', { bubbles:true }));
+      });
+      cell.appendChild(directionButton);
+    }
+    updateDirectionButton();
+  }
+
   fillList(statusList, STATUS_OPTIONS);
   fillList(sortList, SORT_OPTIONS);
   const sortLabel = sortInput.closest('.filter-cell')?.querySelector('label');
   if (sortLabel) sortLabel.textContent = '排序依据';
-  if (!SORT_OPTIONS.includes(nativeGet(sortInput).trim())) nativeSet(sortInput, DEFAULT_SORT);
+  nativeSet(sortInput, normalizeSortLabel(initialSortRaw));
+  ensureDirectionStyle();
+  ensureDirectionButton();
 
   let menu = null;
   let activeInput = null;
@@ -217,6 +285,14 @@
   }));
 
   document.addEventListener('click', event => {
+    if (event.target.closest('#clearLibFilters')) {
+      queueMicrotask(() => {
+        sortDirection = 'desc';
+        nativeSet(sortInput, DEFAULT_SORT);
+        updateDirectionButton();
+        sortInput.dispatchEvent(new Event('input', { bubbles:true }));
+      });
+    }
     if (!event.target.closest('.library-filter-menu-v3') && !event.target.closest('.library-filter-toggle-v3')) closeMenu();
   });
   window.addEventListener('resize', positionMenu);
