@@ -4,17 +4,8 @@
 
   const THEME_KEY='movie-collection-ui-theme-v1';
   const APP_KEY='movie-collection-v2';
+  const LEGACY_DEFAULT_ASSETS=['assets/theme-bg-star-cosmic.webp','assets/theme-bg-ocean-sunny.webp'];
   const DEFAULT_BACKGROUNDS={
-    star:{
-      asset:'assets/theme-bg-star-cosmic.webp',
-      overlay:'linear-gradient(145deg,rgba(4,8,23,.36),rgba(8,18,42,.48) 46%,rgba(4,8,23,.62))',
-      position:'center center'
-    },
-    ocean:{
-      asset:'assets/theme-bg-ocean-sunny.webp',
-      overlay:'linear-gradient(145deg,rgba(2,28,39,.18),rgba(3,38,52,.28) 46%,rgba(2,25,35,.42))',
-      position:'center center'
-    },
     snow:{
       asset:'assets/theme-bg-snow-dawn.webp',
       overlay:'linear-gradient(145deg,rgba(18,31,44,.18),rgba(22,40,58,.28) 46%,rgba(13,25,38,.44))',
@@ -48,13 +39,37 @@
     return Boolean(String(appSettings().wallpaperDataUrl||''));
   }
 
+  function hasLegacyDefaultBackground(body){
+    const image=String(body?.style?.backgroundImage||'');
+    return LEGACY_DEFAULT_ASSETS.some(asset=>image.includes(asset));
+  }
+
+  function restoreThemeBackground(theme){
+    const body=document.body;
+    if(!body)return;
+    const needsRestore=Boolean(body.dataset.defaultThemeBackground)||hasLegacyDefaultBackground(body);
+    delete body.dataset.defaultThemeBackground;
+    if(!needsRestore)return;
+    const system=window.MovieCollectionThemeSystem;
+    if(system?.apply){
+      system.apply(theme);
+      return;
+    }
+    body.style.removeProperty('background-image');
+    body.style.removeProperty('background-size');
+    body.style.removeProperty('background-position');
+    body.style.removeProperty('background-repeat');
+    body.style.removeProperty('background-attachment');
+  }
+
   function applyDefaultBackground(){
     const body=document.body;
     if(!body||applying)return;
     const theme=currentTheme();
     const config=DEFAULT_BACKGROUNDS[theme];
     if(!config||hasCustomWallpaper()){
-      delete body.dataset.defaultThemeBackground;
+      applying=true;
+      try{restoreThemeBackground(theme)}finally{queueMicrotask(()=>{applying=false})}
       return;
     }
     if((body.style.backgroundImage||'').includes(config.asset)){
