@@ -233,7 +233,7 @@
   function sameCloudVersion(remoteUpdatedAt,baselineUpdatedAt) {
     const remoteTs = ts(remoteUpdatedAt);
     const baselineTs = ts(baselineUpdatedAt);
-    return Boolean(remoteTs && baselineTs && Math.abs(remoteTs - baselineTs) <= 500);
+    return Boolean(remoteTs && baselineTs && remoteTs === baselineTs);
   }
   function stageCloudData(user,row,{ conflict=false }={}) {
     const cloud = row?.data_json;
