@@ -180,7 +180,16 @@
     if (IS_ADMIN) enforceAdminEditor();
     normalizeVisibleLabels();
     const grid = document.getElementById('libraryGrid');
-    if (grid) new MutationObserver(normalizeVisibleLabels).observe(grid, { childList:true, subtree:true });
+    if (grid) {
+      new MutationObserver(() => {
+        const changed = normalizeStoredState();
+        if (changed) {
+          location.reload();
+          return;
+        }
+        normalizeVisibleLabels();
+      }).observe(grid, { childList:true, subtree:true });
+    }
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
