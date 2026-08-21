@@ -28,7 +28,16 @@
     const n = Date.parse(value || '');
     return Number.isFinite(n) ? n : 0;
   };
-  const stateSignature = data => JSON.stringify({ data });
+  const stableValue = value => {
+    if (Array.isArray(value)) return value.map(stableValue);
+    if (value && typeof value === 'object') {
+      const out = {};
+      for (const key of Object.keys(value).sort()) out[key] = stableValue(value[key]);
+      return out;
+    }
+    return value;
+  };
+  const stateSignature = data => JSON.stringify(stableValue({ data }));
 
   function readPendingCloud(userId=currentUser?.id) {
     const pending = safeParse(localStorage.getItem(PENDING_KEY));
@@ -209,6 +218,9 @@
     const changed = stateSignature(cloud) !== stateSignature(local);
     if (!changed) {
       clearPendingCloud(user.id);
+      localStorage.setItem(OWNER_KEY,user.id);
+      localStorage.setItem(LAST_SYNC_KEY,row.updated_at || localStorage.getItem(LAST_SYNC_KEY) || new Date().toISOString());
+      localStorage.removeItem(DIRTY_KEY);
       return false;
     }
     localStorage.setItem(PENDING_KEY,JSON.stringify({
@@ -266,10 +278,14 @@
         const row = await fetchCloudRow(currentUser.id);
         const cloudNewer = hasUsableData(row?.data_json) && owner === currentUser.id && ts(row.updated_at) > ts(lastSync) + 500;
         if (cloudNewer) {
-          localStorage.setItem(DIRTY_KEY,'1');
-          stageCloudData(currentUser,row,{ conflict:true });
-          if (!silent) toast('云端也有更新，已暂停上传，请选择保留版本');
-          return false;
+          const staged = stageCloudData(currentUser,row,{ conflict:true });
+          if (staged) {
+            localStorage.setItem(DIRTY_KEY,'1');
+            if (!silent) toast('云端也有更新，已暂停上传，请选择保留版本');
+            return false;
+          }
+          if (!silent) toast('云端与本机内容一致，已更新同步基线');
+          return true;
         }
       }
       const now = new Date().toISOString();
@@ -348,6 +364,15 @@
       return;
     }
 
+    const same = stateSignature(cloud) === stateSignature(local);
+    if (same) {
+      clearPendingCloud(user.id);
+      localStorage.setItem(OWNER_KEY,user.id);
+      localStorage.setItem(LAST_SYNC_KEY,row.updated_at || lastSync || new Date().toISOString());
+      localStorage.removeItem(DIRTY_KEY);
+      return;
+    }
+
     const cloudNewer = ts(row.updated_at) > ts(lastSync) + 500;
     if (cloudNewer) {
       const conflict = dirty;
@@ -358,14 +383,6 @@
     if (dirty) {
       clearPendingCloud(user.id);
       await uploadCurrentData({ silent:true });
-      return;
-    }
-
-    const same = stateSignature(cloud) === stateSignature(local);
-    if (same) {
-      clearPendingCloud(user.id);
-      localStorage.setItem(OWNER_KEY,user.id);
-      localStorage.setItem(LAST_SYNC_KEY,row.updated_at || lastSync || new Date().toISOString());
       return;
     }
 
