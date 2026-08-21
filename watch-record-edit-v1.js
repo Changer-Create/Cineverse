@@ -57,7 +57,9 @@
     if (!list) return;
     list.querySelectorAll('[data-delete-watch]').forEach(deleteButton => {
       const displayIndex = String(deleteButton.dataset.deleteWatch || '');
-      if (deleteButton.parentElement?.querySelector(`[data-edit-watch="${CSS.escape(displayIndex)}"]`)) return;
+      const existingGroup = deleteButton.closest('.watch-record-actions');
+      if (existingGroup?.querySelector(`[data-edit-watch="${CSS.escape(displayIndex)}"]`)) return;
+
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'watch-record-edit-btn';
@@ -65,7 +67,11 @@
       button.textContent = '编辑';
       button.title = '编辑观影记录';
       button.setAttribute('aria-label', '编辑观影记录');
-      deleteButton.insertAdjacentElement('beforebegin', button);
+
+      const actions = document.createElement('div');
+      actions.className = 'watch-record-actions';
+      deleteButton.insertAdjacentElement('beforebegin', actions);
+      actions.append(button, deleteButton);
     });
   }
 
@@ -139,11 +145,18 @@
     const style = document.createElement('style');
     style.id = 'watchRecordEditV1Style';
     style.textContent = `
+      #detailWatchList .watch-record-actions{
+        display:flex;align-items:center;justify-content:flex-end;gap:7px;
+        width:max-content;min-width:max-content;justify-self:end;align-self:center;
+      }
       #detailWatchList .watch-record-edit-btn{
         min-width:48px;height:38px;padding:0 10px;display:inline-grid;place-items:center;flex:0 0 auto;
         border:1px solid rgba(161,179,255,.18);border-radius:11px;
         background:rgba(15,29,63,.7);color:#b9c5df;font-size:11px;line-height:1;
-        transition:.16s ease;margin-right:7px;
+        transition:.16s ease;margin:0;
+      }
+      #detailWatchList .watch-record-actions [data-delete-watch]{
+        flex:0 0 auto;margin:0;
       }
       #detailWatchList .watch-record-edit-btn:hover{
         border-color:rgba(159,124,255,.48);background:rgba(111,97,244,.16);color:#fff;
