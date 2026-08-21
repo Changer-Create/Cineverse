@@ -1,0 +1,28 @@
+@media (min-width: 1800px) {
+  #planView .plan-shell {
+    width: 100%;
+    max-width: 2200px;
+  }
+
+  #planView .plan-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+    gap: 18px;
+  }
+
+  #planView .plan-day {
+    min-height: 140px;
+  }
+
+  #matchView .match-shell {
+    width: 100%;
+    max-width: 2200px;
+  }
+
+  #matchView .match-hero {
+    padding: 26px 28px;
+  }
+
+  #matchView .match-panel {
+    margin-top: 20px;
+  }
+}
