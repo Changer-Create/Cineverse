@@ -106,10 +106,11 @@
   async function fillMissingCardSummary(card, radar, movie) {
     const existing = localOverviewForRadar(radar, movie);
     if (existing) {
+      card.dataset.radarOverviewLoaded = '1';
       setCardSummary(card, existing);
       return;
     }
-    if (!radar?.tmdbId) {
+    if (!radar?.tmdbId || card.dataset.radarOverviewLoaded === '1') {
       setCardSummary(card, '暂无影片摘要。');
       return;
     }
@@ -123,6 +124,7 @@
       writeOverviewCache(cache);
     }
     if (!card.isConnected || radarIdFromCard(card) !== String(radar.id || '')) return;
+    card.dataset.radarOverviewLoaded = '1';
     setCardSummary(card, overview);
   }
 
@@ -216,10 +218,6 @@
 
     const existing = findMovieForRadar(radar, state);
     if (existing?.id) {
-      existing.personal = existing.personal || {};
-      existing.personal.status = 'want';
-      existing.updatedAt = new Date().toISOString();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       setRadarReturnContext();
       location.hash = `detail/${encodeURIComponent(existing.id)}`;
       location.reload();
