@@ -22,6 +22,60 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
+  function ensureNoteTextarea() {
+    const current = document.getElementById('watchNoteInput');
+    if (!current) return null;
+    if (current.tagName === 'TEXTAREA') return current;
+
+    const textarea = document.createElement('textarea');
+    textarea.id = 'watchNoteInput';
+    textarea.className = current.className || '';
+    textarea.value = current.value || '';
+    textarea.placeholder = '记录你的感受';
+    textarea.rows = 10;
+    textarea.setAttribute('aria-label', '记录你的感受');
+
+    current.id = 'watchNoteInputLegacy';
+    current.tabIndex = -1;
+    current.setAttribute('aria-hidden', 'true');
+    current.style.display = 'none';
+    current.insertAdjacentElement('beforebegin', textarea);
+
+    const syncLegacy = () => { current.value = textarea.value; };
+    textarea.addEventListener('input', syncLegacy);
+    textarea.addEventListener('change', syncLegacy);
+    return textarea;
+  }
+
+  function syncNoteToLegacy() {
+    const note = document.getElementById('watchNoteInput');
+    const legacy = document.getElementById('watchNoteInputLegacy');
+    if (note && legacy) legacy.value = note.value;
+  }
+
+  function syncNoteFromLegacy() {
+    const note = document.getElementById('watchNoteInput');
+    const legacy = document.getElementById('watchNoteInputLegacy');
+    if (note && legacy) note.value = legacy.value || '';
+  }
+
+  function replaceFieldLabel(input, text) {
+    if (!input) return;
+    const labels = input.labels ? [...input.labels] : [];
+    const label = labels[0] || input.closest('label');
+    if (!label) return;
+
+    const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const raw = node.nodeValue || '';
+      if (/观影场景\s*\/\s*影院|观看场景/.test(raw)) {
+        node.nodeValue = raw.replace(/观影场景\s*\/\s*影院|观看场景/g, text);
+        return;
+      }
+    }
+  }
+
   function modalParts() {
     const modal = document.getElementById('watchModal');
     const form = document.getElementById('watchForm');
@@ -33,13 +87,18 @@
       date: document.getElementById('watchDateInput'),
       rating: document.getElementById('watchRatingInput'),
       venue: document.getElementById('watchVenueInput'),
-      note: document.getElementById('watchNoteInput')
+      note: ensureNoteTextarea()
     };
   }
 
   function tuneWatchModal() {
-    const { modal, note } = modalParts();
+    const { modal, venue, note } = modalParts();
     if (modal) modal.classList.add('watch-record-expanded');
+    if (venue) {
+      replaceFieldLabel(venue, '观看场景');
+      venue.placeholder = '影院 / 家中 / 聚会';
+      venue.setAttribute('aria-label', '观看场景');
+    }
     if (note) {
       note.placeholder = '记录你的感受';
       note.setAttribute('aria-label', '记录你的感受');
@@ -109,6 +168,7 @@
     rating.value = score == null ? '' : String(score);
     venue.value = String(target.venue || '');
     note.value = String(target.note || '');
+    syncNoteToLegacy();
     if (title) title.textContent = '编辑观影记录';
     if (submit) submit.textContent = '保存修改';
     modal.showModal();
@@ -202,13 +262,19 @@
         overflow-y:auto;
       }
       #watchModal #watchNoteInput{
+        display:block;
         width:100%;
         min-height:260px!important;
         height:clamp(240px,34vh,420px);
         max-height:58vh;
         resize:vertical!important;
-        line-height:1.8;
-        padding:14px 16px;
+        box-sizing:border-box;
+        text-align:left!important;
+        vertical-align:top!important;
+        white-space:pre-wrap;
+        overflow:auto;
+        line-height:1.8!important;
+        padding:14px 16px!important;
       }
       #watchModal #watchNoteInput::placeholder{
         color:#7f8aa8;
@@ -248,12 +314,17 @@
       openEditor(editButton.dataset.editWatch);
     }
     if (event.target.closest?.('#detailAddWatchBtn,#detailAddWatchBtn2')) {
-      requestAnimationFrame(tuneWatchModal);
+      requestAnimationFrame(() => {
+        tuneWatchModal();
+        if (!editing) syncNoteFromLegacy();
+      });
     }
   }, true);
 
   document.addEventListener('submit', event => {
-    if (event.target?.id !== 'watchForm' || !editing) return;
+    if (event.target?.id !== 'watchForm') return;
+    syncNoteToLegacy();
+    if (!editing) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
