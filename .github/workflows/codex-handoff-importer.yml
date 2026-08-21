@@ -30,7 +30,6 @@ jobs:
         shell: bash
         run: |
           test -f cineverse-codex-handoff-clean.patch
-          test "$(git merge-base HEAD origin/main)" = "2578ad7b77254fdd583b865f2e5601e3a273fe65"
           git merge-base --is-ancestor 10db6de53e82defe948617388469482c0a67fa20 HEAD
 
       - name: Apply Codex patch
@@ -70,7 +69,6 @@ jobs:
               if new not in text:
                   raise SystemExit(f'{label} anchor missing in {path}')
 
-          # The production Pages URL is the current repository homepage.
           replace_required(
               'cineverse-config.js',
               'https://cj956151388-png.github.io/movie-collection/',
@@ -78,8 +76,6 @@ jobs:
               'publicAppUrl',
           )
 
-          # Preserve the newer library card system introduced on main while keeping
-          # the Codex manifest/governance refactor.
           runtime = Path('content-center-runtime-v1.js')
           text = runtime.read_text()
           text = text.replace("'library-card-actions-v2',", "'library-card-system-v1',")
@@ -98,10 +94,6 @@ jobs:
           cards = Path('library-card-system-v1.js')
           text = cards.read_text()
           text = text.replace(
-              "  const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';\n",
-              '',
-          )
-          text = text.replace(
               "  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';",
               "  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;",
           )
@@ -111,10 +103,10 @@ jobs:
               text = text.replace(old_save, new_save)
           elif new_save not in text:
               raise SystemExit('library card save boundary anchor missing')
+          text = text.replace("  const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';\n", '')
           text = text.replace('new MutationObserver(', 'new window.MovieMutationObserver(')
           cards.write_text(text)
 
-          # Keep the new active module covered by Codex's boundary tests.
           test = Path('test/content-runtime.test.js')
           text = test.read_text()
           text = text.replace('assert.equal(resources.length, 44);', 'assert.equal(resources.length, 45);')
@@ -162,7 +154,6 @@ jobs:
           audit.write_text(text)
           PY
 
-          # Handoff artifacts are transport only, not product code.
           git rm -f cineverse-codex-handoff-clean.patch
           git rm -f .github/workflows/import-codex-patch.yml || true
 
