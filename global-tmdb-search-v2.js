@@ -130,11 +130,12 @@
   }
 
   async function tmdbFetch(path, params = {}) {
-    const res = await fetch(PROXY_URL, {
+    const response = await fetch(PROXY_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ path, params })
     });
+    const res = await window.MovieTmdbAliasMatch?.enrich(response,path,params) || response;
     let body = null;
     try { body = await res.json(); } catch {}
     if (!res.ok) throw new Error(body?.message || body?.error || `TMDb 请求失败（${res.status}）`);

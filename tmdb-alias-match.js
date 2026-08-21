@@ -10,18 +10,11 @@
     .normalize('NFKC')
     .replace(/[\s·•:：—–\-_'"“”‘’.,，。!！?？()（）\[\]【】]/g,'');
 
-  function requestMeta(input,init){
-    const url=typeof input==='string'?input:(input instanceof URL?input.href:input?.url||'');
-    if(url!==TMDB_PROXY_URL) return null;
-    const body=init?.body;
-    if(typeof body!=='string') return null;
-    try{
-      const parsed=JSON.parse(body);
-      const path=String(parsed?.path||'');
-      if(!['/search/multi','/search/movie','/search/tv'].includes(path)) return null;
-      const query=String(parsed?.params?.query||'').trim();
-      return query?{path,query}:null;
-    }catch{return null}
+  function searchMeta(path,params){
+    const normalizedPath=String(path||'');
+    if(!['/search/multi','/search/movie','/search/tv'].includes(normalizedPath)) return null;
+    const query=String(params?.query||'').trim();
+    return query?{path:normalizedPath,query}:null;
   }
 
   function candidateType(item,path){
@@ -97,10 +90,11 @@
     });
   }
 
-  window.fetch=async function(input,init){
-    const meta=requestMeta(input,init);
-    const response=await nativeFetch(input,init);
-    if(!meta) return response;
-    try{return await enrichSearchResponse(response,meta)}catch{return response}
-  };
+  window.MovieTmdbAliasMatch=Object.freeze({
+    async enrich(response,path,params={}) {
+      const meta=searchMeta(path,params);
+      if(!meta) return response;
+      try{return await enrichSearchResponse(response,meta)}catch{return response}
+    }
+  });
 })();

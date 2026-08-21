@@ -1489,7 +1489,7 @@
   if(Array.isArray(appState.home.radar))appState.home.radar=appState.home.radar.filter(r=>!String(r?.id||'').startsWith('radar-demo-'));
   appState.home.random=[];
   localStorage.setItem(V2_KEY,JSON.stringify(appState));
-  function save(){localStorage.setItem(V2_KEY,JSON.stringify(appState));if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
+  function save(){window.MovieRatingSync?.syncState(appState);localStorage.setItem(V2_KEY,JSON.stringify(appState));if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
 
 
   const $=id=>document.getElementById(id);
@@ -1648,7 +1648,8 @@
   const TMDB_PROXY_URL='https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
   function tmdbCredential(){return 'proxy'}
   async function tmdbFetch(path,params={}){
-    const res=await fetch(TMDB_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,params})});
+    const response=await fetch(TMDB_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,params})});
+    const res=await window.MovieTmdbAliasMatch?.enrich(response,path,params) || response;
     let body=null;try{body=await res.json()}catch{}
     if(!res.ok)throw new Error(body?.message||body?.error||`TMDb 代理 HTTP ${res.status}`);
     return body;

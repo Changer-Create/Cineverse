@@ -234,7 +234,7 @@
   }
 
   async function tmdbFetch(path,params={}){
-    const res=await fetch(TMDB_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,params})}); let body=null; try{body=await res.json()}catch{}
+    const response=await fetch(TMDB_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path,params})}); const res=await window.MovieTmdbAliasMatch?.enrich(response,path,params) || response; let body=null; try{body=await res.json()}catch{}
     if(!res.ok)throw new Error(body?.message||body?.error||`TMDb 代理 HTTP ${res.status}`); return body;
   }
   const tmdbImage=(p,size='w342')=>p?`https://image.tmdb.org/t/p/${size}${p}`:'';
