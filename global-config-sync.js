@@ -32,6 +32,7 @@
   let applyingRemote = false;
   let pulling = false;
   let pushInFlight = 0;
+  let lastRemoteKeys = new Set();
   const pushTimers = new Map();
   let readyResolve;
   const ready = new Promise(resolve => { readyResolve = resolve; });
@@ -124,6 +125,7 @@
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok || payload?.ok !== true) throw new Error(payload?.message || `HTTP ${res.status}`);
+      lastRemoteKeys.add(key);
       window.dispatchEvent(new CustomEvent('movie-global-config:saved', { detail: { key, updatedAt: payload.updatedAt || '' } }));
       if (!silent) showAdminToast('已同步到全用户');
       return true;
@@ -177,6 +179,7 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const rows = await res.json();
       if (!Array.isArray(rows)) return false;
+      lastRemoteKeys = new Set(rows.map(row => String(row?.config_key || '')).filter(Boolean));
 
       let changed = false;
       for (const row of rows) changed = applyRemoteRow(row) || changed;
@@ -197,6 +200,19 @@
     } finally {
       pulling = false;
     }
+  }
+
+  async function bootstrapMissingAdminConfig() {
+    if (!IS_ADMIN || !adminToken()) return 0;
+    let migrated = 0;
+    for (const [key, meta] of Object.entries(CONFIGS)) {
+      if (lastRemoteKeys.has(key)) continue;
+      const local = safeParse(localStorage.getItem(meta.storageKey));
+      if (!local || typeof local !== 'object' || Array.isArray(local)) continue;
+      if (await push(key, local, { silent:true })) migrated += 1;
+    }
+    if (migrated > 0) showAdminToast(`已将 ${migrated} 类现有后台配置迁移到云端`);
+    return migrated;
   }
 
   const previousSetItem = Storage.prototype.setItem;
@@ -227,11 +243,13 @@
     push
   };
 
-  const initial = pull({ allowAdminReload:true }).finally(() => readyResolve?.());
+  const initial = pull({ allowAdminReload:true })
+    .then(() => bootstrapMissingAdminConfig())
+    .finally(() => readyResolve?.());
   void initial;
 
   if (!IS_ADMIN) {
-    setInterval(() => pull({ allowAdminReload:false }), 60000);
+    setInterval(() => pull({ allowAdminReload:false }), 30000);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') pull({ allowAdminReload:false });
     });
