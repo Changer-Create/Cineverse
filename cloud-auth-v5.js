@@ -220,10 +220,20 @@
     if (!dialog.open) dialog.showModal();
   }
 
+  async function fetchCloudMeta(userId) {
+    const { data,error } = await client.from('user_data').select('updated_at').eq('user_id',userId).maybeSingle();
+    if (error) throw error;
+    return data || null;
+  }
   async function fetchCloudRow(userId) {
     const { data,error } = await client.from('user_data').select('data_json,updated_at').eq('user_id',userId).maybeSingle();
     if (error) throw error;
     return data || null;
+  }
+  function sameCloudVersion(remoteUpdatedAt,baselineUpdatedAt) {
+    const remoteTs = ts(remoteUpdatedAt);
+    const baselineTs = ts(baselineUpdatedAt);
+    return Boolean(remoteTs && baselineTs && Math.abs(remoteTs - baselineTs) <= 500);
   }
   function stageCloudData(user,row,{ conflict=false }={}) {
     const cloud = row?.data_json;
@@ -272,30 +282,48 @@
     return true;
   }
 
-  async function performSync({ silent=false,force=false,startup=false }={}) {
+  async function performSync({ silent=false,force=false,startup=false,cloudMeta=null }={}) {
     if (!currentUser) return false;
     const local = localData();
     if (!hasUsableData(local)) return false;
     const owner = localStorage.getItem(OWNER_KEY) || '';
     if (!force && owner && owner !== currentUser.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
+    if (force) return upsertLocal(local,{ silent });
 
+    const baseline = readBaseline(currentUser.id);
+    const baselineFp = baseline?.fingerprint || '';
+    const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
+    const localFp = fingerprint(local);
+    const meta = cloudMeta || await fetchCloudMeta(currentUser.id);
+
+    if (!meta) return upsertLocal(local,{ silent:true });
+
+    // 正常状态只读取 updated_at。只要云端版本戳仍与 baseline 一致，
+    // 就可以确认云端内容未变化，无需下载整份 data_json。
+    if (baselineFp) {
+      const baselineStamp = baseline?.updated_at || lastSync;
+      if (sameCloudVersion(meta.updated_at,baselineStamp)) {
+        if (localFp === baselineFp) {
+          commitSyncedState(currentUser.id,local,meta.updated_at || baselineStamp || new Date().toISOString());
+          return true;
+        }
+        clearPendingCloud(currentUser.id);
+        return upsertLocal(local,{ silent:true });
+      }
+    }
+
+    // 只有首次建立 baseline、云端版本戳变化，或旧数据需要兜底比对时，才下载完整 JSON。
     const row = await fetchCloudRow(currentUser.id);
     const cloud = row?.data_json;
     if (!hasUsableData(cloud)) return upsertLocal(local,{ silent:true });
 
-    const localFp = fingerprint(local);
     const cloudFp = fingerprint(cloud);
     if (localFp === cloudFp) {
       commitSyncedState(currentUser.id,cloud,row.updated_at || new Date().toISOString());
       return true;
     }
-    if (force) return upsertLocal(local,{ silent });
 
-    const baseline = readBaseline(currentUser.id);
-    const baselineFp = baseline?.fingerprint || '';
     const dirty = localStorage.getItem(DIRTY_KEY) === '1';
-    const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
-
     if (baselineFp) {
       if (cloudFp === baselineFp && localFp !== baselineFp) {
         clearPendingCloud(currentUser.id);
@@ -385,10 +413,11 @@
   }
 
   async function reconcileUserData(user) {
-    const row = await fetchCloudRow(user.id);
     const local = localData();
     const owner = localStorage.getItem(OWNER_KEY) || '';
-    if (!hasUsableData(row?.data_json)) {
+    const meta = await fetchCloudMeta(user.id);
+
+    if (!meta) {
       clearPendingCloud(user.id);
       if (hasUsableData(local)) {
         if (owner && owner !== user.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
@@ -396,11 +425,24 @@
       }
       return;
     }
+
+    // 没有可用本机数据或切换了账号时，必须真正下载云端内容以供应用。
     if (!hasUsableData(local) || (owner && owner !== user.id)) {
+      const row = await fetchCloudRow(user.id);
+      if (!hasUsableData(row?.data_json)) {
+        clearPendingCloud(user.id);
+        if (hasUsableData(local)) {
+          if (owner && owner !== user.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
+          await upsertLocal(local,{ silent:true });
+        }
+        return;
+      }
       stageCloudData(user,row,{ conflict:false });
       return;
     }
-    await uploadCurrentData({ silent:true,startup:true });
+
+    // 已有本机 baseline 的正常启动只复用轻量 metadata，避免再次查询整份 JSON。
+    await uploadCurrentData({ silent:true,startup:true,cloudMeta:meta });
   }
 
   async function setUser(user,{ reconcile=true }={}) {
