@@ -6,8 +6,6 @@
   const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
   let previewRadarId = '';
   let previewRequestId = 0;
-  let previewApplying = false;
-  let previewObserver = null;
 
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
   const readState = () => safeParse(localStorage.getItem(STORAGE_KEY)) || { movies: [], home: { radar: [] }, settings: {} };
@@ -143,10 +141,6 @@
   }
 
   function showDetailView() {
-    if (typeof window.setView === 'function') {
-      window.setView('detail');
-      return;
-    }
     document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
     document.getElementById('detailView')?.classList.remove('hidden');
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active', a.dataset.view === 'library'));
@@ -183,50 +177,45 @@
 
   function fillPreview(radar, detail = null, credits = null) {
     if (!radar || previewRadarId !== radar.id) return;
-    previewApplying = true;
-    try {
-      const title = detail?.title || radar.title || '未命名电影';
-      const year = Number(String(detail?.release_date || radar.releaseDate || '').slice(0, 4)) || radar.year || '';
-      const directors = (credits?.crew || []).filter(person => person?.job === 'Director').map(person => person.name).filter(Boolean);
-      const fallbackDirectors = Array.isArray(radar.directors) ? radar.directors : [];
-      const countries = (detail?.production_countries || []).map(item => item.name).filter(Boolean);
-      const fallbackCountries = Array.isArray(radar.countries) ? radar.countries : [];
-      const genres = (detail?.genres || []).map(item => item.name).filter(Boolean);
-      const fallbackGenres = Array.isArray(radar.genres) ? radar.genres : [];
-      const posterUrl = detail?.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (radar.posterUrl || '');
+    const title = detail?.title || radar.title || '未命名电影';
+    const year = Number(String(detail?.release_date || radar.releaseDate || '').slice(0, 4)) || radar.year || '';
+    const directors = (credits?.crew || []).filter(person => person?.job === 'Director').map(person => person.name).filter(Boolean);
+    const fallbackDirectors = Array.isArray(radar.directors) ? radar.directors : [];
+    const countries = (detail?.production_countries || []).map(item => item.name).filter(Boolean);
+    const fallbackCountries = Array.isArray(radar.countries) ? radar.countries : [];
+    const genres = (detail?.genres || []).map(item => item.name).filter(Boolean);
+    const fallbackGenres = Array.isArray(radar.genres) ? radar.genres : [];
+    const posterUrl = detail?.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (radar.posterUrl || '');
 
-      setText('detailTitle', title);
-      setText('detailOriginal', [detail?.original_title, year].filter(Boolean).join(' · ') || String(year || ''));
-      setText('detailCreatorLabel', '导演');
-      setText('detailDirectors', (directors.length ? directors : fallbackDirectors).join(' / ') || '未知');
-      setText('detailCountries', (countries.length ? countries : fallbackCountries).join(' / ') || '未知');
-      setText('detailGenres', (genres.length ? genres : fallbackGenres).join(' / ') || '待补全');
-      setText('detailRuntimeLabel', '片长');
-      setText('detailRuntime', (detail?.runtime || radar.runtime) ? `${detail?.runtime || radar.runtime} 分钟` : '未知');
-      setText('detailReleaseLabel', '上映');
-      setText('detailRelease', detail?.release_date || radar.releaseDate || year || '未知');
-      setText('detailMediaType', '电影');
-      document.getElementById('detailSeriesFact')?.classList.add('hidden');
-      setText('detailTmdb', radar.tmdbId || detail?.id || '未关联');
-      setText('detailOverview', detail?.overview || '暂无剧情简介。当前展示电影雷达已有资料，加入影视库后可继续完善个人记录。');
-      setPreviewTags(genres.length ? genres : fallbackGenres);
-      setPreviewPoster(posterUrl, title);
+    setText('detailTitle', title);
+    setText('detailOriginal', [detail?.original_title, year].filter(Boolean).join(' · ') || String(year || ''));
+    setText('detailCreatorLabel', '导演');
+    setText('detailDirectors', (directors.length ? directors : fallbackDirectors).join(' / ') || '未知');
+    setText('detailCountries', (countries.length ? countries : fallbackCountries).join(' / ') || '未知');
+    setText('detailGenres', (genres.length ? genres : fallbackGenres).join(' / ') || '待补全');
+    setText('detailRuntimeLabel', '片长');
+    setText('detailRuntime', (detail?.runtime || radar.runtime) ? `${detail?.runtime || radar.runtime} 分钟` : '未知');
+    setText('detailReleaseLabel', '上映');
+    setText('detailRelease', detail?.release_date || radar.releaseDate || year || '未知');
+    setText('detailMediaType', '电影');
+    document.getElementById('detailSeriesFact')?.classList.add('hidden');
+    setText('detailTmdb', radar.tmdbId || detail?.id || '未关联');
+    setText('detailOverview', detail?.overview || '暂无剧情简介。当前展示电影雷达已有资料，加入影视库后可继续完善个人记录。');
+    setPreviewTags(genres.length ? genres : fallbackGenres);
+    setPreviewPoster(posterUrl, title);
 
-      setText('detailRating', '—');
-      setText('detailStars', '☆☆☆☆☆');
-      setText('detailLastWatch', '尚未加入影视库');
-      setText('detailPlanMeta', '未加入月度计划');
-      setText('detailRadarBadge', radar.ignored ? '已忽略' : (radar.badge || '电影雷达'));
-      setText('detailRadarDate', radar.discoveredAt || '—');
-      setText('detailPublicScore', radar.public != null ? Number(radar.public).toFixed(1) : '—');
-      setText('detailMatchScore', radar.match != null ? `${Math.round(Number(radar.match))}%` : '—');
-      setText('detailRadarReason', radar.reason || '来自电影雷达的推荐。');
-      const back = document.getElementById('detailBack');
-      if (back) back.textContent = '‹ 返回电影雷达';
-      ensurePreviewNote();
-    } finally {
-      previewApplying = false;
-    }
+    setText('detailRating', '—');
+    setText('detailStars', '☆☆☆☆☆');
+    setText('detailLastWatch', '尚未加入影视库');
+    setText('detailPlanMeta', '未加入月度计划');
+    setText('detailRadarBadge', radar.ignored ? '已忽略' : (radar.badge || '电影雷达'));
+    setText('detailRadarDate', radar.discoveredAt || '—');
+    setText('detailPublicScore', radar.public != null ? Number(radar.public).toFixed(1) : '—');
+    setText('detailMatchScore', radar.match != null ? `${Math.round(Number(radar.match))}%` : '—');
+    setText('detailRadarReason', radar.reason || '来自电影雷达的推荐。');
+    const back = document.getElementById('detailBack');
+    if (back) back.textContent = '‹ 返回电影雷达';
+    ensurePreviewNote();
   }
 
   async function tmdbFetch(path, params = {}) {
@@ -263,26 +252,12 @@
     enrichPreview(radar, requestId).catch(() => {});
   }
 
-  function observePreviewIntegrity() {
-    const detail = document.getElementById('detailView');
-    if (!detail || previewObserver) return;
-    previewObserver = new MutationObserver(() => {
-      if (!previewRadarId || previewApplying || detail.classList.contains('hidden')) return;
-      const radar = radarById(previewRadarId);
-      if (!radar) return;
-      const title = String(document.getElementById('detailTitle')?.textContent || '').trim();
-      if (title !== String(radar.title || '').trim()) queueMicrotask(() => fillPreview(radar));
-    });
-    previewObserver.observe(detail, { childList: true, subtree: true, characterData: true, attributes: true });
-  }
-
   function boot() {
     ensureStyle();
     swapHomePlanAndInsight();
     syncRandomPosterLink();
     annotateRadarPosters();
     ensurePreviewNote();
-    observePreviewIntegrity();
 
     const randomTitle = document.getElementById('randomTitle');
     const randomPoster = document.getElementById('randomPoster');
@@ -300,11 +275,8 @@
       event.stopPropagation();
       event.stopImmediatePropagation();
       clearPreviewMode();
-      if (typeof window.setView === 'function') window.setView('radar');
-      else {
-        document.getElementById('detailView')?.classList.add('hidden');
-        document.getElementById('radarView')?.classList.remove('hidden');
-      }
+      document.getElementById('detailView')?.classList.add('hidden');
+      document.getElementById('radarView')?.classList.remove('hidden');
       location.hash = 'radar';
       return;
     }
