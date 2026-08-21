@@ -98,7 +98,7 @@ jobs:
               "  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;",
           )
           old_save = """  const saveState = state => {\n    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n    localStorage.setItem(CLOUD_DIRTY_KEY, '1');\n  };"""
-          new_save = """  const saveState = state => {\n    window.MovieRatingSync?.syncState?.(state);\n    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n    window.dispatchEvent(new CustomEvent('movie-collection:data-saved'));\n    window.MovieCloudAccount?.markLocalChange?.();\n  };"""
+          new_save = """  const saveState = state => {\n    window.MovieRatingSync?.syncState?.(state);\n    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));\n    window.dispatchEvent(new CustomEvent('movie-collection:data-saved'));\n    window.MovieCloudAccount?.markLocalChange();\n  };"""
           if old_save in text:
               text = text.replace(old_save, new_save)
           elif new_save not in text:
