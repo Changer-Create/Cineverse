@@ -3,7 +3,7 @@
   if (/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname)) return;
 
   const APP_KEY = 'movie-collection-v2';
-  const PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   const LIMIT = 6;
   const PLACEHOLDER = '搜索电影、剧集，点击Enter确认';
   const bundleCache = new Map();
@@ -12,8 +12,6 @@
   let lastResults = [];
   let activeIndex = -1;
   let previewState = null;
-  let pendingExternalWatch = null;
-  let replayingNativeWatch = false;
   let busyAction = false;
 
   const $ = id => document.getElementById(id);
@@ -28,11 +26,6 @@
   const originalTitleOf = item => mediaTypeOf(item) === 'tv' ? (item?.original_name || item?.original_title || item?.info?.originalTitle || '') : (item?.original_title || item?.original_name || item?.info?.originalTitle || '');
   const dateOf = item => String(item?.release_date || item?.first_air_date || item?.info?.releaseDate || item?.info?.firstAirDate || '');
   const yearOf = item => String(item?.info?.year || dateOf(item)).slice(0,4);
-  const localToday = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  };
-  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   function toast(message, duration = 3600) {
     const el = $('toast');
@@ -77,9 +70,10 @@
       .cv-global-search-action.watch{color:#ffe5ec;border-color:rgba(255,127,154,.25)}
       .cv-global-search-action:disabled{opacity:.5;cursor:wait}
       .cv-global-search-footer{padding:7px 10px 6px;border-top:1px solid rgba(161,179,255,.08);color:#66738f;font-size:9px;text-align:right}
-      html.cv-search-silent-add #movieModal{visibility:hidden!important;pointer-events:none!important}
-      html.cv-search-detail-preview #detailFavorite,
-      html.cv-search-detail-preview #detailView .detail-actions,
+      html.cv-search-detail-preview #detailPlanBtn,
+      html.cv-search-detail-preview #detailEditBtn,
+      html.cv-search-detail-preview #detailAddWatchBtn,
+      html.cv-search-detail-preview #detailView .detail-side-card:first-child,
       html.cv-search-detail-preview #detailView .detail-section,
       html.cv-search-detail-preview #detailView .detail-bottom{display:none!important}
       .cv-search-preview-note{margin:10px 0 0;padding:10px 12px;border:1px solid rgba(159,124,255,.2);border-radius:12px;background:rgba(117,86,220,.08);color:#aeb9d6;font-size:11px;line-height:1.7}
@@ -130,11 +124,12 @@
   }
 
   async function tmdbFetch(path, params = {}) {
-    const res = await fetch(PROXY_URL, {
+    const response = await fetch(PROXY_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ path, params })
     });
+    const res = await window.MovieTmdbAliasMatch?.enrich(response,path,params) || response;
     let body = null;
     try { body = await res.json(); } catch {}
     if (!res.ok) throw new Error(body?.message || body?.error || `TMDb 请求失败（${res.status}）`);
@@ -356,209 +351,61 @@
     return Number(bundle.detail?.runtime) || null;
   }
 
-  function setValue(id,value) {
-    const el = $(id);
-    if (el) el.value = value == null ? '' : String(value);
-  }
-
-  function fillMovieModal(bundle,status) {
+  function bundleData(bundle) {
     const { type, detail, result } = bundle;
-    const title = type==='tv' ? (detail.name || titleOf(result)) : (detail.title || titleOf(result));
-    const original = type==='tv' ? (detail.original_name || originalTitleOf(result)) : (detail.original_title || originalTitleOf(result));
-    const release = type==='tv' ? (detail.first_air_date || dateOf(result)) : (detail.release_date || dateOf(result));
-    const poster = detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '');
-
-    const typeInput = $('movieMediaTypeInput');
-    if (typeInput) {
-      typeInput.value = type;
-      typeInput.dispatchEvent(new Event('change',{bubbles:true}));
-    }
-    setValue('movieTitleInput',title);
-    setValue('movieOriginalTitleInput',original);
-    setValue('movieYearInput',String(release || '').slice(0,4));
-    setValue('movieReleaseDateInput',release || '');
-    setValue('movieLastAirDateInput',type==='tv' ? (detail.last_air_date || '') : '');
-    setValue('movieRuntimeInput',bundleRuntime(bundle) || '');
-    setValue('movieSeasonsInput',type==='tv' ? (detail.number_of_seasons ?? '') : '');
-    setValue('movieEpisodesInput',type==='tv' ? (detail.number_of_episodes ?? '') : '');
-    setValue('movieTvStatusInput',type==='tv' ? (detail.status || '') : '');
-    setValue('movieTmdbIdInput',detail.id || result.id);
-    setValue('movieDirectorInput',bundleCreators(bundle).join(' / '));
-    setValue('movieCountryInput',countryNames(detail).join(' / '));
-    setValue('movieGenresInput',(detail.genres || []).map(x => x?.name).filter(Boolean).join(' / '));
-    setValue('movieOverviewInput',detail.overview || '');
-    setValue('moviePosterInput',poster);
-    setValue('movieRatingInput','');
-    setValue('movieTagsInput','');
-    setValue('tmdbMovieQuery',title);
-    const statusInput = $('movieStatusInput');
-    if (statusInput) statusInput.value = status;
+    const releaseDate = type==='tv' ? (detail.first_air_date || dateOf(result)) : (detail.release_date || dateOf(result));
+    return {
+      mediaType:type,
+      tmdbId:Number(detail.id || result.id) || null,
+      title:type==='tv' ? (detail.name || titleOf(result)) : (detail.title || titleOf(result)),
+      originalTitle:type==='tv' ? (detail.original_name || originalTitleOf(result)) : (detail.original_title || originalTitleOf(result)),
+      year:Number(String(releaseDate || '').slice(0,4)) || null,
+      releaseDate,
+      firstAirDate:type==='tv' ? releaseDate : '',
+      lastAirDate:type==='tv' ? (detail.last_air_date || '') : '',
+      numberOfSeasons:type==='tv' ? (detail.number_of_seasons ?? null) : null,
+      numberOfEpisodes:type==='tv' ? (detail.number_of_episodes ?? null) : null,
+      tvStatus:type==='tv' ? (detail.status || '') : '',
+      runtime:bundleRuntime(bundle),
+      directors:bundleCreators(bundle),
+      countries:countryNames(detail),
+      genres:(detail.genres || []).map(item => item?.name).filter(Boolean),
+      overview:detail.overview || '',
+      posterUrl:detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '')
+    };
   }
 
-  function triggerCoreEdit(movieId) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.editId = movieId;
-    btn.style.display = 'none';
-    document.body.appendChild(btn);
-    btn.click();
-    btn.remove();
-  }
-
-  function triggerCoreDetail(movieId) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.openDetail = movieId;
-    btn.style.display = 'none';
-    document.body.appendChild(btn);
-    btn.click();
-    btn.remove();
-  }
-
-  async function waitForModal(open, timeout = 2500) {
-    const started = Date.now();
-    while (Date.now()-started < timeout) {
-      if (Boolean($('movieModal')?.open) === open) return true;
-      await wait(20);
-    }
-    return false;
-  }
-
-  async function createOrUpdateViaCore(result,status,bundle = null) {
-    let local = localMatch(result);
-    document.documentElement.classList.add('cv-search-silent-add');
-    try {
-      if (local) {
-        if (local.personal?.status === status) return local;
-        triggerCoreEdit(local.id);
-        await waitForModal(true);
-        const statusInput = $('movieStatusInput');
-        if (statusInput) statusInput.value = status;
-      } else {
-        const add = $('addMovieBtn');
-        if (!add) throw new Error('添加影片入口不可用');
-        const resolved = bundle || await fetchBundle(result);
-        add.click();
-        await waitForModal(true);
-        fillMovieModal(resolved,status);
-      }
-      const form = $('movieForm');
-      if (!form) throw new Error('添加影片表单不可用');
-      form.requestSubmit();
-      await waitForModal(false);
-      await wait(30);
-      local = localMatch(result);
-      if (!local) throw new Error('影片保存后未能在影视库中找到');
-      return local;
-    } finally {
-      document.documentElement.classList.remove('cv-search-silent-add');
-    }
+  function detailApi() {
+    const api = window.CineverseLibraryDetail;
+    if (!api) throw new Error('统一详情数据层不可用');
+    return api;
   }
 
   async function applyStatus(result,status,sourceButton) {
     if (!result || busyAction) return;
-    if (status==='watched') {
-      const local = localMatch(result);
-      if (local) {
-        closeDrop();
-        triggerCoreDetail(local.id);
-        await wait(20);
-        $('detailAddWatchBtn')?.click();
-      } else {
-        busyAction = true;
-        if (sourceButton) { sourceButton.disabled = true; sourceButton.textContent = '载入…'; }
-        try {
-          const bundle = await fetchBundle(result);
-          pendingExternalWatch = { result, bundle };
-          closeDrop();
-          openExternalWatch(result);
-        } catch (err) {
-          toast(`无法打开观看记录：${err?.message || err}`);
-        } finally {
-          busyAction = false;
-          if (sourceButton?.isConnected) { sourceButton.disabled = false; sourceButton.textContent = '看过'; }
-        }
-      }
-      return;
-    }
-
     busyAction = true;
-    if (sourceButton) { sourceButton.disabled = true; sourceButton.textContent = '保存中…'; }
+    if (sourceButton) { sourceButton.disabled = true; sourceButton.textContent = status==='watched'?'载入…':'保存中…'; }
     try {
-      const local = await createOrUpdateViaCore(result,status);
+      const bundle = await fetchBundle(result);
+      const data = bundleData(bundle);
+      const api = detailApi();
+      if (status==='watched') {
+        closeDrop();
+        api.openWatchRecord(data);
+        return;
+      }
+      const local = api.findLibraryMovie(data);
+      const movie = local ? api.setLibraryStatus(local.id,status) : api.addTmdbMovieToLibrary(data,{status,favorite:false});
+      if (previewState) upgradePreview(movie);
       toast(`《${titleOf(result)}》已设为「${status==='watching'?'在看':'想看'}」`);
       renderResults();
-      return local;
+      return movie;
     } catch (err) {
       toast(`保存失败：${err?.message || err}`);
     } finally {
       busyAction = false;
+      if (sourceButton?.isConnected) sourceButton.disabled = false;
     }
-  }
-
-  function watchTitleEl() {
-    return $('watchModal')?.querySelector('.modal-head h3') || null;
-  }
-
-  function restoreWatchTitle() {
-    const title = watchTitleEl();
-    if (title) title.textContent = '记录一次观看';
-  }
-
-  function openExternalWatch(result, values = null) {
-    const modal = $('watchModal');
-    if (!modal) { toast('观看记录模块不可用'); pendingExternalWatch = null; return; }
-    const title = watchTitleEl();
-    if (title) title.textContent = `记录一次观看 · 《${titleOf(result)}》`;
-    setValue('watchDateInput', values?.date || localToday());
-    setValue('watchRatingInput', values?.rating ?? '');
-    setValue('watchVenueInput', values?.venue || '');
-    setValue('watchNoteInput', values?.note || '');
-    if (!modal.open) modal.showModal();
-  }
-
-  async function commitExternalWatch(event) {
-    if (!pendingExternalWatch || replayingNativeWatch) return false;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    const record = {
-      date: $('watchDateInput')?.value || localToday(),
-      rating: $('watchRatingInput')?.value ?? '',
-      venue: $('watchVenueInput')?.value || '',
-      note: $('watchNoteInput')?.value || ''
-    };
-    const pending = pendingExternalWatch;
-    pendingExternalWatch = null;
-    $('watchModal')?.close();
-    restoreWatchTitle();
-    busyAction = true;
-    try {
-      const local = await createOrUpdateViaCore(pending.result,'want',pending.bundle);
-      triggerCoreDetail(local.id);
-      await wait(30);
-      setValue('watchDateInput',record.date);
-      setValue('watchRatingInput',record.rating);
-      setValue('watchVenueInput',record.venue);
-      setValue('watchNoteInput',record.note);
-      replayingNativeWatch = true;
-      try { $('watchForm')?.requestSubmit(); }
-      finally { replayingNativeWatch = false; }
-    } catch (err) {
-      toast(`保存观看记录失败：${err?.message || err}`);
-      pendingExternalWatch = pending;
-      openExternalWatch(pending.result,record);
-    } finally {
-      busyAction = false;
-    }
-    return true;
-  }
-
-  function clearExternalWatch() {
-    if (replayingNativeWatch) return;
-    pendingExternalWatch = null;
-    restoreWatchTitle();
   }
 
   function visiblePageId() {
@@ -651,8 +498,17 @@
     } else $('detailSeriesFact')?.classList.add('hidden');
     setPreviewTags(genres);
     setPreviewPoster(posterUrl,title);
+    const favorite = $('detailFavorite');
+    favorite?.classList.remove('on');
+    const actions = $('detailStatusActions');
+    if (actions) {
+      const options = type==='tv' ? [['want','想看'],['watching','在看'],['watched','看过']] : [['want','想看'],['watched','看过']];
+      actions.innerHTML = options.map(([value,label]) => `<button type="button" data-detail-status="${value}">${label}</button>`).join('');
+    }
+    const data = bundle ? bundleData(bundle) : {mediaType:type,tmdbId:Number(result.id)||null,title,originalTitle:original,year:Number(String(release||'').slice(0,4))||null,releaseDate:release};
+    window.CineverseLibraryDetail?.setDetailContext({source:'tmdb',mediaType:type,tmdbId:Number(result.id)||null,libraryMovieId:null,data});
     const note = ensurePreviewNote();
-    if (note) note.textContent = `TMDb 搜索详情预览 · 《${title || '该作品'}》尚未加入影视库。可返回搜索结果后选择“想看 / 在看 / 看过”。`;
+    if (note) note.textContent = `TMDb 浏览 · 《${title || '该作品'}》尚未加入影视库。星标或选择状态后会在当前详情原地解锁个人功能。`;
     const back = $('detailBack');
     if (back) back.textContent = '‹ 返回搜索结果';
   }
@@ -660,12 +516,16 @@
   async function openPreview(result) {
     const local = localMatch(result);
     if (local) {
+      previewState={result,previousViewId:visiblePageId(),libraryMovieId:local.id};
+      document.documentElement.dataset.detailReturnSource='search';
       closeDrop();
-      triggerCoreDetail(local.id);
+      detailApi().openLibraryDetail(local.id);
+      if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
       return;
     }
     previewState = { result, previousViewId:visiblePageId() };
     document.documentElement.classList.add('cv-search-detail-preview');
+    document.documentElement.dataset.detailReturnSource='search';
     closeDrop();
     document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
     $('detailView')?.classList.remove('hidden');
@@ -673,11 +533,19 @@
     fillPreview(result);
     try {
       const bundle = await fetchBundle(result);
-      if (previewState?.result?.id===result.id && mediaTypeOf(previewState.result)===mediaTypeOf(result)) fillPreview(result,bundle);
+      if (previewState?.result?.id===result.id && mediaTypeOf(previewState.result)===mediaTypeOf(result)) {previewState.bundle=bundle;fillPreview(result,bundle)}
     } catch (err) {
       const overview = $('detailOverview');
       if (overview && /正在读取/.test(overview.textContent || '')) overview.textContent = `TMDb 详情读取失败：${err?.message || err}`;
     }
+  }
+
+  function upgradePreview(movie) {
+    if (!movie) return;
+    document.documentElement.classList.remove('cv-search-detail-preview');
+    $('globalSearchPreviewNote')?.remove();
+    if (previewState) previewState.libraryMovieId = movie.id;
+    detailApi().openLibraryDetail(movie.id);
   }
 
   function closePreview() {
@@ -685,6 +553,7 @@
     const prev = previewState;
     previewState = null;
     document.documentElement.classList.remove('cv-search-detail-preview');
+    delete document.documentElement.dataset.detailReturnSource;
     $('globalSearchPreviewNote')?.remove();
     const back = $('detailBack');
     if (back) back.textContent = '‹ 返回影视库';
@@ -693,6 +562,7 @@
     target?.classList.remove('hidden');
     const map = {homeView:'home',libraryView:'library',matchView:'match',radarView:'radar',planView:'plan',watchedView:'watched',statsView:'stats',settingsView:'settings'};
     const viewKey = map[prev.previousViewId] || 'library';
+    history.replaceState(null,'',`#${viewKey}`);
     document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active',a.dataset.view===viewKey));
     if (lastResults.length) renderResults();
     return true;
@@ -731,6 +601,21 @@
   }
 
   document.addEventListener('click', event => {
+    if (previewState && event.target.closest?.('#detailFavorite')) {
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+      busyAction=true;
+      fetchBundle(previewState.result).then(bundle=>{
+        const movie=detailApi().addTmdbMovieToLibrary(bundleData(bundle),{status:'want',favorite:true});
+        upgradePreview(movie);toast(`《${titleOf(previewState?.result || bundle.result)}》已加入想看并点亮星标`);
+      }).catch(err=>toast(`保存失败：${err?.message || err}`)).finally(()=>{busyAction=false});
+      return;
+    }
+    const detailStatus = previewState ? event.target.closest?.('#detailStatusActions [data-detail-status]') : null;
+    if (detailStatus) {
+      event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+      applyStatus(previewState.result,detailStatus.dataset.detailStatus,detailStatus);
+      return;
+    }
     const action = event.target.closest?.('[data-tmdb-search-status]');
     if (action) {
       event.preventDefault();
@@ -760,18 +645,15 @@
     if (drop && !drop.classList.contains('hidden') && !event.target.closest('.cv-global-search-wrap')) closeDrop();
   }, true);
 
-  document.addEventListener('submit', event => {
-    if (event.target?.id==='watchForm' && pendingExternalWatch && !replayingNativeWatch) commitExternalWatch(event);
-  }, true);
+  window.addEventListener('cineverse:detail-library-opened',event=>{
+    if (!previewState) return;
+    previewState.libraryMovieId=event.detail?.libraryMovieId||null;
+    document.documentElement.classList.remove('cv-search-detail-preview');
+    $('globalSearchPreviewNote')?.remove();
+    if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
+  });
 
-  document.addEventListener('click', event => {
-    if (!pendingExternalWatch || replayingNativeWatch) return;
-    if (event.target.closest?.('#watchModalClose,#watchCancelBtn')) clearExternalWatch();
-  }, true);
 
-  document.addEventListener('cancel', event => {
-    if (event.target?.id==='watchModal' && pendingExternalWatch && !replayingNativeWatch) clearExternalWatch();
-  }, true);
 
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();

@@ -1,10 +1,9 @@
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
-  const ADMIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/admin-global-config`;
-  const TABLE_URL = `${SUPABASE_URL}/rest/v1/global_site_config?select=config_key,data_json,updated_at&order=config_key.asc`;
+  const SUPABASE_PUBLISHABLE_KEY = window.CineverseConfig.supabasePublishableKey;
+  const ADMIN_FUNCTION_URL = window.CineverseConfig.endpoints.adminGlobalConfig;
+  const TABLE_URL = window.CineverseConfig.endpoints.globalConfigTable;
   const ADMIN_TOKEN_KEY = 'movie-collection-admin-session-v1';
   const ADMIN_RELOAD_KEY = 'movie-global-config-admin-reload-v1';
   const IS_ADMIN = /(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname);
@@ -215,24 +214,14 @@
     return migrated;
   }
 
-  const previousSetItem = Storage.prototype.setItem;
-  const previousRemoveItem = Storage.prototype.removeItem;
-  if (!Storage.prototype.__movieGlobalConfigSyncV1) {
-    Object.defineProperty(Storage.prototype, '__movieGlobalConfigSyncV1', { value:true, configurable:true });
-    Storage.prototype.setItem = function(key, value) {
-      const result = previousSetItem.call(this, key, value);
-      if (this === localStorage && IS_ADMIN && !applyingRemote && BY_STORAGE_KEY[key]) {
-        queuePushByStorage(key, safeParse(value));
-      }
-      return result;
-    };
-    Storage.prototype.removeItem = function(key) {
-      const result = previousRemoveItem.call(this, key);
-      if (this === localStorage && IS_ADMIN && !applyingRemote && BY_STORAGE_KEY[key]) {
-        setTimeout(() => queuePushByStorage(key, fallbackStateForStorage(key)), 0);
-      }
-      return result;
-    };
+  function localChanged(storageKey, data) {
+    if (!IS_ADMIN || applyingRemote || !BY_STORAGE_KEY[storageKey]) return;
+    queuePushByStorage(storageKey, data);
+  }
+
+  function localRemoved(storageKey) {
+    if (!IS_ADMIN || applyingRemote || !BY_STORAGE_KEY[storageKey]) return;
+    setTimeout(() => queuePushByStorage(storageKey, fallbackStateForStorage(storageKey)), 0);
   }
 
   window.MovieGlobalConfig = {
@@ -240,7 +229,9 @@
     configs: clone(CONFIGS),
     ready,
     pull,
-    push
+    push,
+    localChanged,
+    localRemoved
   };
 
   const initial = pull({ allowAdminReload:true })

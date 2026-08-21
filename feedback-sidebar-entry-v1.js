@@ -58,7 +58,7 @@
     if (!nav) return;
     ensureEntry();
     if (!observer) {
-      observer = new MutationObserver(() => {
+      observer = new window.MovieMutationObserver(() => {
         const entry = document.getElementById(ENTRY_ID);
         if (!entry || nav.lastElementChild !== entry) scheduleEnsure();
       });

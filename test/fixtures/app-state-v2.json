@@ -1,0 +1,16 @@
+{
+  "movies": [
+    {
+      "id": "fixture-movie-1",
+      "mediaType": "movie",
+      "info": {"title": "示例电影", "year": 2024, "directors": ["示例导演"], "countries": ["中国"], "genres": ["剧情"]},
+      "personal": {"status": "watched", "rating": 8.5, "tags": ["示例"], "shortReview": "匿名测试数据", "favorite": true},
+      "watchHistory": [{"date": "2025-01-02", "rating": 8.5, "note": "fixture", "venue": "家中"}],
+      "plans": [{"month": "2025-01", "status": "completed"}],
+      "radar": {"discovered": false, "ignored": false}
+    }
+  ],
+  "settings": {"profileName": "测试用户", "profileRole": "", "profileAvatarDataUrl": "", "wallpaperDataUrl": ""},
+  "home": {"radar": [], "recent": [], "plan": [], "random": []},
+  "tmdbMatchCenter": {"rows": [], "resumeIds": [], "paused": false}
+}

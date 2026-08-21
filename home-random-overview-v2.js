@@ -48,7 +48,7 @@
     const quote = $('randomQuote');
     if (!quote) return;
     restoreFullOverview();
-    new MutationObserver(restoreFullOverview).observe(quote, {
+    new window.MovieMutationObserver(restoreFullOverview).observe(quote, {
       childList: true,
       characterData: true,
       subtree: true

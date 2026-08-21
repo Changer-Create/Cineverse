@@ -94,7 +94,7 @@
   function boot(){
     if(!document.body)return;
     applyDefaultBackground();
-    const observer=new MutationObserver(()=>{
+    const observer=new window.MovieMutationObserver(()=>{
       if(!applying)queueMicrotask(applyDefaultBackground);
     });
     observer.observe(document.body,{attributes:true,attributeFilter:['style','data-ui-theme']});

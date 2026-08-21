@@ -174,7 +174,7 @@
     const calendar = document.getElementById('planCalendar');
     if(!calendar) return;
     decorateAll(calendar);
-    const observer = new MutationObserver(mutations => {
+    const observer = new window.MovieMutationObserver(mutations => {
       let needsDecorate = false;
       for(const mutation of mutations){
         if(mutation.type === 'childList' && mutation.addedNodes.length){ needsDecorate = true; break; }
