@@ -62,7 +62,7 @@
       button.type = 'button';
       button.className = 'watch-record-edit-btn';
       button.dataset.editWatch = displayIndex;
-      button.textContent = '✎';
+      button.textContent = '编辑';
       button.title = '编辑观影记录';
       button.setAttribute('aria-label', '编辑观影记录');
       deleteButton.insertAdjacentElement('beforebegin', button);
@@ -140,15 +140,14 @@
     style.id = 'watchRecordEditV1Style';
     style.textContent = `
       #detailWatchList .watch-record-edit-btn{
-        width:38px;height:38px;display:inline-grid;place-items:center;flex:0 0 auto;
+        min-width:48px;height:38px;padding:0 10px;display:inline-grid;place-items:center;flex:0 0 auto;
         border:1px solid rgba(161,179,255,.18);border-radius:11px;
-        background:rgba(15,29,63,.7);color:#b9c5df;font-size:16px;line-height:1;
-        transition:.16s ease;
+        background:rgba(15,29,63,.7);color:#b9c5df;font-size:11px;line-height:1;
+        transition:.16s ease;margin-right:7px;
       }
       #detailWatchList .watch-record-edit-btn:hover{
         border-color:rgba(159,124,255,.48);background:rgba(111,97,244,.16);color:#fff;
       }
-      #detailWatchList [data-delete-watch] + .watch-record-edit-btn{margin-left:7px}
     `;
     document.head.appendChild(style);
   }
