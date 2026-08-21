@@ -83,6 +83,7 @@
       logoDataUrl:typeof next.logoDataUrl==='string'?next.logoDataUrl:prev.logoDataUrl
     };
     localStorage.setItem(KEY,JSON.stringify(state));
+    window.MovieGlobalConfig?.localChanged(KEY, state);
     window.dispatchEvent(new CustomEvent('movie-collection:brand-updated',{detail:clone(state)}));
     apply();
     return state;
@@ -90,6 +91,7 @@
 
   function reset(){
     localStorage.removeItem(KEY);
+    window.MovieGlobalConfig?.localRemoved(KEY);
     apply();
     return load();
   }

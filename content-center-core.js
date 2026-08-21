@@ -75,6 +75,7 @@
   function saveCopyState(next){
     const state = {version:VERSION,updatedAt:nowIso(),values:{...(next?.values||{})}};
     localStorage.setItem(COPY_KEY, JSON.stringify(state));
+    window.MovieGlobalConfig?.localChanged(COPY_KEY, state);
     window.dispatchEvent(new CustomEvent('movie-collection:content-updated',{detail:deepClone(state)}));
     return state;
   }
@@ -132,6 +133,7 @@
       disabledDefaultIds:Array.isArray(next?.disabledDefaultIds)?next.disabledDefaultIds:[]
     };
     localStorage.setItem(QUOTE_KEY,JSON.stringify(state));
+    window.MovieGlobalConfig?.localChanged(QUOTE_KEY, state);
     return state;
   }
 

@@ -1489,7 +1489,7 @@
   if(Array.isArray(appState.home.radar))appState.home.radar=appState.home.radar.filter(r=>!String(r?.id||'').startsWith('radar-demo-'));
   appState.home.random=[];
   localStorage.setItem(V2_KEY,JSON.stringify(appState));
-  function save(){window.MovieRatingSync?.syncState(appState);localStorage.setItem(V2_KEY,JSON.stringify(appState));if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
+  function save(){window.MovieRatingSync?.syncState(appState);localStorage.setItem(V2_KEY,JSON.stringify(appState));window.dispatchEvent(new CustomEvent('movie-collection:data-saved'));window.MovieCloudAccount?.markLocalChange();if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
 
 
   const $=id=>document.getElementById(id);

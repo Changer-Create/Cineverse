@@ -198,6 +198,8 @@
     movie.updatedAt = new Date().toISOString();
 
     localStorage.setItem(APP_KEY, JSON.stringify(state));
+    window.dispatchEvent(new CustomEvent('movie-collection:data-saved'));
+    window.MovieCloudAccount?.markLocalChange();
     modal?.close();
     clearEditing();
 

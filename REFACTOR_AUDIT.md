@@ -44,7 +44,7 @@
 ### P0：先建立保护网，暂不重构
 
 1. **零自动化测试与零 CI。** 所有行为变更都只能靠人工发现，与近期连续「重构 → hotfix → rollback → quarantine → 重新收口」的提交链相互印证。
-2. **持久化链由多层全局补丁组成。** 当前加载链中，`global-config-sync.js`、`home-month-insight-v2.js`、`cloud-pending-volatile-v1.js` 和 `cloud-auth-v5.js` 都包装 `Storage.prototype`；最终语义取决于脚本顺序。任一模块若保存错误的「previous」函数、抛异常或不传递 `this`，都可能破坏同步。
+2. **多层持久化补丁（已收口）。** 初次审计时 `global-config-sync.js`、`home-month-insight-v2.js`、`cloud-pending-volatile-v1.js` 和 `cloud-auth-v5.js` 都包装 `Storage.prototype`，使语义依赖脚本顺序。现已改为显式的应用保存事件、云同步通知、页签内待处理数据 store 和全局配置持久化 API；生产 JavaScript 不再修改 `Storage.prototype`。
 3. **全局序列化副作用（已收口）。** 初次审计时 `rating-sync-v3.js` 直接替换 `JSON.stringify`；现已改为由应用 `save()` 边界显式调用 `MovieRatingSync.syncState`，不再影响无关业务或第三方 SDK。
 4. **浏览器原语替换（已收口）。** 初次审计时 `content-observer-shield.js` 替换 `window.MutationObserver`，`tmdb-alias-match.js` 替换 `window.fetch`。现已分别改为显式 `MovieMutationObserver` 和 `MovieTmdbAliasMatch.enrich` 边界，不再改写浏览器全局原语；回归测试会阻止全局替换被重新引入。
 

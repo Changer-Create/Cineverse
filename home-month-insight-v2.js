@@ -296,15 +296,7 @@
     });
   }
 
-  const originalSetItem = Storage.prototype.setItem;
-  if (!Storage.prototype.__movieInsightPatchedV3) {
-    Object.defineProperty(Storage.prototype, '__movieInsightPatchedV3', { value:true, configurable:true });
-    Storage.prototype.setItem = function(key, value) {
-      const result = originalSetItem.call(this, key, value);
-      if (this === localStorage && key === STORAGE_KEY) queueRender();
-      return result;
-    };
-  }
+  window.addEventListener('movie-collection:data-saved', queueRender);
 
   window.addEventListener('storage', event => {
     if (event.key === STORAGE_KEY) queueRender();

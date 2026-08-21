@@ -215,24 +215,14 @@
     return migrated;
   }
 
-  const previousSetItem = Storage.prototype.setItem;
-  const previousRemoveItem = Storage.prototype.removeItem;
-  if (!Storage.prototype.__movieGlobalConfigSyncV1) {
-    Object.defineProperty(Storage.prototype, '__movieGlobalConfigSyncV1', { value:true, configurable:true });
-    Storage.prototype.setItem = function(key, value) {
-      const result = previousSetItem.call(this, key, value);
-      if (this === localStorage && IS_ADMIN && !applyingRemote && BY_STORAGE_KEY[key]) {
-        queuePushByStorage(key, safeParse(value));
-      }
-      return result;
-    };
-    Storage.prototype.removeItem = function(key) {
-      const result = previousRemoveItem.call(this, key);
-      if (this === localStorage && IS_ADMIN && !applyingRemote && BY_STORAGE_KEY[key]) {
-        setTimeout(() => queuePushByStorage(key, fallbackStateForStorage(key)), 0);
-      }
-      return result;
-    };
+  function localChanged(storageKey, data) {
+    if (!IS_ADMIN || applyingRemote || !BY_STORAGE_KEY[storageKey]) return;
+    queuePushByStorage(storageKey, data);
+  }
+
+  function localRemoved(storageKey) {
+    if (!IS_ADMIN || applyingRemote || !BY_STORAGE_KEY[storageKey]) return;
+    setTimeout(() => queuePushByStorage(storageKey, fallbackStateForStorage(storageKey)), 0);
   }
 
   window.MovieGlobalConfig = {
@@ -240,7 +230,9 @@
     configs: clone(CONFIGS),
     ready,
     pull,
-    push
+    push,
+    localChanged,
+    localRemoved
   };
 
   const initial = pull({ allowAdminReload:true })

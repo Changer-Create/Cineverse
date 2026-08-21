@@ -24,6 +24,7 @@
 
   const $ = id => document.getElementById(id);
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
+  const pendingStore = window.MovieCloudPending;
   const localData = () => safeParse(localStorage.getItem(APP_KEY));
   const hasUsableData = data => data && typeof data === 'object' && Array.isArray(data.movies);
   const ts = value => {
@@ -68,7 +69,7 @@
     }));
   }
   function readPendingCloud(userId=currentUser?.id) {
-    const pending = safeParse(localStorage.getItem(PENDING_KEY));
+    const pending = safeParse(pendingStore?.get());
     if (!pending || !userId || pending.userId !== userId || !hasUsableData(pending.data_json)) return null;
     return pending;
   }
@@ -79,8 +80,8 @@
     return pending;
   }
   function clearPendingCloud(userId=currentUser?.id) {
-    const pending = safeParse(localStorage.getItem(PENDING_KEY));
-    if (!pending || !userId || pending.userId === userId) localStorage.removeItem(PENDING_KEY);
+    const pending = safeParse(pendingStore?.get());
+    if (!pending || !userId || pending.userId === userId) pendingStore?.remove();
     pendingApply = false;
     pendingConflict = false;
   }
@@ -249,7 +250,7 @@
       commitSyncedState(user.id,cloud,row.updated_at || '');
       return false;
     }
-    localStorage.setItem(PENDING_KEY,JSON.stringify({
+    pendingStore?.set(JSON.stringify({
       userId:user.id,
       data_json:cloud,
       updated_at:row.updated_at || new Date().toISOString(),
@@ -399,7 +400,7 @@
     const pending = readPendingCloud(currentUser.id);
     if (pending) {
       pending.conflict = true;
-      localStorage.setItem(PENDING_KEY,JSON.stringify(pending));
+      pendingStore?.set(JSON.stringify(pending));
       pendingApply = true;
       pendingConflict = true;
       renderProfile();
@@ -408,17 +409,6 @@
     clearTimeout(uploadTimer);
     uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),500);
   }
-  function installStorageHook() {
-    if (Storage.prototype.__movieCloudAuthPatchedV5) return;
-    const previousSetItem = Storage.prototype.setItem;
-    Object.defineProperty(Storage.prototype,'__movieCloudAuthPatchedV5',{ value:true,configurable:true });
-    Storage.prototype.setItem = function(key,value) {
-      const result = previousSetItem.call(this,key,value);
-      if (this === localStorage && key === APP_KEY && !suppressUpload) queueUpload();
-      return result;
-    };
-  }
-
   async function reconcileUserData(user) {
     const local = localData();
     const owner = localStorage.getItem(OWNER_KEY) || '';
@@ -542,7 +532,6 @@
   async function boot() {
     injectStyles();
     ensureDialog();
-    installStorageHook();
     bindEvents();
     renderProfile();
     try {
@@ -553,6 +542,7 @@
         sync:(options={}) => uploadCurrentData({ silent:false,...options }),
         syncNow:(options={}) => uploadCurrentData({ silent:true,...options }),
         syncBeforeReload,
+        markLocalChange:queueUpload,
         open:openDialog,
         getState:() => ({ syncing,pendingApply,pendingConflict,dirty:localStorage.getItem(DIRTY_KEY)==='1',lastSync:localStorage.getItem(LAST_SYNC_KEY)||'' })
       };

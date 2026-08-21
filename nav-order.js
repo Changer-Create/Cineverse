@@ -39,6 +39,7 @@
   function save(order){
     const state={version:VERSION,updatedAt:new Date().toISOString(),order:normalize(order)};
     localStorage.setItem(KEY,JSON.stringify(state));
+    window.MovieGlobalConfig?.localChanged(KEY, state);
     window.dispatchEvent(new CustomEvent('movie-collection:nav-order-updated',{detail:clone(state)}));
     apply();
     return state;
@@ -46,6 +47,7 @@
 
   function reset(){
     localStorage.removeItem(KEY);
+    window.MovieGlobalConfig?.localRemoved(KEY);
     const state=load();
     window.dispatchEvent(new CustomEvent('movie-collection:nav-order-updated',{detail:clone(state)}));
     apply();
