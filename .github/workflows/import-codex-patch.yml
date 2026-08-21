@@ -5,7 +5,7 @@ on:
     branches:
       - integrate/codex-c43829
     paths:
-      - codex-current.patch
+      - cineverse-codex-handoff-clean.patch
 
 permissions:
   contents: write
@@ -24,7 +24,7 @@ jobs:
         id: guard
         shell: bash
         run: |
-          if [[ -f codex-current.patch ]]; then
+          if [[ -f cineverse-codex-handoff-clean.patch ]]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          git apply --3way --exclude='review-package/**' codex-current.patch
+          git apply --3way cineverse-codex-handoff-clean.patch
           rc=$?
           set -e
           if [[ $rc -ne 0 ]]; then
@@ -102,8 +102,7 @@ jobs:
           cards.write_text(text)
           PY
 
-          rm -rf review-package
-          git rm -f codex-current.patch
+          git rm -f cineverse-codex-handoff-clean.patch
 
       - name: Run repository checks
         if: steps.guard.outputs.run == 'true'
