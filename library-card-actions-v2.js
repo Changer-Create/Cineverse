@@ -20,6 +20,25 @@
   const getState = () => safeParse(localStorage.getItem(STORAGE_KEY));
   const saveState = state => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   const esc = value => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  async function waitForCloudAccount(timeout=2200) {
+    const started = Date.now();
+    while (Date.now() - started < timeout) {
+      if (window.MovieCloudAccount?.syncBeforeReload) return window.MovieCloudAccount;
+      await sleep(50);
+    }
+    return window.MovieCloudAccount || null;
+  }
+
+  async function reloadAfterCloudSync(hash) {
+    if (hash) location.hash = hash;
+    const account = await waitForCloudAccount();
+    if (account?.syncBeforeReload) {
+      try { await Promise.race([account.syncBeforeReload(), sleep(2600)]); } catch {}
+    }
+    location.reload();
+  }
 
   function normalizeLegacyStatuses() {
     const state = getState();
@@ -83,7 +102,6 @@
   }
 
   if (IS_ADMIN) {
-    // admin-data.js 会在 content-center.js 之后执行，因此先迁移数据，确保后台读到的就是新状态模型。
     normalizeLegacyStatuses();
     const bootAdmin = () => {
       cleanAdminStatusControls();
@@ -261,7 +279,7 @@
     try { date?.showPicker?.(); } catch {}
   }
 
-  function savePlan() {
+  async function savePlan() {
     if (!activeMovieId) return;
     const dateInput = document.getElementById('libraryPlanDate');
     const plannedDate = dateInput?.value || today();
@@ -284,11 +302,10 @@
     movie.updatedAt = new Date().toISOString();
     saveState(state);
     document.getElementById('libraryPlanDialog')?.close();
-    location.hash = 'library';
-    location.reload();
+    await reloadAfterCloudSync('library');
   }
 
-  function toggleStatus(movieId) {
+  async function toggleStatus(movieId) {
     const state = getState();
     const movie = state?.movies?.find(m => String(m.id) === String(movieId));
     if (!movie) return;
@@ -312,8 +329,8 @@
 
     movie.updatedAt = new Date().toISOString();
     saveState(state);
-    location.hash = location.hash.startsWith('#detail/') ? location.hash.slice(1) : 'library';
-    location.reload();
+    const nextHash = location.hash.startsWith('#detail/') ? location.hash.slice(1) : 'library';
+    await reloadAfterCloudSync(nextHash);
   }
 
   function currentDetailMovieId() {
