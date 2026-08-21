@@ -6,6 +6,7 @@ on:
       - integrate/codex-c43829
     paths:
       - cineverse-codex-handoff-clean.patch
+      - .github/workflows/import-codex-patch.yml
 
 permissions:
   contents: write
