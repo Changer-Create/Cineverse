@@ -123,7 +123,13 @@
       if (button.textContent.trim() === '已看完') button.textContent = '已看';
     });
     const detail = document.getElementById('detailStatusBtn');
-    if (detail && detail.textContent.includes('已看完')) detail.textContent = detail.textContent.replace('已看完','已看');
+    const detailId = currentDetailMovieId();
+    const movie = detailId ? getState()?.movies?.find(item => String(item?.id || '') === String(detailId)) : null;
+    if (detail && movie) {
+      const status = normalizedStatus(movie, movie?.personal?.status);
+      detail.textContent = status === 'watching' ? '在看' : status === 'watched' ? '已看' : '想看';
+      detail.dataset.statusClass = status;
+    }
   }
 
   const migrated = normalizeStoredState();
