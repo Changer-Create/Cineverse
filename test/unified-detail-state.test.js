@@ -41,14 +41,15 @@ const bundleData = {
   mediaType:'tv',tmdbId:123,title:'示例剧集',originalTitle:'Example Series',year:2025,
   releaseDate:'2025-01-02',firstAirDate:'2025-01-02',lastAirDate:'2025-02-03',runtime:48,
   numberOfSeasons:2,numberOfEpisodes:16,tvStatus:'Returning Series',directors:['主创甲'],
-  countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',
+  countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',publicScore:8.7,
 };
 
 test('TMDb browsing has an explicit context and opening details does not save', () => {
   assert.match(index, /detailContext=\{source:'library',mediaType:'movie',tmdbId:null,libraryMovieId:null,data:\{\}\}/);
   const openDetail = functionLine('openDetail');
   assert.doesNotMatch(openDetail, /save\(/);
-  assert.match(search, /setDetailContext\(\{source:'tmdb'/);
+  assert.match(search, /openExternalDetail\(resultData\(result\)\)/);
+  assert.match(index, /function openExternalDetail\(data=\{\}\).*renderDetail\(\)/);
 });
 
 test('first library commit uses the complete cached TMDb bundle', () => {
@@ -60,6 +61,7 @@ test('first library commit uses the complete cached TMDb bundle', () => {
   assert.equal(movie.info.numberOfEpisodes,16);
   assert.deepEqual(movie.info.directors,['主创甲']);
   assert.equal(movie.info.overview,'完整简介');
+  assert.equal(movie.radar.publicReputation,8.7);
 });
 
 test('TMDb identity matching prevents duplicates and preserves personal data', () => {
@@ -135,4 +137,17 @@ test('search return context survives in-place library upgrade', () => {
 test('unified detail poster stretches without image distortion', () => {
   assert.match(index,/\.detail-poster\{grid-column:1;grid-row:1 \/ span 2;height:auto;min-height:360px;align-self:stretch/);
   assert.match(index,/\.detail-poster img\{width:100%;height:100%;object-fit:cover/);
+});
+
+
+test('library and TMDb details use one core renderer', () => {
+  assert.doesNotMatch(search, /function fillPreview/);
+  assert.doesNotMatch(search, /cv-search-detail-preview/);
+  assert.doesNotMatch(search, /globalSearchPreviewNote/);
+  assert.match(search, /detailApi\(\)\.openExternalDetail\(resultData\(result\)\)/);
+  assert.match(search, /detailApi\(\)\.openExternalDetail\(bundleData\(bundle\)\)/);
+  assert.ok(index.includes("view.dataset.detailRenderer='core-unified'"));
+  assert.ok(index.includes("view.dataset.detailMode=collected?'library':'tmdb'"));
+  assert.ok(index.includes("const entity=currentDetailEntity();if(!entity)return"));
+  assert.ok(index.includes('openExternalDetail,'));
 });

@@ -70,13 +70,6 @@
       .cv-global-search-action.watch{color:#ffe5ec;border-color:rgba(255,127,154,.25)}
       .cv-global-search-action:disabled{opacity:.5;cursor:wait}
       .cv-global-search-footer{padding:7px 10px 6px;border-top:1px solid rgba(161,179,255,.08);color:#66738f;font-size:9px;text-align:right}
-      html.cv-search-detail-preview #detailPlanBtn,
-      html.cv-search-detail-preview #detailEditBtn,
-      html.cv-search-detail-preview #detailAddWatchBtn,
-      html.cv-search-detail-preview #detailView .detail-side-card:first-child,
-      html.cv-search-detail-preview #detailView .detail-section,
-      html.cv-search-detail-preview #detailView .detail-bottom{display:none!important}
-      .cv-search-preview-note{margin:10px 0 0;padding:10px 12px;border:1px solid rgba(159,124,255,.2);border-radius:12px;background:rgba(117,86,220,.08);color:#aeb9d6;font-size:11px;line-height:1.7}
       @media(max-width:780px){
         .topbar{grid-template-columns:minmax(0,1fr) auto!important;gap:9px!important}
         .topbar .profile .name,.topbar .profile .role{display:none}
@@ -371,7 +364,33 @@
       countries:countryNames(detail),
       genres:(detail.genres || []).map(item => item?.name).filter(Boolean),
       overview:detail.overview || '',
-      posterUrl:detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '')
+      posterUrl:detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : ''),
+      publicScore:Number.isFinite(Number(detail.vote_average ?? result.vote_average)) ? Number(detail.vote_average ?? result.vote_average) : null
+    };
+  }
+
+  function resultData(result) {
+    const type = mediaTypeOf(result);
+    const releaseDate = dateOf(result);
+    return {
+      mediaType:type,
+      tmdbId:Number(result?.id) || null,
+      title:titleOf(result),
+      originalTitle:originalTitleOf(result),
+      year:Number(String(releaseDate || '').slice(0,4)) || null,
+      releaseDate,
+      firstAirDate:type==='tv' ? releaseDate : '',
+      lastAirDate:'',
+      numberOfSeasons:null,
+      numberOfEpisodes:null,
+      tvStatus:'',
+      runtime:null,
+      directors:[],
+      countries:[],
+      genres:[],
+      overview:'',
+      posterUrl:result?.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '',
+      publicScore:Number.isFinite(Number(result?.vote_average)) ? Number(result.vote_average) : null
     };
   }
 
@@ -412,149 +431,45 @@
     return [...document.querySelectorAll('.page-view')].find(el => !el.classList.contains('hidden'))?.id || 'homeView';
   }
 
-  function setText(id,value) {
-    const el = $(id);
-    if (el) el.textContent = value == null || value === '' ? '—' : String(value);
-  }
-
-  function setPreviewPoster(url,title) {
-    const poster = $('detailPoster');
-    if (!poster) return;
-    poster.innerHTML = '';
-    poster.classList.toggle('has-image',Boolean(url));
-    if (url) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = `${title} 海报`;
-      poster.appendChild(img);
-    } else {
-      const text = document.createElement('div');
-      text.className = 'poster-title';
-      text.textContent = title || '影片';
-      poster.appendChild(text);
-    }
-  }
-
-  function setPreviewTags(genres) {
-    const el = $('detailTags');
-    if (!el) return;
-    el.innerHTML = '';
-    for (const genre of genres || []) {
-      const span = document.createElement('span');
-      span.textContent = genre;
-      el.appendChild(span);
-    }
-  }
-
-  function ensurePreviewNote() {
-    let note = $('globalSearchPreviewNote');
-    if (note) return note;
-    const overview = document.querySelector('#detailView .detail-overview');
-    if (!overview) return null;
-    note = document.createElement('div');
-    note.id = 'globalSearchPreviewNote';
-    note.className = 'cv-search-preview-note';
-    overview.insertAdjacentElement('beforebegin',note);
-    return note;
-  }
-
-  function fillPreview(result,bundle = null) {
-    const type = mediaTypeOf(result);
-    const detail = bundle?.detail || {};
-    const title = type==='tv' ? (detail.name || titleOf(result)) : (detail.title || titleOf(result));
-    const original = type==='tv' ? (detail.original_name || originalTitleOf(result)) : (detail.original_title || originalTitleOf(result));
-    const release = type==='tv' ? (detail.first_air_date || dateOf(result)) : (detail.release_date || dateOf(result));
-    const creators = bundle ? bundleCreators(bundle) : [];
-    const countries = bundle ? countryNames(detail) : [];
-    const genres = (detail.genres || []).map(x => x?.name).filter(Boolean);
-    const posterUrl = detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '');
-    const runtime = bundle ? bundleRuntime(bundle) : null;
-
-    setText('detailTitle',title || '未命名作品');
-    setText('detailOriginal',[original && normalize(original)!==normalize(title) ? original : '', String(release||'').slice(0,4)].filter(Boolean).join(' · '));
-    setText('detailCreatorLabel',type==='tv'?'主创':'导演');
-    setText('detailDirectors',creators.join(' / ') || '待载入');
-    setText('detailCountries',countries.join(' / ') || '待载入');
-    setText('detailGenres',genres.join(' / ') || '待载入');
-    setText('detailRuntimeLabel',type==='tv'?'单集时长':'片长');
-    setText('detailRuntime',runtime ? `${runtime} 分钟` : '未知');
-    setText('detailReleaseLabel',type==='tv'?'首播':'上映');
-    setText('detailRelease',release || '未知');
-    setText('detailMediaType',type==='tv'?'剧集':'电影');
-    setText('detailTmdb',detail.id || result.id);
-    setText('detailOverview',detail.overview || '正在读取 TMDb 详情…');
-    setText('detailRating','—');
-    setText('detailStars','☆☆☆☆☆');
-    setText('detailLastWatch','尚未加入影视库');
-    setText('detailPlanMeta','未加入月度计划');
-    setText('detailRadarBadge','TMDb 搜索');
-    setText('detailRadarDate','—');
-    setText('detailPublicScore',detail.vote_average ? Number(detail.vote_average).toFixed(1) : (result.vote_average ? Number(result.vote_average).toFixed(1) : '—'));
-    setText('detailMatchScore','—');
-    setText('detailRadarReason','来自顶部 TMDb 全库搜索。');
-    if (type==='tv') {
-      $('detailSeriesFact')?.classList.remove('hidden');
-      setText('detailSeriesMeta',[detail.number_of_seasons!=null?`${detail.number_of_seasons} 季`:null,detail.number_of_episodes!=null?`${detail.number_of_episodes} 集`:null].filter(Boolean).join(' · ') || '剧集资料待载入');
-    } else $('detailSeriesFact')?.classList.add('hidden');
-    setPreviewTags(genres);
-    setPreviewPoster(posterUrl,title);
-    const favorite = $('detailFavorite');
-    favorite?.classList.remove('on');
-    const actions = $('detailStatusActions');
-    if (actions) {
-      const options = type==='tv' ? [['want','想看'],['watching','在看'],['watched','看过']] : [['want','想看'],['watched','看过']];
-      actions.innerHTML = options.map(([value,label]) => `<button type="button" data-detail-status="${value}">${label}</button>`).join('');
-    }
-    const data = bundle ? bundleData(bundle) : {mediaType:type,tmdbId:Number(result.id)||null,title,originalTitle:original,year:Number(String(release||'').slice(0,4))||null,releaseDate:release};
-    window.CineverseLibraryDetail?.setDetailContext({source:'tmdb',mediaType:type,tmdbId:Number(result.id)||null,libraryMovieId:null,data});
-    const note = ensurePreviewNote();
-    if (note) note.textContent = `TMDb 浏览 · 《${title || '该作品'}》尚未加入影视库。星标或选择状态后会在当前详情原地解锁个人功能。`;
-    const back = $('detailBack');
-    if (back) back.textContent = '‹ 返回搜索结果';
-  }
-
   async function openPreview(result) {
     const local = localMatch(result);
+    previewState = { result, previousViewId:visiblePageId(), libraryMovieId:local?.id || null };
+    document.documentElement.dataset.detailReturnSource='search';
+    closeDrop();
     if (local) {
-      previewState={result,previousViewId:visiblePageId(),libraryMovieId:local.id};
-      document.documentElement.dataset.detailReturnSource='search';
-      closeDrop();
       detailApi().openLibraryDetail(local.id);
       if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
       return;
     }
-    previewState = { result, previousViewId:visiblePageId() };
-    document.documentElement.classList.add('cv-search-detail-preview');
-    document.documentElement.dataset.detailReturnSource='search';
-    closeDrop();
-    document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
-    $('detailView')?.classList.remove('hidden');
-    document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active',a.dataset.view==='library'));
-    fillPreview(result);
+    detailApi().openExternalDetail(resultData(result));
+    if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
     try {
       const bundle = await fetchBundle(result);
-      if (previewState?.result?.id===result.id && mediaTypeOf(previewState.result)===mediaTypeOf(result)) {previewState.bundle=bundle;fillPreview(result,bundle)}
+      if (previewState?.result?.id===result.id && mediaTypeOf(previewState.result)===mediaTypeOf(result)) {
+        previewState.bundle=bundle;
+        detailApi().openExternalDetail(bundleData(bundle));
+        if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
+      }
     } catch (err) {
-      const overview = $('detailOverview');
-      if (overview && /正在读取/.test(overview.textContent || '')) overview.textContent = `TMDb 详情读取失败：${err?.message || err}`;
+      if (previewState?.result?.id===result.id && mediaTypeOf(previewState.result)===mediaTypeOf(result)) {
+        detailApi().openExternalDetail({...resultData(result),overview:`TMDb 详情读取失败：${err?.message || err}`});
+        if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
+      }
     }
   }
 
   function upgradePreview(movie) {
     if (!movie) return;
-    document.documentElement.classList.remove('cv-search-detail-preview');
-    $('globalSearchPreviewNote')?.remove();
     if (previewState) previewState.libraryMovieId = movie.id;
     detailApi().openLibraryDetail(movie.id);
+    if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
   }
 
   function closePreview() {
     if (!previewState) return false;
     const prev = previewState;
     previewState = null;
-    document.documentElement.classList.remove('cv-search-detail-preview');
     delete document.documentElement.dataset.detailReturnSource;
-    $('globalSearchPreviewNote')?.remove();
     const back = $('detailBack');
     if (back) back.textContent = '‹ 返回影视库';
     document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
@@ -648,8 +563,6 @@
   window.addEventListener('cineverse:detail-library-opened',event=>{
     if (!previewState) return;
     previewState.libraryMovieId=event.detail?.libraryMovieId||null;
-    document.documentElement.classList.remove('cv-search-detail-preview');
-    $('globalSearchPreviewNote')?.remove();
     if ($('detailBack')) $('detailBack').textContent='‹ 返回搜索结果';
   });
 
