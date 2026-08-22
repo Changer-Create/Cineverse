@@ -64,7 +64,21 @@
         <div class="panel-title"><span class="star">✦</span> 今晚交给星星决定</div>
         <div class="stat-note" style="margin-top:4px">从你的想看片单中，随机为你推荐一部</div>
         <div class="constellation" aria-hidden="true"><svg viewBox="0 0 110 82"><path d="M9 37 L36 21 L62 31 L89 11 M62 31 L78 62" fill="none" stroke="rgba(196,181,255,.45)" stroke-width="1"/></svg><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="random-content"><div class="random-poster" id="randomPoster"></div><div><div class="random-title" id="randomTitle">正在读取想看片单…</div><div class="random-meta" id="randomMeta">—</div><div class="random-quote" id="randomQuote">从你的真实想看片单中抽取一部作品。</div><div class="random-actions"><button class="primary" id="watchTonight">就看这一部 ✦</button><button class="secondary" id="reroll">换一部</button></div></div></div>
+        <div class="random-content">
+          <div class="random-poster" id="randomPoster"></div>
+          <div class="random-main">
+            <div class="random-title" id="randomTitle">正在读取想看片单…</div>
+            <div class="random-meta" id="randomMeta">—</div>
+            <div class="random-quote" id="randomQuote">从你的真实想看片单中抽取一部作品。</div>
+            <div class="random-actions"><button class="primary" id="watchTonight">就看这一部 ✦</button><button class="secondary" id="reroll">换一部</button></div>
+          </div>
+          <aside class="random-facts" aria-label="随机推荐影片信息">
+            <div><span>导演</span><strong id="randomDirector">—</strong></div>
+            <div><span>类型</span><strong id="randomGenres">—</strong></div>
+            <div><span>公众口碑</span><strong class="public" id="randomPublicScore">—</strong></div>
+            <div><span>片长</span><strong id="randomRuntime">—</strong></div>
+          </aside>
+        </div>
       </section>
     </section>
     <section class="home-triple">
@@ -636,6 +650,6 @@
 <script src="app-detail-model-v1.js?v=20260822-1600"></script>
 <script src="verified-quotes-v1.js?v=20260822-1200"></script>
 <script src="app-main-v1.js?v=20260822-2500"></script>
-<script src="content-center-runtime-v1.js?v=20260822-2300"></script>
+<script src="content-center-runtime-v1.js?v=20260823-4k"></script>
 </body>
 </html>
