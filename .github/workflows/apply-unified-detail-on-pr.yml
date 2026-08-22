@@ -21,6 +21,22 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
+      - name: Fix staged transform replacement callbacks
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/unify-detail-renderer-v2.py')
+          text=p.read_text()
+          old1='index, count = pattern.subn(detail_block + "\\n  function renderWatchHistory", index, count=1)'
+          new1='index, count = pattern.subn(lambda _match: detail_block + "\\n  function renderWatchHistory", index, count=1)'
+          old2='search, count = pattern.subn(preview_block + "  function closePreview() {", search, count=1)'
+          new2='search, count = pattern.subn(lambda _match: preview_block + "  function closePreview() {", search, count=1)'
+          if old1 not in text or old2 not in text:
+              raise SystemExit('staged transform anchors missing')
+          p.write_text(text.replace(old1,new1,1).replace(old2,new2,1))
+          PY
+
       - name: Apply core renderer transform
         run: python3 scripts/unify-detail-renderer-v2.py
 
