@@ -369,6 +369,17 @@
   function decorateActions(card, movie) {
     const actions = card.querySelector('.lib-actions');
     if (!actions) return;
+    // index.html renders the canonical four quick actions. Keep them intact:
+    // the legacy decorator used to replace this row after every render, which
+    // made the updated buttons appear to have no effect in the running app.
+    if (actions.querySelector('[data-lib-want]')
+      && actions.querySelector('[data-lib-watched]')
+      && actions.querySelector('[data-lib-plan]')
+      && actions.querySelector('[data-lib-watch]')) {
+      actions.classList.remove('library-actions-system-v1');
+      delete actions.dataset.libraryCardSystemSignature;
+      return;
+    }
     const id = String(movie.id);
     const [statusClass, statusLabel] = statusInfo(movie);
     const signature = `${id}|${statusClass}|system-v1`;
