@@ -29,6 +29,11 @@ for (const file of readdirSync('.').filter(file => extname(file) === '.js')) {
   const check = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
   if (check.status !== 0) failures.push(`${file} has invalid syntax: ${check.stderr.trim()}`);
 }
+const unitTests = readdirSync('tests/unit').filter(file => file.endsWith('.test.mjs'));
+for (const file of unitTests) {
+  const test = spawnSync(process.execPath, [`tests/unit/${file}`], { encoding:'utf8' });
+  if (test.status !== 0) failures.push(`${file} failed: ${(test.stderr || test.stdout).trim()}`);
+}
 if (failures.length) {
   console.error(failures.map(item => `- ${item}`).join('\n'));
   process.exit(1);

@@ -81,5 +81,9 @@
     return { page:currentPage, totalPages, start, pageMovies:(rows || []).slice(start, start + pageSize) };
   }
 
-  window.CineverseLibrary = Object.freeze({ MEDIA_FILTER, STATUS_FILTER, SORT_FILTER, resolveMappedFilter, passes, ratingPass, filterMovies, paginate });
+  function extend(runtimeApi = {}) {
+    return Object.freeze({ ...window.CineverseLibrary, ...runtimeApi });
+  }
+
+  window.CineverseLibrary = Object.freeze({ MEDIA_FILTER, STATUS_FILTER, SORT_FILTER, resolveMappedFilter, passes, ratingPass, filterMovies, paginate, extend });
 })();
