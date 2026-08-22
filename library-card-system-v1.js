@@ -73,7 +73,7 @@
         body.library-fixed-workspace-v1 .main{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:18px}
         body.library-fixed-workspace-v1 .topbar{flex:0 0 auto;margin-bottom:12px}
         body.library-fixed-workspace-v1 #libraryView:not(.hidden){display:flex;flex:1 1 auto;min-height:0;overflow:hidden}
-        body.library-fixed-workspace-v1 #libraryView .library-shell{display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:10px;flex:1 1 auto;min-height:0;width:100%}
+        body.library-fixed-workspace-v1 #libraryView .library-shell{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);gap:10px;flex:1 1 auto;min-height:0;width:100%}
         body.library-fixed-workspace-v1 #libraryView .library-hero{padding:13px 17px}
         body.library-fixed-workspace-v1 #libraryView .library-head{align-items:center}
         body.library-fixed-workspace-v1 #libraryView .library-head h2{font-size:28px}
@@ -102,6 +102,7 @@
       #libraryGrid:not(.list-view) .lib-poster img{width:100%;height:100%;object-fit:contain;background:#050a17}
       #libraryGrid:not(.list-view) .poster-title{padding:10px;font-size:15px}
       #libraryGrid:not(.list-view) .lib-body{padding:11px 11px 10px 8px;min-width:0;display:flex;flex-direction:column}
+      #libraryGrid:not(.list-view) .lib-body>.lib-actions{margin-top:auto!important}
       #libraryGrid:not(.list-view) .lib-title-wrap{min-width:0;padding-right:64px}
       #libraryGrid:not(.list-view) .lib-title{font-size:17px;line-height:1.34;font-weight:700;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:23px}
       #libraryGrid:not(.list-view) .media-type-pill{vertical-align:1px}
@@ -561,7 +562,7 @@
     ensureDeleteDialog().close();
     deleteMovieId = '';
     toast(`《${title}》已从影视库移除`);
-    await reloadAfterCloudSync('library');
+    document.dispatchEvent(new CustomEvent('movie-library:state-updated', { detail:{ state, reason:'delete' } }));
   }
 
   document.addEventListener('click', event => {

@@ -27,9 +27,9 @@
   function saveTheme(theme){const id=THEMES[theme]?theme:'star';localStorage.setItem(THEME_KEY,JSON.stringify({version:1,theme:id,updatedAt:new Date().toISOString()}));return id}
   function appSettings(){const app=safeJson(localStorage.getItem(APP_KEY)||'{}');return app?.settings&&typeof app.settings==='object'?app.settings:{}}
   function shadeHex(hex,amount){const v=String(hex||'').replace('#','');if(!/^[0-9a-fA-F]{6}$/.test(v))return hex;const cl=x=>clamp(x,0,255),rgb=[0,2,4].map(i=>parseInt(v.slice(i,i+2),16));return '#'+rgb.map(x=>Math.round(cl(x+amount)).toString(16).padStart(2,'0')).join('')}
-  function currentAccent(theme){const input=q('#settingsAccent'),raw=input?.value||appSettings().accentColor||THEMES[theme].accent;return /^#[0-9a-fA-F]{6}$/.test(raw)?raw:THEMES[theme].accent}
-  function panelOpacity(){const el=q('#settingsPanelOpacity'),raw=el?.value||appSettings().panelOpacity||72;return clamp(Number(raw)||72,45,94)/100}
-  function environmentLevel(){const el=q('#settingsStarDensity');return ['low','normal','high'].includes(el?.value)?el.value:(appSettings().starDensity||'normal')}
+  function currentAccent(theme){return THEMES[theme]?.accent||THEMES.star.accent}
+  function panelOpacity(){return .72}
+  function environmentLevel(){return 'normal'}
   function wallpaper(){return String(appSettings().wallpaperDataUrl||'')}
 
   function setRootTokens(themeId){
@@ -110,17 +110,14 @@
     if(!presets.dataset.uiThemeSystem){
       presets.dataset.uiThemeSystem='1';
       presets.innerHTML='<button class="theme-preset" type="button" data-ui-theme-choice="star"><div class="theme-swatch swatch-star"></div><b>星夜宇宙</b><small>默认 · 深蓝紫与暖金</small></button><button class="theme-preset" type="button" data-ui-theme-choice="ocean"><div class="theme-swatch swatch-ocean"></div><b>深海微光</b><small>深海蓝 · 青绿与珍珠光</small></button>';
-      presets.addEventListener('click',e=>{const btn=e.target.closest('[data-ui-theme-choice]');if(!btn)return;const id=btn.dataset.uiThemeChoice;if(!THEMES[id])return;state.selected=id;saveTheme(id);const accent=q('#settingsAccent');if(accent){accent.value=THEMES[id].accent;accent.dispatchEvent(new Event('input',{bubbles:true}))}apply(id)});
+      presets.addEventListener('click',e=>{const btn=e.target.closest('[data-ui-theme-choice]');if(!btn)return;const id=btn.dataset.uiThemeChoice;if(!THEMES[id])return;state.selected=id;saveTheme(id);apply(id)});
     }
     const heading=q('#settingsView .settings-stack:first-child .settings-card:nth-child(2) .settings-card-head h3');if(heading&&!hasCopy('settings.appearance.title'))heading.textContent='外观 · UI 主题';
-    const density=q('#settingsStarDensity');if(density){const copy=density.closest('.setting-row')?.querySelector('.setting-copy');if(copy&&!copy.dataset.uiThemeCopy){copy.dataset.uiThemeCopy='1';copy.innerHTML='<b>环境效果</b><span>控制星点、气泡与主题环境装饰的强度。</span>'}const labels={low:'简洁',normal:'标准',high:'丰富'};[...density.options].forEach(o=>{if(labels[o.value])o.textContent=labels[o.value]})}
     syncCards();return true;
   }
   function syncCards(){document.querySelectorAll('[data-ui-theme-choice]').forEach(btn=>btn.classList.toggle('active',btn.dataset.uiThemeChoice===state.selected))}
 
   function bindControls(){
-    const after=()=>queueMicrotask(()=>apply(state.selected));
-    q('#settingsAccent')?.addEventListener('input',after);q('#settingsPanelOpacity')?.addEventListener('input',after);q('#settingsStarDensity')?.addEventListener('change',after);q('#settingsMotion')?.addEventListener('click',after);
     q('#settingsSaveAppearance')?.addEventListener('click',()=>{saveTheme(state.selected);queueMicrotask(()=>apply(state.selected))});
     q('#settingsResetAppearance')?.addEventListener('click',()=>{state.selected='star';saveTheme('star');queueMicrotask(()=>{transformSettings();apply('star')})});
     q('#settingsWallpaperClear')?.addEventListener('click',()=>setTimeout(()=>apply(state.selected),0));
