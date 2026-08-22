@@ -29,9 +29,6 @@
       if(title) title.textContent='翠绿森林';
       if(desc) desc.textContent='翠绿 · 阳光与林间清风';
     });
-    const density=document.querySelector('#settingsStarDensity');
-    const copy=density?.closest('.setting-row')?.querySelector('.setting-copy span');
-    if(copy) copy.textContent='控制星点、气泡、飘雪、林间光尘等主题环境装饰的强度。';
   }
 
   function schedulePatch(){[0,80,260,700].forEach(ms=>setTimeout(patchCopy,ms));}
