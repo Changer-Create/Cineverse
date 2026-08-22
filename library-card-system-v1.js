@@ -562,7 +562,7 @@
     ensureDeleteDialog().close();
     deleteMovieId = '';
     toast(`《${title}》已从影视库移除`);
-    await reloadAfterCloudSync('library');
+    document.dispatchEvent(new CustomEvent('movie-library:state-updated', { detail:{ state, reason:'delete' } }));
   }
 
   document.addEventListener('click', event => {

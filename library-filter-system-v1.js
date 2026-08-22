@@ -31,7 +31,7 @@
   const nativeSet = (input, value) => inputDescriptor.set.call(input, value);
   const now = new Date();
   const CURRENT_MONTH = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const STATUS_OPTIONS = ['全部', '关注', '想看', '已计划', '在看', '已看', '已看完', '暂停', '弃剧'];
+  const STATUS_OPTIONS = ['想看', '看过', '已计划'];
   const SORT_OPTIONS = ['标记时间', '片名（拼音）', '评分', '时长', '年份'];
   const MODE_KEYS = ['year', 'director', 'country', 'status', 'tag', 'plan'];
   const FILTER_INPUTS = {
@@ -86,7 +86,7 @@
       #libraryView .library-filter-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px;align-items:start}
       #libraryView .library-tools{position:relative}
       #libraryView .library-filter-top{padding-right:108px}
-      #libraryView .library-filter-toggle{position:absolute;right:10px;top:10px;height:38px;padding:0 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:11px}
+      #libraryView .library-filter-toggle{position:absolute;right:10px;top:27px;height:38px;padding:0 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:11px}
       #libraryView .library-filter-toggle:hover{border-color:rgba(159,124,255,.5);color:#fff}
       #libraryView .filter-grid.library-filter-collapsed{display:none}
       #libraryView .library-toolbar.library-action-strip{margin-top:10px;padding:10px 12px;border:1px solid rgba(161,179,255,.14);border-radius:15px;background:rgba(8,18,42,.62)}
@@ -408,7 +408,7 @@
   }
   function normalizeStatusQuery(raw) {
     const query = String(raw || '').trim();
-    if (!query || query === '全部') return '';
+    if (!query) return '';
     if (STATUS_OPTIONS.includes(query)) return query;
     const matches = STATUS_OPTIONS.filter(value => value !== '全部' && value.includes(query));
     return matches.length === 1 ? matches[0] : '__nomatch__';
@@ -418,18 +418,8 @@
   }
   function statusLabel(movie) {
     const status = movie?.personal?.status || 'want';
-    if (movie?.mediaType === 'tv') {
-      if (status === 'watching') return '在看';
-      if (status === 'watched') return '已看完';
-      if (status === 'paused') return '暂停';
-      if (status === 'dropped') return '弃剧';
-      if (hasCurrentPlan(movie)) return '已计划';
-      return '想看';
-    }
-    if (status === 'watched') return '已看';
     if (hasCurrentPlan(movie)) return '已计划';
-    if (status === 'follow') return '关注';
-    return '想看';
+    return status === 'watched' ? '看过' : '想看';
   }
   function isCoreLibrarySort(compareFn) {
     if (typeof compareFn !== 'function') return false;

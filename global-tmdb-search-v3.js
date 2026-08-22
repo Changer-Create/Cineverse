@@ -269,7 +269,6 @@
       actions.className = 'cv-global-search-actions';
       const current = local?.personal?.status || '';
       actions.appendChild(actionButton('想看', result, 'want', current === 'want'));
-      if (mediaTypeOf(result) === 'tv') actions.appendChild(actionButton('在看', result, 'watching', current === 'watching'));
       actions.appendChild(actionButton('看过', result, 'watched', current === 'watched'));
       row.appendChild(actions);
       ui.drop.appendChild(row);
