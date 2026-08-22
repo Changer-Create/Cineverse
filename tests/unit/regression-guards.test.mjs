@@ -7,6 +7,7 @@ const filters = readFileSync('library-filter-system-v1.js', 'utf8');
 const cards = readFileSync('library-card-system-v1.js', 'utf8');
 const appMain = readFileSync('app-main-v1.js', 'utf8');
 const tmdbMatch = readFileSync('app-tmdb-match-v1.js', 'utf8');
+const doubanImport = readFileSync('app-douban-import-v1.js', 'utf8');
 
 assert.match(index, /<html[^>]*class="cineverse-app"/);
 assert.match(layout, /html\.cineverse-app body\s*\{/);
@@ -19,6 +20,10 @@ assert.ok(index.indexOf('app-tmdb-match-v1.js') < index.indexOf('app-main-v1.js'
 assert.match(appMain, /TmdbMatch\.matchMovie\(movie,tmdbSearchByTitle\)/);
 assert.doesNotMatch(appMain, /function cleanTmdbTitle\(/, 'TMDb title rules must stay outside app-main');
 assert.match(tmdbMatch, /function compactSeasonTargets\(/);
+assert.ok(index.indexOf('app-douban-import-v1.js') < index.indexOf('app-main-v1.js'), 'Douban parser must load before app-main');
+assert.match(appMain, /parseFile:parseDoubanFile/);
+assert.doesNotMatch(appMain, /function parseDoubanHtml\(/, 'Douban parsing rules must stay outside app-main');
+assert.match(doubanImport, /function parseFile\(/);
 const deleteStart = cards.indexOf('async function confirmDelete()');
 const deleteEnd = cards.indexOf("document.addEventListener('click'", deleteStart);
 const deleteFlow = cards.slice(deleteStart, deleteEnd);
@@ -33,7 +38,8 @@ for (const asset of ['app-state-storage-v1.js', 'content-center-runtime-v1.js'])
   assert.match(index, new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2300`));
 }
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
-assert.match(index, /app-main-v1\.js\?v=20260822-2400/);
+assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
+assert.match(index, /app-main-v1\.js\?v=20260822-2500/);
 
 for (const asset of ['radar-20.js', 'radar-experience-v3.js', 'library-card-system-v1.js', 'rating-sync-v3.js', 'watch-record-edit-v1.js', 'cloud-auth-v5.js']) {
   assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2300`));
