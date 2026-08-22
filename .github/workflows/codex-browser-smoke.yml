@@ -54,9 +54,10 @@ jobs:
           const pass = (name, detail='') => report.checks.push({ name, ok:true, detail });
           const fail = (name, detail='') => { report.checks.push({ name, ok:false, detail }); throw new Error(`${name}: ${detail}`); };
           const assert = (cond, name, detail='') => cond ? pass(name, detail) : fail(name, detail);
+          let browser = null;
 
           (async () => {
-            const browser = await chromium.launch({ headless:true });
+            browser = await chromium.launch({ headless:true });
             report.browser = await browser.version();
             const context = await browser.newContext({ viewport:{ width:1440, height:1100 } });
             const page = await context.newPage();
@@ -110,7 +111,7 @@ jobs:
             assert(await page.locator('#detailStatusActions [data-detail-status]').count() >= 2, 'unified detail status actions render');
             const posterBox = await page.locator('#detailPoster').boundingBox();
             const heroBox = await page.locator('.detail-hero').boundingBox();
-            assert(Boolean(posterBox && heroBox && posterBox.height >= 300 && posterBox.bottom <= heroBox.y + heroBox.height + 2), 'detail poster stays within hero and has usable height', JSON.stringify({posterBox,heroBox}));
+            assert(Boolean(posterBox && heroBox && posterBox.height >= 300 && posterBox.y >= heroBox.y - 2 && posterBox.y + posterBox.height <= heroBox.y + heroBox.height + 2), 'detail poster stays within hero and has usable height', JSON.stringify({posterBox,heroBox}));
             await page.screenshot({ path:'browser-smoke-detail.png', fullPage:true });
 
             const before = await page.evaluate(() => localStorage.getItem('movie-collection-v2'));
@@ -120,15 +121,20 @@ jobs:
             assert(before === after, 'refresh preserves fixture state without silent mutation');
 
             const tmdb = await page.evaluate(async () => {
+              const controller = new AbortController();
+              const timer = setTimeout(() => controller.abort(), 12000);
               try {
                 const response = await fetch(window.CineverseConfig.endpoints.tmdbProxy, {
                   method:'POST',
                   headers:{'Content-Type':'application/json'},
-                  body:JSON.stringify({ path:'/configuration', params:{} })
+                  body:JSON.stringify({ path:'/configuration', params:{} }),
+                  signal:controller.signal
                 });
                 return { ok:response.ok, status:response.status, text:(await response.text()).slice(0,180) };
               } catch (error) {
                 return { ok:false, status:0, text:String(error) };
+              } finally {
+                clearTimeout(timer);
               }
             });
             assert(tmdb.ok, 'TMDb proxy is reachable from supported localhost origin', JSON.stringify(tmdb));
@@ -145,15 +151,16 @@ jobs:
 
             report.consoleErrors = [...new Set(report.consoleErrors)].slice(0,50);
             fs.writeFileSync('browser-smoke-report.json', JSON.stringify(report, null, 2));
-            await browser.close();
-          })().catch(async error => {
+          })().catch(error => {
             report.fatal = String(error?.stack || error);
             fs.writeFileSync('browser-smoke-report.json', JSON.stringify(report, null, 2));
             console.error(report.fatal);
             process.exitCode = 1;
+          }).finally(async () => {
+            try { await browser?.close(); } catch {}
           });
           NODE
-          node .browser-smoke-ci.cjs
+          timeout 150s node .browser-smoke-ci.cjs
 
       - name: Upload browser evidence
         if: always()
