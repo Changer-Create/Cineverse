@@ -187,7 +187,9 @@
       const state = previousState();
       if (!state?.movies) return false;
       if (!normalizeZeroRatings(state)) return false;
-      localStorage.setItem(APP_KEY, nativeStringify(state));
+      const gateway = window.CineverseStateGateway;
+      if (gateway?.replace) gateway.replace(state, { source:'rating-sync', reason:'rating-migration' });
+      else localStorage.setItem(APP_KEY, nativeStringify(state));
       localStorage.setItem(CLOUD_DIRTY_KEY, '1');
       return true;
     } catch {

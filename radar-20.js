@@ -31,8 +31,14 @@
   const safeJson = raw => {
     try { return JSON.parse(raw); } catch { return null; }
   };
-  const readState = () => safeJson(localStorage.getItem(STORAGE_KEY)) || null;
-  const writeState = state => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const stateGateway = () => window.CineverseStateGateway;
+  const readState = () => stateGateway()?.snapshot?.() || safeJson(localStorage.getItem(STORAGE_KEY)) || null;
+  const writeState = state => {
+    const gateway = stateGateway();
+    if (gateway?.replace) return gateway.replace(state, { source:'radar-20', reason:'radar-generate' });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return state;
+  };
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   async function waitForCloudAccount(timeout=2200) {
     const started = Date.now();
