@@ -6,10 +6,8 @@
   window.__CINEVERSE_EXTERNAL_DETAIL_PREVIEW_V1__ = true;
 
   const APP_KEY = 'movie-collection-v2';
-  const ACTION_IDS = [
-    'detailFavorite','detailStatusBtn','detailPlanBtn','detailEditBtn',
-    'detailAddWatchBtn','detailAddWatchBtn2'
-  ];
+  const ACTION_IDS = ['detailFavorite','detailEditBtn'];
+  const JOIN_ACTIONS = ['detailStatusBtn','detailPlanBtn','detailAddWatchBtn','detailAddWatchBtn2'];
   const VIEW_MAP = {
     homeView:'home', libraryView:'library', matchView:'match', radarView:'radar',
     planView:'plan', watchedView:'watched', statsView:'stats', settingsView:'settings'
@@ -134,6 +132,13 @@
     const favorite = $('detailFavorite');
     favorite?.classList.remove('on');
     if (favorite) favorite.title = '加入影视库后可收藏';
+    for (const id of JOIN_ACTIONS) {
+      const el = $(id);
+      if (!el) continue;
+      el.disabled = false;
+      el.classList.remove('external-detail-disabled');
+      el.removeAttribute('aria-disabled');
+    }
   }
 
   function snapshotLocalActions() {
@@ -231,10 +236,10 @@
     setTags(model.genres || []);
 
     setText('detailStatusBtn', '未收藏');
-    setText('detailPlanBtn', '加入影视库后可计划');
+    setText('detailPlanBtn', '＋ 加入本月计划');
     setText('detailEditBtn', '✎ 加入影视库后可编辑');
-    setText('detailAddWatchBtn', '＋ 加入影视库后可记录');
-    setText('detailAddWatchBtn2', '＋ 加入影视库后可记录');
+    setText('detailAddWatchBtn', '＋ 记录一次观看');
+    setText('detailAddWatchBtn2', '＋ 添加记录');
     setText('detailRating', '—');
     setText('detailStars', '☆☆☆☆☆');
     setText('detailLastWatch', '尚未加入影视库');
@@ -388,6 +393,21 @@
   }
 
   document.addEventListener('click', event => {
+    if (active) {
+      const actionButton = event.target.closest?.('#detailStatusBtn,#detailPlanBtn,#detailAddWatchBtn,#detailAddWatchBtn2');
+      if (actionButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        const action = actionButton.id === 'detailPlanBtn' ? 'plan'
+          : actionButton.id === 'detailStatusBtn' ? 'want' : 'watch';
+        const model = active.model;
+        leaveStateOnly();
+        window.CineverseLibrary?.collectExternalDetail?.(model, action);
+        return;
+      }
+    }
+
     if (active && event.target.closest?.('#detailBack')) {
       event.preventDefault();
       event.stopPropagation();

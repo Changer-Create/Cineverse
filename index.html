@@ -1878,6 +1878,22 @@
     if(plan&&!getPlan(m,CURRENT_MONTH))m.plans.push({month:CURRENT_MONTH,status:'planned',plannedDate:null,movedTo:null});
     m.updatedAt=new Date().toISOString();save();renderAll();if(!els.radarView.classList.contains('hidden'))renderRadarPage();return m;
   }
+  function collectExternalDetail(model,action='want'){
+    const existing=(appState.movies||[]).find(m=>Number(model.tmdbId)&&Number(m.info?.tmdbId)===Number(model.tmdbId)&&m.mediaType===model.type);
+    const now=new Date().toISOString();
+    const m=existing||normalizeMovie({id:uid(),mediaType:model.type,info:{title:model.title,originalTitle:model.originalTitle,year:model.year,releaseDate:model.releaseDate,firstAirDate:model.releaseDate,directors:model.creators,countries:model.countries,runtime:model.runtime,genres:model.genres,posterUrl:model.posterUrl,overview:model.overview,tmdbId:model.tmdbId},personal:{status:action==='watch'?'watched':'want',rating:null,tags:[],shortReview:'',favorite:false},watchHistory:[],plans:[],radar:model.source==='radar'?{discovered:true,discoveredAt:model.discoveredAt,publicReputation:model.publicScore,matchScore:model.matchScore,reason:model.reason,source:'电影雷达',ignored:false}:{discovered:false,ignored:false},createdAt:now,updatedAt:now});
+    if(!existing)appState.movies.push(m);
+    m.personal=m.personal||{};
+    m.personal.status=action==='watch'?'watched':'want';
+    m.plans=m.plans||[];
+    if(action==='plan'&&!getPlan(m,CURRENT_MONTH))m.plans.push({month:CURRENT_MONTH,status:'planned',plannedDate:null,movedTo:null});
+    m.updatedAt=now;
+    save();renderAll();openDetail(m.id);
+    if(action==='watch')openWatchModal();
+    else toastMsg(action==='plan'?`《${m.info.title}》已加入影视库和本月计划`:`《${m.info.title}》已加入影视库，状态为想看`);
+    return m;
+  }
+  window.CineverseLibrary=Object.freeze({collectExternalDetail});
   function radarFiltered(){
     const q=(els.radarKeyword?.value||'').trim().toLowerCase(),min=Number(els.radarMatch?.value||0),sort=els.radarSort?.value||'matchDesc';let rows=radarItems().filter(r=>{
       if(radarState.tab==='week'&&(r.category!=='week'||r.ignored||!isCurrentWeek(r.discoveredAt)))return false;
