@@ -17,9 +17,10 @@ test('index inline scripts compile as JavaScript', () => {
   const scripts = inlineScripts(html);
   assert.ok(scripts.length > 0, 'expected at least one inline script');
   for (const script of scripts) {
-    assert.doesNotThrow(
-      () => new vm.Script(script.code, { filename: `index.inline-${script.index}.js` }),
-      `inline script ${script.index} must compile`,
-    );
+    try {
+      new vm.Script(script.code, { filename: `index.inline-${script.index}.js` });
+    } catch (error) {
+      throw new Error(`inline script ${script.index} failed to compile:\n${error?.stack || error}`);
+    }
   }
 });
