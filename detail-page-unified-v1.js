@@ -235,11 +235,11 @@
     setPoster(model.posterUrl, model.title);
     setTags(model.genres || []);
 
-    setText('detailStatusBtn', '未收藏');
-    setText('detailPlanBtn', '＋ 加入本月计划');
+    setText('detailStatusBtn', '想看');
+    setText('detailPlanBtn', '加入计划');
     setText('detailEditBtn', '✎ 加入影视库后可编辑');
-    setText('detailAddWatchBtn', '＋ 记录一次观看');
-    setText('detailAddWatchBtn2', '＋ 添加记录');
+    setText('detailAddWatchBtn', '看过');
+    setText('detailAddWatchBtn2', '添加观影记录');
     setText('detailRating', '—');
     setText('detailStars', '☆☆☆☆☆');
     setText('detailLastWatch', '尚未加入影视库');
