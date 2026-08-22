@@ -41,7 +41,7 @@ const bundleData = {
   mediaType:'tv',tmdbId:123,title:'示例剧集',originalTitle:'Example Series',year:2025,
   releaseDate:'2025-01-02',firstAirDate:'2025-01-02',lastAirDate:'2025-02-03',runtime:48,
   numberOfSeasons:2,numberOfEpisodes:16,tvStatus:'Returning Series',directors:['主创甲'],
-  countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',
+  countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',publicScore:8.7,
 };
 
 test('TMDb browsing has an explicit context and opening details does not save', () => {
@@ -61,6 +61,7 @@ test('first library commit uses the complete cached TMDb bundle', () => {
   assert.equal(movie.info.numberOfEpisodes,16);
   assert.deepEqual(movie.info.directors,['主创甲']);
   assert.equal(movie.info.overview,'完整简介');
+  assert.equal(movie.radar.publicReputation,8.7);
 });
 
 test('TMDb identity matching prevents duplicates and preserves personal data', () => {
