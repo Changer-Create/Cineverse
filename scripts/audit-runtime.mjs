@@ -9,10 +9,7 @@ const retired = [
   'cloud-pending-memory.js', 'global-tmdb-search-v1.js',
   'library-card-actions-v2.js', 'library-display-experience-v1.js',
   'library-filter-controls-v3.js', 'library-filter-experience-v1.js',
-  'library-filter-experience-v2.js', 'radar-experience-v2.js', 'rating-sync-v2.js',
-  'detail-entry-router-v1.js', 'detail-external-preview-unified-v1.js',
-  'detail-layout-unified-v1.js', 'detail-return-context-v1.js',
-  'movie-action-bar-unified-v1.js'
+  'library-filter-experience-v2.js', 'radar-experience-v2.js', 'rating-sync-v2.js'
 ];
 const failures = [];
 const localAsset = /(?:src|href)=["']([^"']+\.(?:js|css)(?:\?[^"']*)?)["']/g;
