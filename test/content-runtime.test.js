@@ -38,7 +38,7 @@ test('main entry emits the established resources in order', () => {
 
   assert.equal(result.redirects.length, 0);
   assert.equal(result.writes.length, 2);
-  assert.equal(resources.length, 45);
+  assert.equal(resources.length, 46);
   assert.deepEqual(resources.slice(0, 7), [
     'settings-responsive.css?v=20260821-1028',
     'large-screen-layout-v1.css?v=20260822-0208',
@@ -49,7 +49,10 @@ test('main entry emits the established resources in order', () => {
     'library-pagination-top.js',
   ]);
   assert.equal(resources[7], 'content-observer-shield.js');
-  assert.equal(resources.at(-1), 'global-tmdb-search-v2.js?v=20260822-0322');
+  assert.deepEqual(resources.slice(-2), [
+    'global-tmdb-search-v2.js?v=20260822-0322',
+    'detail-renderer-unified-v2.js?v=20260822-1053',
+  ]);
   assert.ok(!resources.some(url => url.startsWith('admin-')));
 });
 
@@ -66,6 +69,7 @@ test('authenticated admin entry preserves its guarded module order', () => {
   assert.ok(resources.includes('tmdb-alias-match.js?v=20260821-0125'));
   assert.ok(!resources.includes('cloud-auth-v5.js?v=20260822-0253'));
   assert.ok(!resources.includes('global-tmdb-search-v2.js?v=20260822-0322'));
+  assert.ok(!resources.includes('detail-renderer-unified-v2.js?v=20260822-1053'));
 });
 
 test('unauthenticated admin entry redirects before application modules load', () => {
