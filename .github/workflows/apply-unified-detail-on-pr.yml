@@ -1,0 +1,46 @@
+name: Apply unified detail transform
+
+on:
+  pull_request:
+    branches:
+      - integrate/codex-c43829
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  apply:
+    if: github.head_ref == 'fix/unify-detail-renderer-v2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out feature head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Apply core renderer transform
+        run: python3 scripts/unify-detail-renderer-v2.py
+
+      - name: Remove transport-only helpers
+        run: |
+          git rm -f scripts/unify-detail-renderer-v2.py
+          git rm -f .github/workflows/unify-detail-v2-transform.yml || true
+          git rm -f detail-renderer-unified-v2.js
+
+      - name: Run repository checks
+        run: npm run check
+
+      - name: Validate diff whitespace
+        run: git diff --check
+
+      - name: Commit transformed result
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor: unify TMDb and library detail rendering'
+          git push origin HEAD:fix/unify-detail-renderer-v2
