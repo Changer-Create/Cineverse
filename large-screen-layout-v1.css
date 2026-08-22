@@ -1,3 +1,470 @@
+/* Desktop workspace: keep navigation and the browser viewport stable.  Each
+   active page owns its scrolling, while data-heavy pages hand scrolling to
+   their primary list/grid module.  Compact/mobile layouts retain natural
+   document scrolling for accessibility and browser UI compatibility. */
+@media (min-width: 821px) and (min-height: 650px) {
+  html,
+  body {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .main {
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .main > .topbar {
+    flex: 0 0 auto;
+  }
+
+  .main > .page-view:not(.hidden) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(141, 154, 196, .28) transparent;
+  }
+
+  .main > .page-view:not(.hidden)::-webkit-scrollbar,
+  .workspace-scroll-module::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+
+  .main > .page-view:not(.hidden)::-webkit-scrollbar-thumb,
+  .workspace-scroll-module::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(141, 154, 196, .24);
+  }
+
+  /* Matching center: hero and controls stay visible; results scroll. */
+  #matchView:not(.hidden) {
+    overflow: hidden;
+  }
+
+  #matchView .match-shell {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #matchView .match-hero {
+    flex: 0 0 auto;
+  }
+
+  #matchView .match-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #matchView .match-toolbar {
+    flex: 0 0 auto;
+  }
+
+  #matchView .match-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Radar and watched pages keep their toolbars fixed and scroll the content
+     columns independently when their results exceed the available height. */
+  #radarView:not(.hidden),
+  #watchedView:not(.hidden) {
+    overflow: hidden;
+  }
+
+  #radarView .radar-shell,
+  #watchedView .watched-shell {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #radarView .radar-hero,
+  #watchedView .watched-hero,
+  #watchedView .watched-toolbar {
+    flex: 0 0 auto;
+  }
+
+  #radarView .radar-layout,
+  #watchedView .watched-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #radarView .radar-main-panel,
+  #radarView .radar-side,
+  #watchedView .watched-feed,
+  #watchedView .watched-side {
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* The calendar/list is the plan page's working surface. */
+  #planView:not(.hidden) {
+    overflow: hidden;
+  }
+
+  #planView .plan-shell {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #planView .plan-hero,
+  #planView .plan-toolbar {
+    flex: 0 0 auto;
+  }
+
+  #planView .plan-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Compact the three dashboard-style pages so their primary information fits
+     in a common laptop viewport without wasting vertical space. */
+  #homeView {
+    padding-right: 3px;
+  }
+
+  #homeView .hero {
+    padding: 15px 18px;
+  }
+
+  #homeView .hero h2 {
+    margin: 5px 0 4px;
+    font-size: 28px;
+  }
+
+  #homeView .hero .sub {
+    margin: 0;
+  }
+
+  #homeView .stats {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  #homeView .stat-card {
+    min-height: 64px;
+    padding: 9px 11px;
+  }
+
+  #homeView .stat-value {
+    font-size: 21px;
+  }
+
+  #homeView .home-top-grid,
+  #homeView .home-triple {
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  #homeView .home-top-grid > #watched,
+  #homeView .home-top-grid > .random-panel {
+    height: 248px;
+    min-height: 248px;
+    max-height: 248px;
+  }
+
+  #homeView .home-top-grid > .random-panel {
+    padding: 13px;
+  }
+
+  #homeView .random-content {
+    height: 174px;
+    min-height: 174px;
+    max-height: 174px;
+    margin-top: 7px;
+  }
+
+  #homeView .random-content > div:last-child {
+    height: 174px;
+    min-height: 174px;
+    max-height: 174px;
+  }
+
+  #homeView .home-triple > .panel {
+    min-height: 218px;
+    max-height: 218px;
+  }
+
+  #homeView .panel-head {
+    padding: 11px 13px 6px;
+  }
+
+  #homeView .home-triple .radar-grid {
+    padding: 6px 10px 10px;
+  }
+
+  #homeView .home-triple .movie-card .poster {
+    max-height: 105px;
+  }
+
+  #homeView .home-triple .movie-body {
+    padding: 6px 8px 7px;
+  }
+
+  #homeView .home-triple .scores,
+  #homeView .home-triple .movie-actions {
+    margin-top: 5px;
+  }
+
+  #homeView .home-triple .plan {
+    padding: 5px 13px 12px;
+  }
+
+  #homeView .home-triple .insight-body {
+    padding: 5px 13px 12px;
+  }
+
+  #homeView .insight-grid {
+    gap: 7px;
+  }
+
+  #homeView .insight-item {
+    padding: 9px 6px;
+  }
+
+  #homeView .quote-card {
+    padding: 9px 10px;
+  }
+
+  #planView .plan-shell {
+    gap: 9px;
+  }
+
+  #planView .plan-hero {
+    padding: 13px 16px;
+  }
+
+  #planView .plan-title-row h2 {
+    margin: 2px 0 0;
+    font-size: 25px;
+  }
+
+  #planView .plan-month-nav button,
+  #planView .plan-view-switch button {
+    height: 32px;
+  }
+
+  #planView .plan-page-stats {
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  #planView .plan-page-stat {
+    min-height: 57px;
+    padding: 8px 10px;
+  }
+
+  #planView .plan-page-stat b {
+    margin-top: 2px;
+    font-size: 19px;
+  }
+
+  #planView .plan-toolbar {
+    min-height: 42px;
+    padding: 5px 9px;
+  }
+
+  #planView .plan-layout {
+    gap: 9px;
+  }
+
+  #planView .plan-panel-head {
+    padding: 8px 11px;
+  }
+
+  #planView .calendar-week span {
+    padding: 5px 3px;
+  }
+
+  #planView .plan-day {
+    min-height: 64px !important;
+    padding: 5px !important;
+  }
+
+  #planView .plan-day-number {
+    width: 21px;
+    height: 21px;
+  }
+
+  #planView .plan-day-add {
+    top: 4px;
+    right: 4px;
+    width: 21px;
+    height: 21px;
+  }
+
+  #planView .plan-day-movies {
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  #planView .plan-day-chip.plan-rich-card {
+    min-height: 37px !important;
+    padding: 3px !important;
+  }
+
+  #planView .plan-progress-card {
+    padding: 11px;
+  }
+
+  #planView .plan-big-progress {
+    margin: 2px 0 8px;
+  }
+
+  #planView .plan-ring {
+    width: 96px;
+    height: 96px;
+  }
+
+  #planView .plan-ring strong {
+    font-size: 22px;
+  }
+
+  #planView .plan-status-bars,
+  #planView .unscheduled-list {
+    gap: 5px;
+  }
+
+  #planView .unscheduled-list {
+    max-height: 145px;
+    padding: 8px;
+    overflow-y: auto;
+  }
+
+  #statsView .stats-shell {
+    gap: 9px;
+  }
+
+  #statsView .stats-hero {
+    padding: 13px 16px;
+  }
+
+  #statsView .stats-title-row h2 {
+    margin: 2px 0 3px;
+    font-size: 25px;
+  }
+
+  #statsView .stats-controls select,
+  #statsView .stats-controls button {
+    height: 32px;
+  }
+
+  #statsView .stats-summary {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 9px;
+  }
+
+  #statsView .stats-summary-card {
+    min-height: 55px;
+    padding: 7px 8px;
+  }
+
+  #statsView .stats-summary-card b {
+    margin-top: 2px;
+    font-size: 18px;
+  }
+
+  #statsView .stats-layout,
+  #statsView .stats-side {
+    gap: 9px;
+  }
+
+  #statsView .stats-card-head {
+    padding: 8px 11px;
+  }
+
+  #statsView .stats-card-body {
+    padding: 9px 11px;
+  }
+
+  #statsView .stats-month-chart {
+    height: 155px;
+    gap: 5px;
+    padding-top: 5px;
+  }
+
+  #statsView .rating-donut-wrap {
+    grid-template-columns: 102px 1fr;
+    gap: 9px;
+  }
+
+  #statsView .rating-donut {
+    width: 96px;
+    height: 96px;
+  }
+
+  #statsView .rating-donut::before {
+    inset: 13px;
+  }
+
+  #statsView .stats-insight-grid,
+  #statsView .stats-rank-grid {
+    gap: 8px;
+  }
+
+  #statsView .stats-insight {
+    min-height: 62px;
+    padding: 7px;
+  }
+
+  #statsView .rank-list,
+  #statsView .stats-top-films {
+    gap: 5px;
+  }
+
+  #statsView .rank-row,
+  #statsView .stats-film-row {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1180px) and (min-height: 650px) {
+  #homeView .home-top-grid > #watched,
+  #homeView .home-top-grid > .random-panel,
+  #homeView .home-triple > .panel {
+    height: auto;
+    min-height: 248px;
+    max-height: none;
+  }
+
+  #statsView .stats-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (min-width: 1800px) {
   #planView .plan-shell {
     width: 100%;

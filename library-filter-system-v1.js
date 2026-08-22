@@ -31,7 +31,7 @@
   const nativeSet = (input, value) => inputDescriptor.set.call(input, value);
   const now = new Date();
   const CURRENT_MONTH = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const STATUS_OPTIONS = ['全部', '关注', '想看', '已计划', '在看', '已看', '已看完', '暂停', '弃剧'];
+  const STATUS_OPTIONS = ['想看', '看过', '已计划'];
   const SORT_OPTIONS = ['标记时间', '片名（拼音）', '评分', '时长', '年份'];
   const MODE_KEYS = ['year', 'director', 'country', 'status', 'tag', 'plan'];
   const FILTER_INPUTS = {
@@ -84,6 +84,12 @@
     style.id = 'libraryFilterSystemStyleV1';
     style.textContent = `
       #libraryView .library-filter-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px;align-items:start}
+      #libraryView .library-tools{position:relative}
+      #libraryView .library-filter-top{padding-right:108px}
+      #libraryView .library-filter-toggle{position:absolute;right:10px;top:27px;height:38px;padding:0 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:11px}
+      #libraryView .library-filter-toggle:hover{border-color:rgba(159,124,255,.5);color:#fff}
+      #libraryView .filter-grid.library-filter-collapsed{display:none}
+      #libraryView .library-toolbar.library-action-strip{margin-top:10px;padding:10px 12px;border:1px solid rgba(161,179,255,.14);border-radius:15px;background:rgba(8,18,42,.62)}
       #libraryView .library-filter-top .filter-cell{min-width:0;margin:0}
       #libraryView .filter-operation-row{display:grid;grid-template-columns:repeat(3,minmax(62px,.72fr)) minmax(84px,1fr) minmax(54px,.62fr) minmax(76px,.82fr);gap:6px}
       #libraryView .filter-operation-row button{height:38px;min-width:0;border-radius:11px;border:1px solid rgba(156,169,218,.14);background:rgba(11,22,50,.72);color:#aeb8d1;font-size:10px;padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.18s ease}
@@ -110,6 +116,9 @@
       #libraryView .rating-filter-row .manual-filter-input-wrap{width:100%}
       #libraryView #libPlan[readonly]{cursor:pointer;padding-right:32px}
       #favoriteFilterBtn.active{color:#f2ce80;border-color:rgba(245,198,108,.42);background:rgba(245,198,108,.1);box-shadow:0 0 18px rgba(245,198,108,.06)}
+      #libraryFilterSchemeDialog{width:min(420px,calc(100vw - 28px));padding:0;border:1px solid rgba(159,124,255,.28);border-radius:18px;background:linear-gradient(160deg,#101b3b,#081126);color:#eef2ff;box-shadow:0 28px 80px rgba(0,0,0,.52)}
+      #libraryFilterSchemeDialog::backdrop{background:rgba(2,6,17,.72);backdrop-filter:blur(6px)}
+      .library-scheme-dialog-body{padding:22px}.library-scheme-dialog-body h3{margin:0 0 6px;font-size:19px}.library-scheme-dialog-body p{margin:0 0 16px;color:#8f9ab7;font-size:11px}.library-scheme-dialog-body label{display:block;margin-bottom:7px;color:#aeb8d1;font-size:11px}.library-scheme-dialog-body input{width:100%;height:42px;border:1px solid rgba(161,179,255,.2);border-radius:11px;background:rgba(5,14,34,.78);color:#fff;padding:0 12px;outline:none}.library-scheme-dialog-body input:focus{border-color:rgba(159,124,255,.55);box-shadow:0 0 0 3px rgba(159,124,255,.09)}.library-scheme-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.library-scheme-dialog-actions button{height:36px;padding:0 14px;border-radius:10px;border:1px solid rgba(161,179,255,.18);background:rgba(18,30,64,.72);color:#dce2f5}.library-scheme-dialog-actions .primary{border-color:rgba(159,124,255,.4);background:rgba(101,76,211,.55);color:#fff}
       .plan-filter-calendar-system-v1{position:fixed;z-index:10020;width:min(344px,calc(100vw - 20px));padding:12px;border:1px solid rgba(133,151,205,.32);border-radius:15px;background:#0b1734;color:#eef2ff;box-shadow:0 22px 60px rgba(0,0,0,.48);display:none}
       .plan-filter-calendar-system-v1.open{display:block}
       .plan-filter-calendar-head{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:7px;align-items:center}
@@ -148,13 +157,46 @@
       <button type="button" class="filter-scheme-slot" data-filter-scheme-slot="1">方案 2 · 空</button>
       <button type="button" class="filter-scheme-slot" data-filter-scheme-slot="2">方案 3 · 空</button>
       <button type="button" class="filter-scheme-save" data-filter-scheme-save>保存筛选方案</button>
-      <button type="button" class="filter-scheme-delete" data-filter-scheme-delete>删除</button>
+      <button type="button" class="filter-scheme-delete" data-filter-scheme-delete>删除当前筛选方案</button>
     </div>`;
   const operationRow = operationCell.querySelector('.filter-operation-row');
   clearButton.classList.add('filter-clear-system');
   clearButton.textContent = '清除筛选';
   operationRow.appendChild(clearButton);
   top.appendChild(operationCell);
+
+  const filterToggle = document.createElement('button');
+  filterToggle.type = 'button';
+  filterToggle.className = 'library-filter-toggle';
+  filterToggle.setAttribute('aria-controls', 'libraryAdvancedFilters');
+  grid.id = 'libraryAdvancedFilters';
+  grid.classList.add('library-filter-collapsed');
+  filterToggle.setAttribute('aria-expanded', 'false');
+  filterToggle.textContent = '展开筛选 ▾';
+  tools.appendChild(filterToggle);
+  filterToggle.addEventListener('click', () => {
+    const expanded = grid.classList.toggle('library-filter-collapsed') === false;
+    filterToggle.setAttribute('aria-expanded', String(expanded));
+    filterToggle.textContent = expanded ? '折叠筛选 ▴' : '展开筛选 ▾';
+  });
+
+  const toolbar = tools.querySelector('.library-toolbar');
+  if (toolbar) {
+    toolbar.classList.add('library-action-strip');
+    tools.insertAdjacentElement('afterend', toolbar);
+  }
+
+  const schemeDialog = document.createElement('dialog');
+  schemeDialog.id = 'libraryFilterSchemeDialog';
+  schemeDialog.innerHTML = `<form method="dialog" class="library-scheme-dialog-body">
+    <h3>保存筛选方案</h3><p>为当前筛选条件取一个容易辨认的名字。</p>
+    <label for="libraryFilterSchemeName">方案名称</label>
+    <input id="libraryFilterSchemeName" maxlength="24" autocomplete="off" required>
+    <div class="library-scheme-dialog-actions"><button type="button" data-scheme-cancel>取消</button><button class="primary" type="submit">保存方案</button></div>
+  </form>`;
+  document.body.appendChild(schemeDialog);
+  const schemeNameInput = schemeDialog.querySelector('input');
+  schemeDialog.querySelector('[data-scheme-cancel]').addEventListener('click', () => schemeDialog.close());
 
   if (statusList) statusList.innerHTML = STATUS_OPTIONS.map(value => `<option value="${esc(value)}"></option>`).join('');
   if (sortList) sortList.innerHTML = SORT_OPTIONS.map(value => `<option value="${esc(value)}"></option>`).join('');
@@ -366,7 +408,7 @@
   }
   function normalizeStatusQuery(raw) {
     const query = String(raw || '').trim();
-    if (!query || query === '全部') return '';
+    if (!query) return '';
     if (STATUS_OPTIONS.includes(query)) return query;
     const matches = STATUS_OPTIONS.filter(value => value !== '全部' && value.includes(query));
     return matches.length === 1 ? matches[0] : '__nomatch__';
@@ -376,18 +418,8 @@
   }
   function statusLabel(movie) {
     const status = movie?.personal?.status || 'want';
-    if (movie?.mediaType === 'tv') {
-      if (status === 'watching') return '在看';
-      if (status === 'watched') return '已看完';
-      if (status === 'paused') return '暂停';
-      if (status === 'dropped') return '弃剧';
-      if (hasCurrentPlan(movie)) return '已计划';
-      return '想看';
-    }
-    if (status === 'watched') return '已看';
     if (hasCurrentPlan(movie)) return '已计划';
-    if (status === 'follow') return '关注';
-    return '想看';
+    return status === 'watched' ? '看过' : '想看';
   }
   function isCoreLibrarySort(compareFn) {
     if (typeof compareFn !== 'function') return false;
@@ -614,7 +646,7 @@
     operationCell.querySelectorAll('[data-filter-scheme-slot]').forEach(button => {
       const index = Number(button.dataset.filterSchemeSlot);
       const saved = Boolean(schemes[index]);
-      button.textContent = saved ? `方案 ${index + 1}` : `方案 ${index + 1} · 空`;
+      button.textContent = saved ? (schemes[index].name || `方案 ${index + 1}`) : `方案 ${index + 1} · 空`;
       button.classList.toggle('saved', saved);
       button.classList.toggle('selected', index === selectedSchemeIndex);
       button.title = saved ? '点击应用该筛选方案' : '点击选择该空方案位';
@@ -645,8 +677,31 @@
     MODE_KEYS.forEach(key => setMode(key, scheme.modes?.[key] === 'exclude' ? 'exclude' : 'include'));
     closePicker();
     dispatchInput(keywordInput);
-    toast(`已应用筛选方案 ${index + 1}`);
+    toast(`已应用筛选方案“${scheme.name || `方案 ${index + 1}`}”`);
   }
+  function openSchemeSaveDialog() {
+    const schemes = loadSchemes();
+    let index = selectedSchemeIndex;
+    if (index < 0) index = schemes.findIndex(item => !item);
+    if (index < 0) index = 0;
+    selectedSchemeIndex = index;
+    renderSchemeSlots();
+    schemeNameInput.value = schemes[index]?.name || `方案 ${index + 1}`;
+    schemeDialog.showModal();
+    requestAnimationFrame(() => { schemeNameInput.focus(); schemeNameInput.select(); });
+  }
+  schemeDialog.querySelector('form').addEventListener('submit', event => {
+    event.preventDefault();
+    const name = schemeNameInput.value.trim();
+    if (!name) { schemeNameInput.focus(); return; }
+    const schemes = loadSchemes();
+    const index = selectedSchemeIndex;
+    schemes[index] = { ...schemeSnapshot(), name };
+    saveSchemes(schemes);
+    renderSchemeSlots();
+    schemeDialog.close();
+    toast(`筛选方案“${name}”已保存`);
+  });
   operationCell.addEventListener('click', event => {
     const slot = event.target.closest('[data-filter-scheme-slot]');
     if (slot) {
@@ -654,16 +709,7 @@
       return;
     }
     if (event.target.closest('[data-filter-scheme-save]')) {
-      const schemes = loadSchemes();
-      let index = selectedSchemeIndex;
-      if (index < 0) index = schemes.findIndex(item => !item);
-      if (index < 0) index = 0;
-      if (schemes[index] && !confirm(`方案 ${index + 1} 已保存筛选条件，确认覆盖吗？`)) return;
-      schemes[index] = schemeSnapshot();
-      saveSchemes(schemes);
-      selectedSchemeIndex = index;
-      renderSchemeSlots();
-      toast(`筛选方案 ${index + 1} 已保存`);
+      openSchemeSaveDialog();
       return;
     }
     if (event.target.closest('[data-filter-scheme-delete]')) {
