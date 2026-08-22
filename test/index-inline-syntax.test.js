@@ -8,9 +8,9 @@ const root = join(__dirname, '..');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
 
 function inlineScripts(source) {
-  return [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
-    .filter(match => !/\bsrc\s*=/.test(match[0]))
-    .map((match, index) => ({ index, code: match[1] }));
+  return [...source.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/gi)]
+    .filter(match => !/\bsrc\s*=/.test(match[1]))
+    .map((match, index) => ({ index, code: match[2] }));
 }
 
 test('index inline scripts compile as JavaScript', () => {
