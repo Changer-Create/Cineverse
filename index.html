@@ -1452,6 +1452,7 @@
 <script src="app-core-utils-v1.js?v=20260822-1200"></script>
 <script src="app-state-storage-v1.js?v=20260822-1230"></script>
 <script src="app-domain-model-v1.js?v=20260822-1300"></script>
+<script src="app-router-v1.js?v=20260822-1400"></script>
 <script src="verified-quotes-v1.js?v=20260822-1200"></script>
 <script>
 (() => {
@@ -2063,22 +2064,20 @@
   function openWatchModal(){const m=currentDetailMovie();if(!m)return;els.watchDateInput.value=localToday();els.watchRatingInput.value=m.personal?.rating??'';els.watchVenueInput.value='';els.watchNoteInput.value='';els.watchModal.showModal()}
   function saveWatchRecord(){const m=currentDetailMovie();if(!m)return;const rating=els.watchRatingInput.value!==''?Number(els.watchRatingInput.value):null;m.watchHistory=m.watchHistory||[];m.watchHistory.push({date:els.watchDateInput.value||localToday(),rating,note:els.watchNoteInput.value.trim(),venue:els.watchVenueInput.value.trim()});m.personal.status='watched';if(rating!=null)m.personal.rating=rating;const month=(els.watchDateInput.value||'').slice(0,7);const p=(m.plans||[]).find(x=>x.month===month);if(p)p.status='completed';m.updatedAt=new Date().toISOString();save();renderAll();renderDetail();els.watchModal.close();toastMsg('这一晚已经写进你的影视宇宙 ✦')}
 
-  function setView(name){
-    if(name==='home'||name==='library'||name==='detail'||name==='match'||name==='radar'||name==='plan'||name==='watched'||name==='stats'||name==='settings'){
-      els.homeView.classList.toggle('hidden',name!=='home');els.libraryView.classList.toggle('hidden',name!=='library');els.detailView.classList.toggle('hidden',name!=='detail');els.matchView.classList.toggle('hidden',name!=='match');els.radarView.classList.toggle('hidden',name!=='radar');els.planView.classList.toggle('hidden',name!=='plan');els.watchedView.classList.toggle('hidden',name!=='watched');els.statsView.classList.toggle('hidden',name!=='stats');els.settingsView.classList.toggle('hidden',name!=='settings');
-      document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',name==='detail'?a.dataset.view==='library':a.dataset.view===name));
-      if(name==='library'){renderLibrary();if(location.hash!=='#library')location.hash='library'}
-      if(name==='home')location.hash='home';
-      if(name==='match'){renderMatchCenter();if(location.hash!=='#match')location.hash='match'};
-      if(name==='radar'){renderRadarPage();if(location.hash!=='#radar')location.hash='radar'};
-      if(name==='plan'){renderPlanPage();if(location.hash!=='#plan')location.hash='plan'}
-      if(name==='watched'){renderWatchedPage();if(location.hash!=='#watched')location.hash='watched'}
-      if(name==='stats'){renderStatsPage();if(location.hash!=='#stats')location.hash='stats'}
-      if(name==='settings'){renderSettings();if(location.hash!=='#settings')location.hash='settings'}
-      if(name==='detail')renderDetail();
-      return
+  const router=window.CineverseRouter.createRouter({
+    pages:{
+      home:{element:els.homeView},library:{element:els.libraryView,enter:renderLibrary},
+      detail:{element:els.detailView,enter:renderDetail},match:{element:els.matchView,enter:renderMatchCenter},
+      radar:{element:els.radarView,enter:renderRadarPage},plan:{element:els.planView,enter:renderPlanPage},
+      watched:{element:els.watchedView,enter:renderWatchedPage},stats:{element:els.statsView,enter:renderStatsPage},
+      settings:{element:els.settingsView,enter:renderSettings}
+    },
+    detail:{
+      enter(id){if(!appState.movies.some(movie=>movie.id===id))return false;detailState.movieId=id;detailState.detachedMovie=null;return true},
+      fallback:'library'
     }
-  }
+  });
+  function setView(name){return router.navigate(name)}
   function renderAll(){renderMetrics();renderRadar();renderRecent();renderPlan();renderRandom();renderMonthInsight();renderLibrary();if(els.matchView&&!els.matchView.classList.contains('hidden'))renderMatchCenter();if(!els.radarView.classList.contains('hidden'))renderRadarPage();if(!els.planView.classList.contains('hidden'))renderPlanPage();if(!els.watchedView.classList.contains('hidden'))renderWatchedPage();if(!els.statsView.classList.contains('hidden'))renderStatsPage();if(detailState.movieId&&!els.detailView.classList.contains('hidden'))renderDetail();if(els.settingsView&&!els.settingsView.classList.contains('hidden'))renderSettings()}
 
   document.addEventListener('click',e=>{
@@ -2182,14 +2181,12 @@
 
   if(els.quoteNextBtn)els.quoteNextBtn.addEventListener('click',e=>{e.stopPropagation();chooseVerifiedQuote({avoidCurrent:true})});
 
-  window.addEventListener('hashchange',()=>{const raw=location.hash.replace('#','');if(raw.startsWith('detail/')){const id=decodeURIComponent(raw.slice(7));if(appState.movies.some(m=>m.id===id)){detailState.movieId=id;setView('detail')}else setView('library')}else if(['library','home','match','radar','plan','watched','stats','settings'].includes(raw))setView(raw)});
-
   applyAppearance();
   applyProfile();
   applyBrand();
   chooseVerifiedQuote({avoidCurrent:true});
   renderAll();
-  const initial=location.hash.replace('#','');if(initial.startsWith('detail/')){const id=decodeURIComponent(initial.slice(7));if(appState.movies.some(m=>m.id===id)){detailState.movieId=id;setView('detail')}else setView('library')}else setView(['library','match','radar','plan','watched','stats','settings'].includes(initial)?initial:'home');
+  router.start();
 })();
 </script>
 <script src="content-center-runtime-v1.js?v=20260822-1300"></script>
