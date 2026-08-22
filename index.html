@@ -1451,6 +1451,7 @@
 <script src="app-constants-v1.js?v=20260822-1200"></script>
 <script src="app-core-utils-v1.js?v=20260822-1200"></script>
 <script src="app-state-storage-v1.js?v=20260822-1230"></script>
+<script src="app-domain-model-v1.js?v=20260822-1300"></script>
 <script src="verified-quotes-v1.js?v=20260822-1200"></script>
 <script>
 (() => {
@@ -1460,6 +1461,8 @@
   const { uid, safeJSON, splitList, esc, escAttr, localToday, csvEscape } = window.CineverseCoreUtils;
   const { DEFAULT_SETTINGS, THEME_PRESETS, EMPTY_HOME } = window.CineverseAppConstants;
   const { normalizeSettings, normalizeMovie, restore:restoreState, backup:backupState } = window.CineverseState;
+  const Domain = window.CineverseDomain;
+  const { uniq, uniqBy, mediaTypeLabel, mediaTypeIcon, posterHue } = Domain;
   const { app:V2_KEY } = window.CineverseState.keys;
   // Public test build: TMDb credentials are never hard-coded; each browser stores its own key locally.
 
@@ -1526,9 +1529,7 @@
   };
   window.MovieQuoteEngine=MovieQuoteEngine;
 
-  function metrics(){
-    const movies=appState.movies||[],yearIds=new Set(),prevIds=new Set();for(const m of movies)for(const w of (m.watchHistory||[])){const d=String(w.date||'');if(d.startsWith(String(NOW_YEAR)))yearIds.add(m.id);if(d.startsWith(String(NOW_YEAR-1)))prevIds.add(m.id)}const want=movies.filter(m=>m.personal?.status==='want').length,monthPlans=movies.flatMap(m=>(m.plans||[]).filter(p=>p.month===CURRENT_MONTH)),done=monthPlans.filter(p=>p.status==='completed').length;return{yearWatched:yearIds.size,prevYearWatched:prevIds.size,want,plans:monthPlans.length,done,total:movies.length}
-  }
+  function metrics(){return Domain.metrics(appState,{year:NOW_YEAR,month:CURRENT_MONTH})}
   function renderMetrics(){const m=metrics();els.yearWatched.textContent=m.yearWatched;els.wantCount.textContent=m.want;els.planCount.textContent=m.plans;els.planDone.textContent=m.done;els.totalCount.textContent=m.total;const pct=m.plans?Math.round(m.done/m.plans*100):0;els.planTopDone.textContent=m.done;els.planTopAll.textContent=m.plans;els.planPercent.textContent=pct+'%';els.planBar.style.width=pct+'%';if(els.yearCompareNote){const delta=m.yearWatched-m.prevYearWatched;els.yearCompareNote.textContent=m.prevYearWatched?`较去年 ${delta>=0?'+':''}${delta}`:(m.yearWatched?'去年暂无记录':'今年还没有观看记录')}if(els.homeHeroYear)els.homeHeroYear.textContent=NOW_YEAR;if(els.homePlanMonthLabel)els.homePlanMonthLabel.textContent=monthLabel(CURRENT_MONTH);if(els.batchPlan)els.batchPlan.textContent=`加入 ${monthLabel(CURRENT_MONTH)}`}
   function renderRadar(){
     els.radarGrid.innerHTML='';
@@ -1560,19 +1561,8 @@
     els.monthRadarCount.textContent=radarCount;els.monthNinePlus.textContent=nineIds.size;els.monthTopDirector.textContent=top?.[0]||'—'
   }
 
-  function uniq(arr){return [...new Set((arr||[]).filter(Boolean))]}
-  function uniqBy(arr,keyFn){const seen=new Set(),out=[];for(const x of arr||[]){const k=keyFn(x);if(seen.has(k))continue;seen.add(k);out.push(x)}return out}
-  function hasPlan(m,month=CURRENT_MONTH){return (m.plans||[]).some(p=>p.month===month)}
-  function mediaTypeLabel(m){return m?.mediaType==='tv'?'剧集':m?.mediaType==='unknown'?'待识别':'电影'}
-  function mediaTypeIcon(m){return m?.mediaType==='tv'?'📺':m?.mediaType==='unknown'?'◌':'🎬'}
-  function displayStatus(m){
-    const s=m.personal?.status||'want';
-    if(m.mediaType==='tv'){
-      if(s==='watching')return ['watching','在看'];if(s==='watched')return ['watched','已看完'];if(s==='paused')return ['paused','暂停'];if(s==='dropped')return ['dropped','弃剧'];if(hasPlan(m))return ['planned','已计划'];return ['want','想看'];
-    }
-    if(s==='watched')return ['watched','已看'];if(hasPlan(m))return ['planned','已计划'];if(s==='follow')return ['follow','关注'];return ['want','想看']
-  }
-  function posterHue(m){let h=0;for(const ch of m.info.title)h=(h+ch.charCodeAt(0)*7)%360;return h}
+  function hasPlan(m,month=CURRENT_MONTH){return Domain.hasPlan(m,month)}
+  function displayStatus(m){return Domain.displayStatus(m,CURRENT_MONTH)}
 
   const LIB_MEDIA_FILTER={电影:'movie',剧集:'tv',待识别:'unknown'};
   const LIB_STATUS_FILTER={想看:'want',看过:'watched',已计划:'planned'};
@@ -1753,8 +1743,8 @@
   function parseMonth(month){const [y,m]=String(month).split('-').map(Number);return{y,m}}
   function monthLabel(month){const {y,m}=parseMonth(month);return `${y} 年 ${m} 月`}
   function shiftMonth(month,delta){const {y,m}=parseMonth(month);const d=new Date(y,m-1+delta,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
-  function planEntries(month){return (appState.movies||[]).flatMap(movie=>(movie.plans||[]).filter(plan=>plan.month===month).map(plan=>({movie,plan})))}
-  function getPlan(movie,month=planState.month){return (movie.plans||[]).find(p=>p.month===month)}
+  function planEntries(month){return Domain.planEntries(appState,month)}
+  function getPlan(movie,month=planState.month){return Domain.getPlan(movie,month)}
   function statusText(status){return status==='completed'?'已完成':status==='deferred'?'已延期':'计划中'}
   function statusClass(status){return status==='completed'?'completed':status==='deferred'?'deferred':'planned'}
   function normalizePlanDates(){for(const m of appState.movies||[]){m.plans=(m.plans||[]).map(p=>typeof p==='string'?{month:p,status:'planned',plannedDate:null}:({...p,status:p.status==='done'?'completed':p.status==='wait'?'planned':p.status||'planned',plannedDate:p.plannedDate||null}))}}
@@ -1785,10 +1775,8 @@
   function removePlan(movieId){const movie=appState.movies.find(m=>m.id===movieId);if(!movie)return;movie.plans=(movie.plans||[]).filter(p=>p.month!==planState.month);movie.updatedAt=new Date().toISOString();save();renderAll();renderPlanPage();toastMsg('已从这个月的计划中移除')}
 
 
-  function watchEntries(){
-    const rows=[];(appState.movies||[]).forEach(movie=>{const hist=movie.watchHistory||[];hist.forEach((watch,index)=>rows.push({movie,watch,index,totalForMovie:hist.length}))});return rows
-  }
-  function isSeasonSourceWatch(movie,watch){return movie?.mediaType==='tv'&&Number(watch?.sourceSeason)>0&&Boolean(watch?.sourceDoubanId||String(watch?.venue||'').includes('豆瓣'))}
+  function watchEntries(){return Domain.watchEntries(appState)}
+  const isSeasonSourceWatch=Domain.isSeasonSourceWatch;
   function sessionWatchEntries(){return watchEntries().filter(x=>!isSeasonSourceWatch(x.movie,x.watch))}
   function seasonMarkEntries(){return watchEntries().filter(x=>isSeasonSourceWatch(x.movie,x.watch))}
   function renderWatchedFilters(){
