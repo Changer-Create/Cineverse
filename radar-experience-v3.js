@@ -3,7 +3,7 @@
   if (/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname)) return;
 
   const STORAGE_KEY = 'movie-collection-v2';
-  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   const RETURN_KEY = 'movie-detail-return-v1';
   const OVERVIEW_CACHE_KEY = 'movie-radar-overview-cache-v1';
   const detailFetches = new Map();
@@ -277,7 +277,7 @@
     syncPreviewWantUi();
 
     const grid = document.getElementById('radarPageGrid');
-    if (grid) new MutationObserver(enhanceRadarCards).observe(grid, { childList: true, subtree: true });
+    if (grid) new window.MovieMutationObserver(enhanceRadarCards).observe(grid, { childList: true, subtree: true });
   }
 
   document.addEventListener('click', event => {

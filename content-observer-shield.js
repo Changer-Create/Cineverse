@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const NativeObserver=window.MutationObserver;
-  if(!NativeObserver||NativeObserver.__movieCollectionEditorShield) return;
+  if(!NativeObserver||window.MovieMutationObserver) return;
 
   const isEditorNode=node=>{
     const el=node?.nodeType===1?node:node?.parentElement;
@@ -27,6 +27,8 @@
     takeRecords(){return filterRecords(this._native.takeRecords())}
   }
 
-  ShieldedMutationObserver.__movieCollectionEditorShield=true;
-  window.MutationObserver=ShieldedMutationObserver;
+  Object.defineProperty(window,'MovieMutationObserver',{
+    value:ShieldedMutationObserver,
+    configurable:true
+  });
 })();

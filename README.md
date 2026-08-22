@@ -1,1 +1,45 @@
-# movie-collection
+# Cineverse
+
+Cineverse is a browser-based movie collection application served as static HTML, CSS, and JavaScript.
+
+## Entry points
+
+- `index.html`: main application.
+- `admin.html`: administrator sign-in.
+- `admin-console.html`: authenticated content administration.
+
+The entry pages load `content-center.js`, which synchronously boots the ordered resource manifest in
+`content-center-runtime-v1.js`. Resource order is currently part of the compatibility contract; change it
+only together with the runtime regression tests.
+
+## Local development
+
+No build step is required. Serve the repository root with any static file server, for example:
+
+```sh
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000/index.html>.
+
+## Checks
+
+Node.js 18 or newer is required for the built-in test runner.
+
+```sh
+npm test          # runtime manifest and entry behavior
+npm run check     # JavaScript syntax, HTML/runtime references, and tests
+```
+
+The tests intentionally avoid network access and external packages. See `REFACTOR_AUDIT.md` for the
+broader risk inventory and staged refactor plan.
+
+The same `npm run check` command runs for pull requests and pushes to `main` through
+`.github/workflows/check.yml`.
+
+## Browser smoke testing
+
+The repository does not install a browser automation dependency. The current Codex container also has
+no Chromium, Chrome, or Firefox executable, so browser behavior cannot be claimed from the Node checks.
+Before release, run the manual app/admin smoke checklist in `BROWSER_SMOKE.md` in a supported desktop
+browser and record console errors and screenshots.

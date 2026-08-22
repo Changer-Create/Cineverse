@@ -8,9 +8,9 @@
   const DIRTY_KEY = 'movie-cloud-dirty-v1';
   const PENDING_KEY = 'movie-cloud-pending-v1';
   const BASELINE_KEY = 'movie-cloud-baseline-fingerprint-v1';
-  const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
-  const APP_URL = 'https://cj956151388-png.github.io/movie-collection/';
+  const SUPABASE_URL = window.CineverseConfig.supabaseUrl;
+  const SUPABASE_PUBLISHABLE_KEY = window.CineverseConfig.supabasePublishableKey;
+  const APP_URL = window.CineverseConfig.publicAppUrl;
 
   let client = null;
   let currentUser = null;
@@ -24,6 +24,7 @@
 
   const $ = id => document.getElementById(id);
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
+  const pendingStore = window.MovieCloudPending;
   const localData = () => safeParse(localStorage.getItem(APP_KEY));
   const hasUsableData = data => data && typeof data === 'object' && Array.isArray(data.movies);
   const ts = value => {
@@ -68,7 +69,7 @@
     }));
   }
   function readPendingCloud(userId=currentUser?.id) {
-    const pending = safeParse(localStorage.getItem(PENDING_KEY));
+    const pending = safeParse(pendingStore?.get());
     if (!pending || !userId || pending.userId !== userId || !hasUsableData(pending.data_json)) return null;
     return pending;
   }
@@ -79,8 +80,8 @@
     return pending;
   }
   function clearPendingCloud(userId=currentUser?.id) {
-    const pending = safeParse(localStorage.getItem(PENDING_KEY));
-    if (!pending || !userId || pending.userId === userId) localStorage.removeItem(PENDING_KEY);
+    const pending = safeParse(pendingStore?.get());
+    if (!pending || !userId || pending.userId === userId) pendingStore?.remove();
     pendingApply = false;
     pendingConflict = false;
   }
@@ -197,7 +198,10 @@
   function renderSignedOut(mode='login',status='',isError=false) {
     const body = $('movieAccountBody');
     if (!body) return;
-    body.innerHTML = `<div class="movie-auth-tabs"><button type="button" class="movie-auth-tab ${mode==='login'?'active':''}" data-auth-mode="login">登录</button><button type="button" class="movie-auth-tab ${mode==='signup'?'active':''}" data-auth-mode="signup">注册</button></div><form id="movieAuthForm" data-mode="${mode}"><div class="movie-auth-field"><label>邮箱</label><input class="movie-auth-input" id="movieAuthEmail" type="email" autocomplete="email" required placeholder="name@example.com"></div><div class="movie-auth-field"><label>密码</label><input class="movie-auth-input" id="movieAuthPassword" type="password" autocomplete="${mode==='login'?'current-password':'new-password'}" minlength="6" required placeholder="至少 6 位"></div><button class="movie-auth-submit" id="movieAuthSubmit" type="submit">${mode==='login'?'登录光影宇宙':'创建光影账户'}</button><div class="movie-auth-status ${isError?'error':''}" id="movieAuthStatus">${status || (mode==='signup'?'注册后请前往邮箱完成验证。':'登录后会自动读取这个账号的云端数据。')}</div></form><div class="movie-cloud-note">云同步保存影视库、评分、观影记录、月度计划、电影雷达和个人设置。每个账号的数据彼此隔离。</div>`;
+    const normalizedMode = mode === 'signup' ? 'signup' : 'login';
+    body.innerHTML = `<div class="movie-auth-tabs"><button type="button" class="movie-auth-tab ${normalizedMode==='login'?'active':''}" data-auth-mode="login">登录</button><button type="button" class="movie-auth-tab ${normalizedMode==='signup'?'active':''}" data-auth-mode="signup">注册</button></div><form id="movieAuthForm" data-mode="${normalizedMode}"><div class="movie-auth-field"><label>邮箱</label><input class="movie-auth-input" id="movieAuthEmail" type="email" autocomplete="email" required placeholder="name@example.com"></div><div class="movie-auth-field"><label>密码</label><input class="movie-auth-input" id="movieAuthPassword" type="password" autocomplete="${normalizedMode==='login'?'current-password':'new-password'}" minlength="6" required placeholder="至少 6 位"></div><button class="movie-auth-submit" id="movieAuthSubmit" type="submit">${normalizedMode==='login'?'登录光影宇宙':'创建光影账户'}</button><div class="movie-auth-status ${isError?'error':''}" id="movieAuthStatus"></div></form><div class="movie-cloud-note">云同步保存影视库、评分、观影记录、月度计划、电影雷达和个人设置。每个账号的数据彼此隔离。</div>`;
+    const statusElement = $('movieAuthStatus');
+    if (statusElement) statusElement.textContent = status || (normalizedMode === 'signup' ? '注册后请前往邮箱完成验证。' : '登录后会自动读取这个账号的云端数据。');
   }
   function renderSignedIn() {
     const body = $('movieAccountBody');
@@ -212,7 +216,11 @@
     const note = pendingConflict
       ? '“使用云端”会放弃本机尚未上传的更改；“保留本机”会覆盖云端较新的版本。两种操作都会再次确认。'
       : (pendingApply ? '这里只在云端内容真的发生变化时出现。应用后会替换本机数据并刷新一次。' : '日常本地修改会自动静默同步；只有另一设备同时修改时才需要手动选择版本。');
-    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email">${String(currentUser.email || '').replace(/[&<>]/g,'')}</div><div class="movie-account-syncstate" id="movieAccountSyncState">${stateText}</div><div class="movie-account-actions ${pendingConflict?'has-conflict':''}">${actions}</div></div><div class="movie-cloud-note">${note}</div>`;
+    body.innerHTML = `<div class="movie-account-card"><div class="movie-account-email" id="movieAccountEmail"></div><div class="movie-account-syncstate" id="movieAccountSyncState"></div><div class="movie-account-actions ${pendingConflict?'has-conflict':''}">${actions}</div></div><div class="movie-cloud-note">${note}</div>`;
+    const emailElement = $('movieAccountEmail');
+    const stateElement = $('movieAccountSyncState');
+    if (emailElement) emailElement.textContent = String(currentUser.email || '');
+    if (stateElement) stateElement.textContent = stateText;
   }
   function openDialog() {
     const dialog = ensureDialog();
@@ -242,7 +250,7 @@
       commitSyncedState(user.id,cloud,row.updated_at || '');
       return false;
     }
-    localStorage.setItem(PENDING_KEY,JSON.stringify({
+    pendingStore?.set(JSON.stringify({
       userId:user.id,
       data_json:cloud,
       updated_at:row.updated_at || new Date().toISOString(),
@@ -392,7 +400,7 @@
     const pending = readPendingCloud(currentUser.id);
     if (pending) {
       pending.conflict = true;
-      localStorage.setItem(PENDING_KEY,JSON.stringify(pending));
+      pendingStore?.set(JSON.stringify(pending));
       pendingApply = true;
       pendingConflict = true;
       renderProfile();
@@ -401,17 +409,6 @@
     clearTimeout(uploadTimer);
     uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),500);
   }
-  function installStorageHook() {
-    if (Storage.prototype.__movieCloudAuthPatchedV5) return;
-    const previousSetItem = Storage.prototype.setItem;
-    Object.defineProperty(Storage.prototype,'__movieCloudAuthPatchedV5',{ value:true,configurable:true });
-    Storage.prototype.setItem = function(key,value) {
-      const result = previousSetItem.call(this,key,value);
-      if (this === localStorage && key === APP_KEY && !suppressUpload) queueUpload();
-      return result;
-    };
-  }
-
   async function reconcileUserData(user) {
     const local = localData();
     const owner = localStorage.getItem(OWNER_KEY) || '';
@@ -535,7 +532,6 @@
   async function boot() {
     injectStyles();
     ensureDialog();
-    installStorageHook();
     bindEvents();
     renderProfile();
     try {
@@ -546,6 +542,7 @@
         sync:(options={}) => uploadCurrentData({ silent:false,...options }),
         syncNow:(options={}) => uploadCurrentData({ silent:true,...options }),
         syncBeforeReload,
+        markLocalChange:queueUpload,
         open:openDialog,
         getState:() => ({ syncing,pendingApply,pendingConflict,dirty:localStorage.getItem(DIRTY_KEY)==='1',lastSync:localStorage.getItem(LAST_SYNC_KEY)||'' })
       };

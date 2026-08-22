@@ -3,7 +3,7 @@
   if (/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname)) return;
 
   const STORAGE_KEY = 'movie-collection-v2';
-  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   let previewRadarId = '';
   let previewRequestId = 0;
 
@@ -261,11 +261,11 @@
 
     const randomTitle = document.getElementById('randomTitle');
     const randomPoster = document.getElementById('randomPoster');
-    if (randomTitle) new MutationObserver(syncRandomPosterLink).observe(randomTitle, { childList: true, characterData: true, subtree: true });
-    if (randomPoster) new MutationObserver(syncRandomPosterLink).observe(randomPoster, { childList: true, subtree: true });
+    if (randomTitle) new window.MovieMutationObserver(syncRandomPosterLink).observe(randomTitle, { childList: true, characterData: true, subtree: true });
+    if (randomPoster) new window.MovieMutationObserver(syncRandomPosterLink).observe(randomPoster, { childList: true, subtree: true });
 
     const radarGrid = document.getElementById('radarPageGrid');
-    if (radarGrid) new MutationObserver(annotateRadarPosters).observe(radarGrid, { childList: true, subtree: true });
+    if (radarGrid) new window.MovieMutationObserver(annotateRadarPosters).observe(radarGrid, { childList: true, subtree: true });
   }
 
   document.addEventListener('click', event => {

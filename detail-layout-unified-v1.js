@@ -189,7 +189,7 @@
 
     const firstWatch = document.getElementById('detailFirstWatch');
     if (firstWatch) {
-      new MutationObserver(() => syncFirstWatchDate()).observe(firstWatch, {
+      new window.MovieMutationObserver(() => syncFirstWatchDate()).observe(firstWatch, {
         childList: true,
         characterData: true,
         subtree: true

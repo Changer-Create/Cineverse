@@ -68,6 +68,7 @@
     const detailView = document.getElementById('detailView');
     const back = document.getElementById('detailBack');
     if (!detailView || detailView.classList.contains('hidden') || !back) return;
+    if (document.documentElement.dataset.detailReturnSource === 'search') {back.textContent='‹ 返回搜索结果';return}
     const source = readReturnSource() || 'library';
     const label = SOURCES[source]?.label || SOURCES.library.label;
     const text = `‹ 返回${label}`;
@@ -111,6 +112,7 @@
   function onBack(event) {
     const back = event.target.closest?.('#detailBack');
     if (!back || location.hash.startsWith('#radar-preview/')) return false;
+    if (document.documentElement.dataset.detailReturnSource === 'search') return false;
     const source = readReturnSource() || 'library';
     if (source === 'radar') return false;
 

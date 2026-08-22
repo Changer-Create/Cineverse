@@ -5,6 +5,8 @@
   const QUOTE_KEY = 'movie-collection-quote-library-v1';
   const VERSION = 1;
 
+  function safeHttpUrl(value){try{const url=new URL(String(value||''));return /^https?:$/.test(url.protocol)?url.href:''}catch{return ''}}
+
   const schema = [
     {key:'global.search.placeholder',group:'全局',label:'全局搜索框占位文案',selector:'#globalSearch',prop:'placeholder',defaultValue:'搜索电影、剧集、主创、标签…'},
     {key:'nav.home',group:'导航',label:'导航：首页',selector:'.nav a[data-view="home"] span:last-child',prop:'text',defaultValue:'首页'},
@@ -75,6 +77,7 @@
   function saveCopyState(next){
     const state = {version:VERSION,updatedAt:nowIso(),values:{...(next?.values||{})}};
     localStorage.setItem(COPY_KEY, JSON.stringify(state));
+    window.MovieGlobalConfig?.localChanged(COPY_KEY, state);
     window.dispatchEvent(new CustomEvent('movie-collection:content-updated',{detail:deepClone(state)}));
     return state;
   }
@@ -132,6 +135,7 @@
       disabledDefaultIds:Array.isArray(next?.disabledDefaultIds)?next.disabledDefaultIds:[]
     };
     localStorage.setItem(QUOTE_KEY,JSON.stringify(state));
+    window.MovieGlobalConfig?.localChanged(QUOTE_KEY, state);
     return state;
   }
 
@@ -178,12 +182,14 @@
       set('#quoteSourceType',q.sourceType||'—');
       set('#quoteSourceTitle',q.sourceTitle||'—');
       set('#quoteSourceTranslation',q.translationNote||'中文为收藏夹展示用自译/意译，不声称为官方译文。');
+      const sourceUrl=safeHttpUrl(q.sourceUrl);
       const link=document.querySelector('#quoteSourceLink');
-      if(link){link.href=q.sourceUrl||'#';link.classList.toggle('hidden',!q.sourceUrl)}
+      if(link){link.href=sourceUrl||'#';link.classList.toggle('hidden',!sourceUrl)}
       dialog.showModal?.();
       return;
     }
-    if(q.sourceUrl) window.open(q.sourceUrl,'_blank','noopener');
+    const sourceUrl=safeHttpUrl(q.sourceUrl);
+    if(sourceUrl) window.open(sourceUrl,'_blank','noopener');
   }
 
   function enhanceQuoteCard(){
@@ -246,7 +252,7 @@
     enhanceQuoteCard();
 
     let timer=0;
-    const observer=new MutationObserver(()=>{
+    const observer=new window.MovieMutationObserver(()=>{
       if(applying) return;
       clearTimeout(timer);
       timer=setTimeout(()=>{applyCopy();enhanceQuoteCard()},80);

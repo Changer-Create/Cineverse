@@ -1,0 +1,11 @@
+{
+  "name": "cineverse",
+  "private": true,
+  "scripts": {
+    "check": "npm run check:syntax && npm run check:html && npm run check:references && npm test",
+    "check:html": "node scripts/check-html.js",
+    "check:syntax": "node scripts/check-syntax.js",
+    "check:references": "node scripts/check-runtime-references.js",
+    "test": "node --test"
+  }
+}

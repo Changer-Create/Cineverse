@@ -5,10 +5,9 @@
   window.__CINEVERSE_LIBRARY_CARD_SYSTEM_V1__ = true;
 
   const STORAGE_KEY = 'movie-collection-v2';
-  const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';
   const SCORE_CACHE_KEY = 'movie-tmdb-score-cache-v1';
   const SCORE_TTL = 7 * 24 * 60 * 60 * 1000;
-  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL = window.CineverseConfig.endpoints.tmdbProxy;
   const grid = document.getElementById('libraryGrid');
   const libraryView = document.getElementById('libraryView');
   if (!grid || !libraryView) return;
@@ -27,8 +26,10 @@
     .replace(/>/g, '&gt;');
   const getState = () => safeParse(localStorage.getItem(STORAGE_KEY));
   const saveState = state => {
+    window.MovieRatingSync?.syncState?.(state);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    localStorage.setItem(CLOUD_DIRTY_KEY, '1');
+    window.dispatchEvent(new CustomEvent('movie-collection:data-saved'));
+    window.MovieCloudAccount?.markLocalChange();
   };
   const today = () => {
     const d = new Date();
@@ -626,12 +627,12 @@
   window.addEventListener('hashchange', () => queueMicrotask(updateFixedWorkspace));
 
   // Only observe the library view's hidden/visible state. This observer never writes back to libraryView.
-  const viewObserver = new MutationObserver(updateFixedWorkspace);
+  const viewObserver = new window.MovieMutationObserver(updateFixedWorkspace);
   viewObserver.observe(libraryView, { attributes:true, attributeFilter:['class'] });
 
   // Core renderLibrary replaces direct card children. Observe only direct childList changes;
   // decorating inside cards therefore cannot retrigger this observer and cannot self-loop.
-  const gridObserver = new MutationObserver(scheduleDecorate);
+  const gridObserver = new window.MovieMutationObserver(scheduleDecorate);
   gridObserver.observe(grid, { childList:true, subtree:false });
 
   injectStyles();

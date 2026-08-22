@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const ENDPOINT='https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/admin-auth';
+  const ENDPOINT=window.CineverseConfig.endpoints.adminAuth;
   const TOKEN_KEY='movie-collection-admin-session-v1';
   const META_KEY='movie-collection-admin-session-meta-v1';
   const EDIT_KEY='movie-collection-content-visual-edit-v1';

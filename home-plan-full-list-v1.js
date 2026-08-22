@@ -64,7 +64,7 @@
     renderFullPlanList();
     const list = document.getElementById('planList');
     if (!list) return;
-    const observer = new MutationObserver(() => queueMicrotask(renderFullPlanList));
+    const observer = new window.MovieMutationObserver(() => queueMicrotask(renderFullPlanList));
     observer.observe(list, { childList:true });
   }
 

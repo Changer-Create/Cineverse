@@ -7,7 +7,8 @@
   const nativeStringify = JSON.stringify;
   const nativeParse = JSON.parse;
   const patchedFlag = '__movieRatingSyncV3__';
-  if (JSON.stringify[patchedFlag]) return;
+  if (window[patchedFlag]) return;
+  Object.defineProperty(window, patchedFlag, { value:true, configurable:true });
 
   // 评分语义：0/负数/空值都代表“未评分”，只有 > 0 才是有效评分。
   const normalRating = value => {
@@ -151,18 +152,12 @@
     return changed;
   }
 
-  function isAppState(value) {
-    return Boolean(value && typeof value === 'object' && Array.isArray(value.movies) && value.settings && value.home);
-  }
-
-  function patchedStringify(value, replacer, space) {
-    if (isAppState(value)) {
-      try { syncStateInPlace(value, previousState()); } catch {}
+  window.MovieRatingSync = Object.freeze({
+    syncState(state) {
+      try { return syncStateInPlace(state, previousState()); }
+      catch { return false; }
     }
-    return nativeStringify(value, replacer, space);
-  }
-  Object.defineProperty(patchedStringify, patchedFlag, { value: true });
-  JSON.stringify = patchedStringify;
+  });
 
   function storedNeedsRepair() {
     try {

@@ -120,17 +120,10 @@
     const current = normalizedStatus(movie, movie.personal.status);
     const order = movie.mediaType === 'tv' ? ['want','watching','watched'] : ['want','watched'];
     const index = Math.max(0, order.indexOf(current));
-    movie.personal.status = order[(index + 1) % order.length];
-
-    if (movie.mediaType !== 'tv' && movie.personal.status === 'watched') {
-      movie.watchHistory = Array.isArray(movie.watchHistory) ? movie.watchHistory : [];
-      if (!movie.watchHistory.some(watch => watch?.date === today())) {
-        movie.watchHistory.push({ date:today(), rating:movie.personal.rating ?? null, note:'', venue:'' });
-      }
-    }
-
-    movie.updatedAt = new Date().toISOString();
-    saveState(state);
+    const next = order[(index + 1) % order.length];
+    if (window.CineverseLibraryDetail) {window.CineverseLibraryDetail.setLibraryStatus(movie.id,next);return}
+    if (next === 'watched') return;
+    movie.personal.status = next;movie.updatedAt = new Date().toISOString();saveState(state);
     const nextHash = location.hash.startsWith('#detail/') ? location.hash.slice(1) : 'library';
     await reloadAfterCloudSync(nextHash);
   }
@@ -139,12 +132,11 @@
     document.querySelectorAll('#libraryGrid [data-library-status].watched').forEach(button => {
       if (button.textContent.trim() === '已看完') button.textContent = '已看';
     });
-    const detail = document.getElementById('detailStatusBtn');
+    const detail = document.getElementById('detailStatusActions');
     const detailId = currentDetailMovieId();
     const movie = detailId ? getState()?.movies?.find(item => String(item?.id || '') === String(detailId)) : null;
     if (detail && movie) {
       const status = normalizedStatus(movie, movie?.personal?.status);
-      detail.textContent = status === 'watching' ? '在看' : status === 'watched' ? '已看' : '想看';
       detail.dataset.statusClass = status;
     }
   }
@@ -156,17 +148,6 @@
   }
 
   window.addEventListener('click', event => {
-    const detailStatus = event.target.closest?.('#detailStatusBtn');
-    if (detailStatus) {
-      const id = currentDetailMovieId();
-      if (!id) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      toggleStatus(id);
-      return;
-    }
-
     const cardStatus = event.target.closest?.('[data-library-status]');
     if (cardStatus?.closest('#libraryGrid')) {
       event.preventDefault();
@@ -204,7 +185,7 @@
     normalizeVisibleLabels();
     const grid = document.getElementById('libraryGrid');
     if (grid) {
-      new MutationObserver(() => {
+      new window.MovieMutationObserver(() => {
         const changed = normalizeStoredState();
         if (changed) {
           location.reload();

@@ -23,6 +23,7 @@
   const q=s=>document.querySelector(s);
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
   function safeJson(raw){try{return JSON.parse(raw)}catch{return null}}
+  function safeImageDataUrl(value){const data=String(value||'');return /^data:image\/(?:png|jpeg|webp|gif);base64,[a-z0-9+/]+=*$/i.test(data)?data:''}
   function loadTheme(){const raw=safeJson(localStorage.getItem(THEME_KEY)||'{}');return THEMES[raw?.theme]?raw.theme:'star'}
   function saveTheme(theme){const id=THEMES[theme]?theme:'star';localStorage.setItem(THEME_KEY,JSON.stringify({version:1,theme:id,updatedAt:new Date().toISOString()}));return id}
   function appSettings(){const app=safeJson(localStorage.getItem(APP_KEY)||'{}');return app?.settings&&typeof app.settings==='object'?app.settings:{}}
@@ -30,7 +31,7 @@
   function currentAccent(theme){const input=q('#settingsAccent'),raw=input?.value||appSettings().accentColor||THEMES[theme].accent;return /^#[0-9a-fA-F]{6}$/.test(raw)?raw:THEMES[theme].accent}
   function panelOpacity(){const el=q('#settingsPanelOpacity'),raw=el?.value||appSettings().panelOpacity||72;return clamp(Number(raw)||72,45,94)/100}
   function environmentLevel(){const el=q('#settingsStarDensity');return ['low','normal','high'].includes(el?.value)?el.value:(appSettings().starDensity||'normal')}
-  function wallpaper(){return String(appSettings().wallpaperDataUrl||'')}
+  function wallpaper(){return safeImageDataUrl(appSettings().wallpaperDataUrl)}
 
   function setRootTokens(themeId){
     const t=THEMES[themeId]||THEMES.star,root=document.documentElement,accent=currentAccent(themeId),op=panelOpacity();

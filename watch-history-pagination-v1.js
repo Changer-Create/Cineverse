@@ -211,7 +211,7 @@
 
     renderPage({ reset: true });
 
-    new MutationObserver(() => {
+    new window.MovieMutationObserver(() => {
       requestAnimationFrame(() => renderPage());
     }).observe(parts.list, { childList: true });
   }
