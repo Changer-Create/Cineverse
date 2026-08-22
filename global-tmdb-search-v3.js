@@ -1,6 +1,8 @@
 (() => {
   'use strict';
   if (/(?:^|\/)(?:admin|admin-console)\.html$/i.test(location.pathname)) return;
+  if (window.__CINEVERSE_GLOBAL_TMDB_SEARCH_V3__) return;
+  window.__CINEVERSE_GLOBAL_TMDB_SEARCH_V3__ = true;
 
   const APP_KEY = 'movie-collection-v2';
   const PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
@@ -11,7 +13,6 @@
   let requestSeq = 0;
   let lastResults = [];
   let activeIndex = -1;
-  let previewState = null;
   let pendingExternalWatch = null;
   let replayingNativeWatch = false;
   let busyAction = false;
@@ -24,13 +25,17 @@
     .normalize('NFKC')
     .replace(/[\s·・:：,，.。!！?？'"“”‘’()（）\[\]【】_-]+/g, '');
   const mediaTypeOf = item => item?.media_type === 'tv' || item?.mediaType === 'tv' ? 'tv' : 'movie';
-  const titleOf = item => mediaTypeOf(item) === 'tv' ? (item?.name || item?.title || item?.info?.title || '') : (item?.title || item?.name || item?.info?.title || '');
-  const originalTitleOf = item => mediaTypeOf(item) === 'tv' ? (item?.original_name || item?.original_title || item?.info?.originalTitle || '') : (item?.original_title || item?.original_name || item?.info?.originalTitle || '');
+  const titleOf = item => mediaTypeOf(item) === 'tv'
+    ? (item?.name || item?.title || item?.info?.title || '')
+    : (item?.title || item?.name || item?.info?.title || '');
+  const originalTitleOf = item => mediaTypeOf(item) === 'tv'
+    ? (item?.original_name || item?.original_title || item?.info?.originalTitle || '')
+    : (item?.original_title || item?.original_name || item?.info?.originalTitle || '');
   const dateOf = item => String(item?.release_date || item?.first_air_date || item?.info?.releaseDate || item?.info?.firstAirDate || '');
-  const yearOf = item => String(item?.info?.year || dateOf(item)).slice(0,4);
+  const yearOf = item => String(item?.info?.year || dateOf(item)).slice(0, 4);
   const localToday = () => {
     const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -44,9 +49,9 @@
   }
 
   function injectStyle() {
-    if ($('globalTmdbSearchStyleV2')) return;
+    if ($('globalTmdbSearchStyleV3')) return;
     const style = document.createElement('style');
-    style.id = 'globalTmdbSearchStyleV2';
+    style.id = 'globalTmdbSearchStyleV3';
     style.textContent = `
       #quickAdd{display:none!important}
       .topbar{grid-template-columns:minmax(0,1fr) auto!important;gap:14px!important}
@@ -78,11 +83,6 @@
       .cv-global-search-action:disabled{opacity:.5;cursor:wait}
       .cv-global-search-footer{padding:7px 10px 6px;border-top:1px solid rgba(161,179,255,.08);color:#66738f;font-size:9px;text-align:right}
       html.cv-search-silent-add #movieModal{visibility:hidden!important;pointer-events:none!important}
-      html.cv-search-detail-preview #detailFavorite,
-      html.cv-search-detail-preview #detailView .detail-actions,
-      html.cv-search-detail-preview #detailView .detail-section,
-      html.cv-search-detail-preview #detailView .detail-bottom{display:none!important}
-      .cv-search-preview-note{margin:10px 0 0;padding:10px 12px;border:1px solid rgba(159,124,255,.2);border-radius:12px;background:rgba(117,86,220,.08);color:#aeb9d6;font-size:11px;line-height:1.7}
       @media(max-width:780px){
         .topbar{grid-template-columns:minmax(0,1fr) auto!important;gap:9px!important}
         .topbar .profile .name,.topbar .profile .role{display:none}
@@ -106,8 +106,8 @@
     if (!input || !search) return null;
     input.placeholder = PLACEHOLDER;
     input.autocomplete = 'off';
-    input.setAttribute('aria-autocomplete','list');
-    input.setAttribute('aria-expanded','false');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-expanded', 'false');
 
     let wrap = search.parentElement?.classList.contains('cv-global-search-wrap') ? search.parentElement : null;
     if (!wrap) {
@@ -122,10 +122,10 @@
       drop = document.createElement('div');
       drop.id = 'globalTmdbSearchDrop';
       drop.className = 'cv-global-search-drop hidden';
-      drop.setAttribute('role','listbox');
+      drop.setAttribute('role', 'listbox');
       wrap.appendChild(drop);
     }
-    input.setAttribute('aria-controls',drop.id);
+    input.setAttribute('aria-controls', drop.id);
     return { input, search, wrap, drop };
   }
 
@@ -156,7 +156,7 @@
       if (mediaTypeOf(movie) !== type) return false;
       const mt = normalize(movie?.info?.title);
       const mo = normalize(movie?.info?.originalTitle);
-      const titleMatch = (rt && [mt,mo].includes(rt)) || (ro && [mt,mo].includes(ro));
+      const titleMatch = (rt && [mt, mo].includes(rt)) || (ro && [mt, mo].includes(ro));
       if (!titleMatch) return false;
       const my = yearOf(movie);
       return !ry || !my || ry === my;
@@ -184,7 +184,7 @@
   function showStatus(text, bad = false) {
     const ui = ensureUi();
     if (!ui) return;
-    ui.drop.innerHTML = `<div class="cv-global-search-status${bad?' bad':''}"></div>`;
+    ui.drop.innerHTML = `<div class="cv-global-search-status${bad ? ' bad' : ''}"></div>`;
     ui.drop.firstElementChild.textContent = text;
     ui.drop.classList.remove('hidden');
     activeIndex = -1;
@@ -200,14 +200,16 @@
       img.alt = '';
       img.loading = 'lazy';
       poster.appendChild(img);
-    } else poster.textContent = '无海报';
+    } else {
+      poster.textContent = '无海报';
+    }
     return poster;
   }
 
   function actionButton(label, result, status, active = false) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `cv-global-search-action${active?' active':''}${status==='watched'?' watch':''}`;
+    btn.className = `cv-global-search-action${active ? ' active' : ''}${status === 'watched' ? ' watch' : ''}`;
     btn.textContent = label;
     btn.dataset.tmdbSearchStatus = status;
     btn.dataset.tmdbSearchId = String(result.id);
@@ -225,13 +227,13 @@
       return;
     }
 
-    results.forEach((result,index) => {
-      const local = localMatch(result,state);
+    results.forEach((result, index) => {
+      const local = localMatch(result, state);
       const row = document.createElement('div');
       row.className = 'cv-global-search-result';
       row.dataset.searchResultIndex = String(index);
-      row.setAttribute('role','option');
-      row.setAttribute('aria-selected','false');
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', 'false');
       row.appendChild(makePoster(result));
 
       const main = document.createElement('div');
@@ -240,17 +242,21 @@
       title.className = 'cv-global-search-title';
       const kind = document.createElement('span');
       kind.className = `cv-global-search-kind ${mediaTypeOf(result)}`;
-      kind.textContent = mediaTypeOf(result)==='tv'?'剧集':'电影';
+      kind.textContent = mediaTypeOf(result) === 'tv' ? '剧集' : '电影';
       const titleText = document.createElement('span');
       titleText.className = 'cv-global-search-title-text';
       titleText.textContent = titleOf(result) || '未命名作品';
-      title.append(kind,titleText);
+      title.append(kind, titleText);
 
       const meta = document.createElement('div');
       meta.className = 'cv-global-search-meta';
       const original = originalTitleOf(result);
-      meta.textContent = [original && normalize(original)!==normalize(titleOf(result)) ? original : '', yearOf(result)||'年份未知', `TMDb ${result.id}`].filter(Boolean).join(' · ');
-      main.append(title,meta);
+      meta.textContent = [
+        original && normalize(original) !== normalize(titleOf(result)) ? original : '',
+        yearOf(result) || '年份未知',
+        `TMDb ${result.id}`
+      ].filter(Boolean).join(' · ');
+      main.append(title, meta);
       if (local) {
         const note = document.createElement('div');
         note.className = 'cv-global-search-local';
@@ -262,9 +268,9 @@
       const actions = document.createElement('div');
       actions.className = 'cv-global-search-actions';
       const current = local?.personal?.status || '';
-      actions.appendChild(actionButton('想看', result, 'want', current==='want'));
-      if (mediaTypeOf(result)==='tv') actions.appendChild(actionButton('在看', result, 'watching', current==='watching'));
-      actions.appendChild(actionButton('看过', result, 'watched', current==='watched'));
+      actions.appendChild(actionButton('想看', result, 'want', current === 'want'));
+      if (mediaTypeOf(result) === 'tv') actions.appendChild(actionButton('在看', result, 'watching', current === 'watching'));
+      actions.appendChild(actionButton('看过', result, 'watched', current === 'watched'));
       row.appendChild(actions);
       ui.drop.appendChild(row);
     });
@@ -281,19 +287,24 @@
   function resultForAction(button) {
     const id = Number(button?.dataset?.tmdbSearchId);
     const type = button?.dataset?.tmdbSearchType;
-    return lastResults.find(item => Number(item?.id)===id && mediaTypeOf(item)===type) || null;
+    return lastResults.find(item => Number(item?.id) === id && mediaTypeOf(item) === type) || null;
+  }
+
+  function resultForRow(row) {
+    const index = Number(row?.dataset?.searchResultIndex);
+    return Number.isInteger(index) ? lastResults[index] || null : null;
   }
 
   function updateActive(delta) {
     const rows = [...document.querySelectorAll('#globalTmdbSearchDrop .cv-global-search-result')];
     if (!rows.length) return;
     activeIndex = (activeIndex + delta + rows.length) % rows.length;
-    rows.forEach((row,index) => {
-      const active = index===activeIndex;
-      row.classList.toggle('active',active);
-      row.setAttribute('aria-selected',active?'true':'false');
+    rows.forEach((row, index) => {
+      const active = index === activeIndex;
+      row.classList.toggle('active', active);
+      row.setAttribute('aria-selected', active ? 'true' : 'false');
     });
-    rows[activeIndex]?.scrollIntoView({block:'nearest'});
+    rows[activeIndex]?.scrollIntoView({ block:'nearest' });
   }
 
   async function runSearch() {
@@ -306,9 +317,9 @@
     try {
       const state = readState();
       const language = state?.settings?.tmdbLanguage || 'zh-CN';
-      const data = await tmdbFetch('/search/multi',{ query, include_adult:false, language, page:1 });
+      const data = await tmdbFetch('/search/multi', { query, include_adult:false, language, page:1 });
       if (seq !== requestSeq) return;
-      lastResults = (data.results || []).filter(item => ['movie','tv'].includes(item?.media_type)).slice(0,LIMIT);
+      lastResults = (data.results || []).filter(item => ['movie', 'tv'].includes(item?.media_type)).slice(0, LIMIT);
       renderResults();
     } catch (error) {
       if (seq !== requestSeq) return;
@@ -321,9 +332,11 @@
     if (!codes.length && Array.isArray(detail?.origin_country)) codes.push(...detail.origin_country);
     if (!codes.length) return (detail?.production_countries || []).map(x => x?.name).filter(Boolean);
     try {
-      const dn = new Intl.DisplayNames(['zh-CN'],{type:'region'});
+      const dn = new Intl.DisplayNames(['zh-CN'], { type:'region' });
       return codes.map(code => dn.of(code) || code);
-    } catch { return codes; }
+    } catch {
+      return codes;
+    }
   }
 
   async function fetchBundle(result) {
@@ -332,65 +345,75 @@
     if (bundleCache.has(key)) return bundleCache.get(key);
     const language = readState()?.settings?.tmdbLanguage || 'zh-CN';
     const detailPath = `/${type}/${result.id}`;
-    const creditsPath = type==='tv' ? `/tv/${result.id}/aggregate_credits` : `/movie/${result.id}/credits`;
+    const creditsPath = type === 'tv' ? `/tv/${result.id}/aggregate_credits` : `/movie/${result.id}/credits`;
     const promise = Promise.all([
-      tmdbFetch(detailPath,{language}),
-      tmdbFetch(creditsPath,{language})
-    ]).then(([detail,credits]) => ({ type, detail, credits, result }));
-    bundleCache.set(key,promise);
-    try { return await promise; }
-    catch (err) { bundleCache.delete(key); throw err; }
+      tmdbFetch(detailPath, { language }),
+      tmdbFetch(creditsPath, { language })
+    ]).then(([detail, credits]) => ({ type, detail, credits, result }));
+    bundleCache.set(key, promise);
+    try {
+      return await promise;
+    } catch (err) {
+      bundleCache.delete(key);
+      throw err;
+    }
   }
 
   function bundleCreators(bundle) {
-    if (bundle.type==='tv') {
+    if (bundle.type === 'tv') {
       const creators = (bundle.detail?.created_by || []).map(x => x?.name).filter(Boolean);
       if (creators.length) return creators;
-      return (bundle.credits?.crew || []).filter(x => (x?.jobs || []).some(j => ['Director','Executive Producer'].includes(j?.job))).map(x => x?.name).filter(Boolean).slice(0,6);
+      return (bundle.credits?.crew || [])
+        .filter(x => (x?.jobs || []).some(j => ['Director', 'Executive Producer'].includes(j?.job)))
+        .map(x => x?.name)
+        .filter(Boolean)
+        .slice(0, 6);
     }
-    return (bundle.credits?.crew || []).filter(x => x?.job==='Director').map(x => x?.name).filter(Boolean);
+    return (bundle.credits?.crew || []).filter(x => x?.job === 'Director').map(x => x?.name).filter(Boolean);
   }
 
   function bundleRuntime(bundle) {
-    if (bundle.type==='tv') return Number(bundle.detail?.episode_run_time?.[0]) || null;
+    if (bundle.type === 'tv') return Number(bundle.detail?.episode_run_time?.[0]) || null;
     return Number(bundle.detail?.runtime) || null;
   }
 
-  function setValue(id,value) {
+  function setValue(id, value) {
     const el = $(id);
     if (el) el.value = value == null ? '' : String(value);
   }
 
-  function fillMovieModal(bundle,status) {
+  function fillMovieModal(bundle, status) {
     const { type, detail, result } = bundle;
-    const title = type==='tv' ? (detail.name || titleOf(result)) : (detail.title || titleOf(result));
-    const original = type==='tv' ? (detail.original_name || originalTitleOf(result)) : (detail.original_title || originalTitleOf(result));
-    const release = type==='tv' ? (detail.first_air_date || dateOf(result)) : (detail.release_date || dateOf(result));
-    const poster = detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '');
+    const title = type === 'tv' ? (detail.name || titleOf(result)) : (detail.title || titleOf(result));
+    const original = type === 'tv' ? (detail.original_name || originalTitleOf(result)) : (detail.original_title || originalTitleOf(result));
+    const release = type === 'tv' ? (detail.first_air_date || dateOf(result)) : (detail.release_date || dateOf(result));
+    const poster = detail.poster_path
+      ? `https://image.tmdb.org/t/p/w500${detail.poster_path}`
+      : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '');
 
     const typeInput = $('movieMediaTypeInput');
     if (typeInput) {
       typeInput.value = type;
-      typeInput.dispatchEvent(new Event('change',{bubbles:true}));
+      typeInput.dispatchEvent(new Event('change', { bubbles:true }));
     }
-    setValue('movieTitleInput',title);
-    setValue('movieOriginalTitleInput',original);
-    setValue('movieYearInput',String(release || '').slice(0,4));
-    setValue('movieReleaseDateInput',release || '');
-    setValue('movieLastAirDateInput',type==='tv' ? (detail.last_air_date || '') : '');
-    setValue('movieRuntimeInput',bundleRuntime(bundle) || '');
-    setValue('movieSeasonsInput',type==='tv' ? (detail.number_of_seasons ?? '') : '');
-    setValue('movieEpisodesInput',type==='tv' ? (detail.number_of_episodes ?? '') : '');
-    setValue('movieTvStatusInput',type==='tv' ? (detail.status || '') : '');
-    setValue('movieTmdbIdInput',detail.id || result.id);
-    setValue('movieDirectorInput',bundleCreators(bundle).join(' / '));
-    setValue('movieCountryInput',countryNames(detail).join(' / '));
-    setValue('movieGenresInput',(detail.genres || []).map(x => x?.name).filter(Boolean).join(' / '));
-    setValue('movieOverviewInput',detail.overview || '');
-    setValue('moviePosterInput',poster);
-    setValue('movieRatingInput','');
-    setValue('movieTagsInput','');
-    setValue('tmdbMovieQuery',title);
+    setValue('movieTitleInput', title);
+    setValue('movieOriginalTitleInput', original);
+    setValue('movieYearInput', String(release || '').slice(0, 4));
+    setValue('movieReleaseDateInput', release || '');
+    setValue('movieLastAirDateInput', type === 'tv' ? (detail.last_air_date || '') : '');
+    setValue('movieRuntimeInput', bundleRuntime(bundle) || '');
+    setValue('movieSeasonsInput', type === 'tv' ? (detail.number_of_seasons ?? '') : '');
+    setValue('movieEpisodesInput', type === 'tv' ? (detail.number_of_episodes ?? '') : '');
+    setValue('movieTvStatusInput', type === 'tv' ? (detail.status || '') : '');
+    setValue('movieTmdbIdInput', detail.id || result.id);
+    setValue('movieDirectorInput', bundleCreators(bundle).join(' / '));
+    setValue('movieCountryInput', countryNames(detail).join(' / '));
+    setValue('movieGenresInput', (detail.genres || []).map(x => x?.name).filter(Boolean).join(' / '));
+    setValue('movieOverviewInput', detail.overview || '');
+    setValue('moviePosterInput', poster);
+    setValue('movieRatingInput', '');
+    setValue('movieTagsInput', '');
+    setValue('tmdbMovieQuery', title);
     const statusInput = $('movieStatusInput');
     if (statusInput) statusInput.value = status;
   }
@@ -417,14 +440,14 @@
 
   async function waitForModal(open, timeout = 2500) {
     const started = Date.now();
-    while (Date.now()-started < timeout) {
+    while (Date.now() - started < timeout) {
       if (Boolean($('movieModal')?.open) === open) return true;
       await wait(20);
     }
     return false;
   }
 
-  async function createOrUpdateViaCore(result,status,bundle = null) {
+  async function createOrUpdateViaCore(result, status, bundle = null) {
     let local = localMatch(result);
     document.documentElement.classList.add('cv-search-silent-add');
     try {
@@ -440,7 +463,7 @@
         const resolved = bundle || await fetchBundle(result);
         add.click();
         await waitForModal(true);
-        fillMovieModal(resolved,status);
+        fillMovieModal(resolved, status);
       }
       const form = $('movieForm');
       if (!form) throw new Error('添加影片表单不可用');
@@ -455,9 +478,9 @@
     }
   }
 
-  async function applyStatus(result,status,sourceButton) {
+  async function applyStatus(result, status, sourceButton) {
     if (!result || busyAction) return;
-    if (status==='watched') {
+    if (status === 'watched') {
       const local = localMatch(result);
       if (local) {
         closeDrop();
@@ -476,7 +499,10 @@
           toast(`无法打开观看记录：${err?.message || err}`);
         } finally {
           busyAction = false;
-          if (sourceButton?.isConnected) { sourceButton.disabled = false; sourceButton.textContent = '看过'; }
+          if (sourceButton?.isConnected) {
+            sourceButton.disabled = false;
+            sourceButton.textContent = '看过';
+          }
         }
       }
       return;
@@ -485,10 +511,9 @@
     busyAction = true;
     if (sourceButton) { sourceButton.disabled = true; sourceButton.textContent = '保存中…'; }
     try {
-      const local = await createOrUpdateViaCore(result,status);
-      toast(`《${titleOf(result)}》已设为「${status==='watching'?'在看':'想看'}」`);
+      await createOrUpdateViaCore(result, status);
+      toast(`《${titleOf(result)}》已设为「${status === 'watching' ? '在看' : '想看'}」`);
       renderResults();
-      return local;
     } catch (err) {
       toast(`保存失败：${err?.message || err}`);
     } finally {
@@ -507,7 +532,11 @@
 
   function openExternalWatch(result, values = null) {
     const modal = $('watchModal');
-    if (!modal) { toast('观看记录模块不可用'); pendingExternalWatch = null; return; }
+    if (!modal) {
+      toast('观看记录模块不可用');
+      pendingExternalWatch = null;
+      return;
+    }
     const title = watchTitleEl();
     if (title) title.textContent = `记录一次观看 · 《${titleOf(result)}》`;
     setValue('watchDateInput', values?.date || localToday());
@@ -524,10 +553,10 @@
     event.stopImmediatePropagation();
 
     const record = {
-      date: $('watchDateInput')?.value || localToday(),
-      rating: $('watchRatingInput')?.value ?? '',
-      venue: $('watchVenueInput')?.value || '',
-      note: $('watchNoteInput')?.value || ''
+      date:$('watchDateInput')?.value || localToday(),
+      rating:$('watchRatingInput')?.value ?? '',
+      venue:$('watchVenueInput')?.value || '',
+      note:$('watchNoteInput')?.value || ''
     };
     const pending = pendingExternalWatch;
     pendingExternalWatch = null;
@@ -535,20 +564,23 @@
     restoreWatchTitle();
     busyAction = true;
     try {
-      const local = await createOrUpdateViaCore(pending.result,'want',pending.bundle);
+      const local = await createOrUpdateViaCore(pending.result, 'want', pending.bundle);
       triggerCoreDetail(local.id);
       await wait(30);
-      setValue('watchDateInput',record.date);
-      setValue('watchRatingInput',record.rating);
-      setValue('watchVenueInput',record.venue);
-      setValue('watchNoteInput',record.note);
+      setValue('watchDateInput', record.date);
+      setValue('watchRatingInput', record.rating);
+      setValue('watchVenueInput', record.venue);
+      setValue('watchNoteInput', record.note);
       replayingNativeWatch = true;
-      try { $('watchForm')?.requestSubmit(); }
-      finally { replayingNativeWatch = false; }
+      try {
+        $('watchForm')?.requestSubmit();
+      } finally {
+        replayingNativeWatch = false;
+      }
     } catch (err) {
       toast(`保存观看记录失败：${err?.message || err}`);
       pendingExternalWatch = pending;
-      openExternalWatch(pending.result,record);
+      openExternalWatch(pending.result, record);
     } finally {
       busyAction = false;
     }
@@ -561,148 +593,13 @@
     restoreWatchTitle();
   }
 
-  function visiblePageId() {
-    return [...document.querySelectorAll('.page-view')].find(el => !el.classList.contains('hidden'))?.id || 'homeView';
-  }
-
-  function setText(id,value) {
-    const el = $(id);
-    if (el) el.textContent = value == null || value === '' ? '—' : String(value);
-  }
-
-  function setPreviewPoster(url,title) {
-    const poster = $('detailPoster');
-    if (!poster) return;
-    poster.innerHTML = '';
-    poster.classList.toggle('has-image',Boolean(url));
-    if (url) {
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = `${title} 海报`;
-      poster.appendChild(img);
-    } else {
-      const text = document.createElement('div');
-      text.className = 'poster-title';
-      text.textContent = title || '影片';
-      poster.appendChild(text);
-    }
-  }
-
-  function setPreviewTags(genres) {
-    const el = $('detailTags');
-    if (!el) return;
-    el.innerHTML = '';
-    for (const genre of genres || []) {
-      const span = document.createElement('span');
-      span.textContent = genre;
-      el.appendChild(span);
-    }
-  }
-
-  function ensurePreviewNote() {
-    let note = $('globalSearchPreviewNote');
-    if (note) return note;
-    const overview = document.querySelector('#detailView .detail-overview');
-    if (!overview) return null;
-    note = document.createElement('div');
-    note.id = 'globalSearchPreviewNote';
-    note.className = 'cv-search-preview-note';
-    overview.insertAdjacentElement('beforebegin',note);
-    return note;
-  }
-
-  function fillPreview(result,bundle = null) {
-    const type = mediaTypeOf(result);
-    const detail = bundle?.detail || {};
-    const title = type==='tv' ? (detail.name || titleOf(result)) : (detail.title || titleOf(result));
-    const original = type==='tv' ? (detail.original_name || originalTitleOf(result)) : (detail.original_title || originalTitleOf(result));
-    const release = type==='tv' ? (detail.first_air_date || dateOf(result)) : (detail.release_date || dateOf(result));
-    const creators = bundle ? bundleCreators(bundle) : [];
-    const countries = bundle ? countryNames(detail) : [];
-    const genres = (detail.genres || []).map(x => x?.name).filter(Boolean);
-    const posterUrl = detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : (result.poster_path ? `https://image.tmdb.org/t/p/w500${result.poster_path}` : '');
-    const runtime = bundle ? bundleRuntime(bundle) : null;
-
-    setText('detailTitle',title || '未命名作品');
-    setText('detailOriginal',[original && normalize(original)!==normalize(title) ? original : '', String(release||'').slice(0,4)].filter(Boolean).join(' · '));
-    setText('detailCreatorLabel',type==='tv'?'主创':'导演');
-    setText('detailDirectors',creators.join(' / ') || '待载入');
-    setText('detailCountries',countries.join(' / ') || '待载入');
-    setText('detailGenres',genres.join(' / ') || '待载入');
-    setText('detailRuntimeLabel',type==='tv'?'单集时长':'片长');
-    setText('detailRuntime',runtime ? `${runtime} 分钟` : '未知');
-    setText('detailReleaseLabel',type==='tv'?'首播':'上映');
-    setText('detailRelease',release || '未知');
-    setText('detailMediaType',type==='tv'?'剧集':'电影');
-    setText('detailTmdb',detail.id || result.id);
-    setText('detailOverview',detail.overview || '正在读取 TMDb 详情…');
-    setText('detailRating','—');
-    setText('detailStars','☆☆☆☆☆');
-    setText('detailLastWatch','尚未加入影视库');
-    setText('detailPlanMeta','未加入月度计划');
-    setText('detailRadarBadge','TMDb 搜索');
-    setText('detailRadarDate','—');
-    setText('detailPublicScore',detail.vote_average ? Number(detail.vote_average).toFixed(1) : (result.vote_average ? Number(result.vote_average).toFixed(1) : '—'));
-    setText('detailMatchScore','—');
-    setText('detailRadarReason','来自顶部 TMDb 全库搜索。');
-    if (type==='tv') {
-      $('detailSeriesFact')?.classList.remove('hidden');
-      setText('detailSeriesMeta',[detail.number_of_seasons!=null?`${detail.number_of_seasons} 季`:null,detail.number_of_episodes!=null?`${detail.number_of_episodes} 集`:null].filter(Boolean).join(' · ') || '剧集资料待载入');
-    } else $('detailSeriesFact')?.classList.add('hidden');
-    setPreviewTags(genres);
-    setPreviewPoster(posterUrl,title);
-    const note = ensurePreviewNote();
-    if (note) note.textContent = `TMDb 搜索详情预览 · 《${title || '该作品'}》尚未加入影视库。可返回搜索结果后选择“想看 / 在看 / 看过”。`;
-    const back = $('detailBack');
-    if (back) back.textContent = '‹ 返回搜索结果';
-  }
-
-  async function openPreview(result) {
-    const local = localMatch(result);
-    if (local) {
-      closeDrop();
-      triggerCoreDetail(local.id);
-      return;
-    }
-    previewState = { result, previousViewId:visiblePageId() };
-    document.documentElement.classList.add('cv-search-detail-preview');
+  function openLocalRow(row) {
+    const result = resultForRow(row);
+    const local = result && localMatch(result);
+    if (!local?.id) return false;
     closeDrop();
-    document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
-    $('detailView')?.classList.remove('hidden');
-    document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active',a.dataset.view==='library'));
-    fillPreview(result);
-    try {
-      const bundle = await fetchBundle(result);
-      if (previewState?.result?.id===result.id && mediaTypeOf(previewState.result)===mediaTypeOf(result)) fillPreview(result,bundle);
-    } catch (err) {
-      const overview = $('detailOverview');
-      if (overview && /正在读取/.test(overview.textContent || '')) overview.textContent = `TMDb 详情读取失败：${err?.message || err}`;
-    }
-  }
-
-  function closePreview() {
-    if (!previewState) return false;
-    const prev = previewState;
-    previewState = null;
-    document.documentElement.classList.remove('cv-search-detail-preview');
-    $('globalSearchPreviewNote')?.remove();
-    const back = $('detailBack');
-    if (back) back.textContent = '‹ 返回影视库';
-    document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
-    const target = $(prev.previousViewId) || $('homeView');
-    target?.classList.remove('hidden');
-    const map = {homeView:'home',libraryView:'library',matchView:'match',radarView:'radar',planView:'plan',watchedView:'watched',statsView:'stats',settingsView:'settings'};
-    const viewKey = map[prev.previousViewId] || 'library';
-    document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active',a.dataset.view===viewKey));
-    if (lastResults.length) renderResults();
+    triggerCoreDetail(local.id);
     return true;
-  }
-
-  function handleRowClick(event,row) {
-    if (event.target.closest('.cv-global-search-action')) return;
-    const index = Number(row.dataset.searchResultIndex);
-    const result = lastResults[index];
-    if (result) openPreview(result);
   }
 
   function boot() {
@@ -712,22 +609,37 @@
 
     const input = $('globalSearch');
     input?.addEventListener('keydown', event => {
-      if (event.key==='ArrowDown' && !$('globalTmdbSearchDrop')?.classList.contains('hidden')) {
-        event.preventDefault(); event.stopImmediatePropagation(); updateActive(1); return;
+      if (event.key === 'ArrowDown' && !$('globalTmdbSearchDrop')?.classList.contains('hidden')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        updateActive(1);
+        return;
       }
-      if (event.key==='ArrowUp' && !$('globalTmdbSearchDrop')?.classList.contains('hidden')) {
-        event.preventDefault(); event.stopImmediatePropagation(); updateActive(-1); return;
+      if (event.key === 'ArrowUp' && !$('globalTmdbSearchDrop')?.classList.contains('hidden')) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        updateActive(-1);
+        return;
       }
-      if (event.key==='Escape') {
-        closeDrop(); return;
+      if (event.key === 'Escape') {
+        closeDrop();
+        return;
       }
-      if (event.key!=='Enter') return;
+      if (event.key !== 'Enter') return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (activeIndex>=0 && lastResults[activeIndex]) openPreview(lastResults[activeIndex]);
-      else runSearch();
+      if (activeIndex >= 0) {
+        const rows = [...document.querySelectorAll('#globalTmdbSearchDrop .cv-global-search-result')];
+        rows[activeIndex]?.click();
+      } else {
+        runSearch();
+      }
     }, true);
-    input?.addEventListener('input',() => { requestSeq++; activeIndex=-1; closeDrop(); }, true);
+    input?.addEventListener('input', () => {
+      requestSeq += 1;
+      activeIndex = -1;
+      closeDrop();
+    }, true);
   }
 
   document.addEventListener('click', event => {
@@ -736,23 +648,17 @@
       event.preventDefault();
       event.stopPropagation();
       const result = resultForAction(action);
-      if (result) applyStatus(result,action.dataset.tmdbSearchStatus,action);
+      if (result) applyStatus(result, action.dataset.tmdbSearchStatus, action);
       return;
     }
 
     const row = event.target.closest?.('#globalTmdbSearchDrop .cv-global-search-result');
-    if (row) {
-      event.preventDefault();
-      event.stopPropagation();
-      handleRowClick(event,row);
-      return;
-    }
-
-    if (previewState && event.target.closest?.('#detailBack')) {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      closePreview();
+    if (row && !event.target.closest?.('[data-tmdb-search-status]')) {
+      if (openLocalRow(row)) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+      }
       return;
     }
 
@@ -761,7 +667,7 @@
   }, true);
 
   document.addEventListener('submit', event => {
-    if (event.target?.id==='watchForm' && pendingExternalWatch && !replayingNativeWatch) commitExternalWatch(event);
+    if (event.target?.id === 'watchForm' && pendingExternalWatch && !replayingNativeWatch) commitExternalWatch(event);
   }, true);
 
   document.addEventListener('click', event => {
@@ -770,9 +676,9 @@
   }, true);
 
   document.addEventListener('cancel', event => {
-    if (event.target?.id==='watchModal' && pendingExternalWatch && !replayingNativeWatch) clearExternalWatch();
+    if (event.target?.id === 'watchModal' && pendingExternalWatch && !replayingNativeWatch) clearExternalWatch();
   }, true);
 
-  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
   else boot();
 })();
