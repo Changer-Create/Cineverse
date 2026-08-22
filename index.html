@@ -1450,54 +1450,33 @@
 <div class="toast" id="toast"></div>
 <script src="app-constants-v1.js?v=20260822-1200"></script>
 <script src="app-core-utils-v1.js?v=20260822-1200"></script>
+<script src="app-state-storage-v1.js?v=20260822-1230"></script>
 <script src="verified-quotes-v1.js?v=20260822-1200"></script>
 <script>
 (() => {
-  const V2_KEY = 'movie-collection-v2';
-  const LEGACY_KEY = 'movie-collection-state-v1';
   const APP_NOW = new Date();
   const CURRENT_MONTH = `${APP_NOW.getFullYear()}-${String(APP_NOW.getMonth()+1).padStart(2,'0')}`;
   const NOW_YEAR = APP_NOW.getFullYear();
   const { uid, safeJSON, splitList, esc, escAttr, localToday, csvEscape } = window.CineverseCoreUtils;
   const { DEFAULT_SETTINGS, THEME_PRESETS, EMPTY_HOME } = window.CineverseAppConstants;
+  const { normalizeSettings, normalizeMovie, restore:restoreState, backup:backupState } = window.CineverseState;
+  const { app:V2_KEY } = window.CineverseState.keys;
   // Public test build: TMDb credentials are never hard-coded; each browser stores its own key locally.
 
   const VERIFIED_QUOTE_LIBRARY=window.CineverseVerifiedQuotes||[];
   const QUOTE_LAST_KEY='movie-collection-v2-last-quote';
 
 
-  function normalizeSettings(v){const out={...DEFAULT_SETTINGS,...(v||{})};delete out.tmdbKey;delete out.brandTitle;delete out.brandSubtitle;delete out.brandLogoDataUrl;delete out.libraryPageSize;return out}
-
-
-  function normalizeMovie(m={}){
-    const normalizeType=v=>['movie','tv','unknown'].includes(String(v||''))?String(v):'movie';
-    if(m.info) return {
-      id:m.id||uid(),mediaType:normalizeType(m.mediaType||m.info.mediaType),
-      info:{title:m.info.title||'',originalTitle:m.info.originalTitle||'',year:m.info.year?Number(m.info.year):null,releaseDate:m.info.releaseDate||m.info.firstAirDate||'',firstAirDate:m.info.firstAirDate||m.info.releaseDate||'',lastAirDate:m.info.lastAirDate||'',numberOfSeasons:m.info.numberOfSeasons!=null?Number(m.info.numberOfSeasons):null,numberOfEpisodes:m.info.numberOfEpisodes!=null?Number(m.info.numberOfEpisodes):null,tvStatus:m.info.tvStatus||'',directors:Array.isArray(m.info.directors)?m.info.directors:splitList(m.info.directors),countries:Array.isArray(m.info.countries)?m.info.countries:splitList(m.info.countries),runtime:m.info.runtime?Number(m.info.runtime):null,genres:Array.isArray(m.info.genres)?m.info.genres:splitList(m.info.genres),posterUrl:m.info.posterUrl||'',overview:m.info.overview||'',tmdbId:m.info.tmdbId||m.tmdbId||null,doubanId:m.info.doubanId||m.doubanId||null},
-      personal:{status:m.personal?.status||'want',want:m.personal?.want==null?(m.personal?.status||'want')==='want':Boolean(m.personal.want),rating:m.personal?.rating!==''&&m.personal?.rating!=null?Number(m.personal.rating):null,tags:Array.isArray(m.personal?.tags)?m.personal.tags:splitList(m.personal?.tags),shortReview:m.personal?.shortReview||'',favorite:Boolean(m.personal?.favorite)},
-      watchHistory:Array.isArray(m.watchHistory)?m.watchHistory:[],plans:Array.isArray(m.plans)?m.plans:[],radar:m.radar||{discovered:false,ignored:false},createdAt:m.createdAt||new Date().toISOString(),updatedAt:m.updatedAt||new Date().toISOString(),external:m.external||{}
-    };
-    return {
-      id:m.id||uid(),mediaType:normalizeType(m.mediaType),info:{title:m.title||'',originalTitle:'',year:m.year?Number(m.year):null,releaseDate:'',firstAirDate:'',lastAirDate:'',numberOfSeasons:null,numberOfEpisodes:null,tvStatus:'',directors:Array.isArray(m.directors)?m.directors:splitList(m.directors),countries:Array.isArray(m.countries)?m.countries:splitList(m.countries),runtime:m.runtime?Number(m.runtime):null,genres:[],posterUrl:m.posterUrl||'',overview:'',tmdbId:m.tmdbId||null,doubanId:m.doubanId||null},
-      personal:{status:m.watched?'watched':'want',rating:null,tags:[],shortReview:'',favorite:false},watchHistory:m.watched?[{date:null,rating:null,note:'',venue:''}]:[],plans:(m.plans||[]).map(x=>typeof x==='string'?{month:x,status:'planned'}:x),radar:{discovered:false,ignored:false},createdAt:m.updatedAt||new Date().toISOString(),updatedAt:m.updatedAt||new Date().toISOString(),external:m.external||{}
-    };
-  }
-  function loadApp(){
-    const saved=safeJSON(localStorage.getItem(V2_KEY));
-    if(saved){saved.movies=(saved.movies||[]).map(normalizeMovie);saved.home={...structuredClone(EMPTY_HOME),...(saved.home||{})};const previousSettings=saved.settings||{},wasOldPublicDefault=previousSettings.profileName==='锦荣'&&previousSettings.profileRole==='影视收藏家'&&!previousSettings.profileAvatarDataUrl;saved.settings=normalizeSettings(previousSettings);if(wasOldPublicDefault){saved.settings.profileName='电影爱好者';saved.settings.profileRole='';localStorage.setItem(V2_KEY,JSON.stringify(saved))}return saved}
-    const legacy=safeJSON(localStorage.getItem(LEGACY_KEY));
-    const state={movies:Array.isArray(legacy)?legacy.map(normalizeMovie):[],settings:normalizeSettings({}),home:structuredClone(EMPTY_HOME),tmdbMatchCenter:{lastScanAt:'',lastTotal:0,lastAuto:0,lastManual:0,rows:[],resumeIds:[],paused:false}};
-    localStorage.setItem(V2_KEY,JSON.stringify(state));return state;
-  }
-  let appState=loadApp();
+  const appStore=window.CineverseState.createStore();
+  let appState=appStore.getState();
   appState.settings=normalizeSettings(appState.settings);
   appState.tmdbMatchCenter={lastScanAt:'',lastTotal:0,lastAuto:0,lastManual:0,rows:[],resumeIds:[],paused:false,...(appState.tmdbMatchCenter||{})};
   if(!Array.isArray(appState.tmdbMatchCenter.rows))appState.tmdbMatchCenter.rows=[];if(!Array.isArray(appState.tmdbMatchCenter.resumeIds))appState.tmdbMatchCenter.resumeIds=[];
   appState.home=appState.home||{};
   if(Array.isArray(appState.home.radar))appState.home.radar=appState.home.radar.filter(r=>!String(r?.id||'').startsWith('radar-demo-'));
   appState.home.random=[];
-  localStorage.setItem(V2_KEY,JSON.stringify(appState));
-  function save(){localStorage.setItem(V2_KEY,JSON.stringify(appState));if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
+  appStore.replace(appState,{persist:true,silent:true,reason:'startup-normalize'});
+  function save(){appStore.replace(appState,{persist:true,silent:true,reason:'app-save'});if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
 
 
   const $=id=>document.getElementById(id);
@@ -1970,11 +1949,11 @@
   function updateSettingsStorage(){const movies=appState.movies||[],watch=movies.reduce((n,m)=>n+(m.watchHistory||[]).length,0),plans=movies.reduce((n,m)=>n+(m.plans||[]).length,0),radar=(appState.home?.radar||[]).length,raw=localStorage.getItem(V2_KEY)||'',bytes=new Blob([raw]).size,kb=bytes/1024;if(els.settingsMovieCount)els.settingsMovieCount.textContent=movies.length;if(els.settingsWatchCount)els.settingsWatchCount.textContent=watch;if(els.settingsPlanCount)els.settingsPlanCount.textContent=plans;if(els.settingsRadarCount)els.settingsRadarCount.textContent=radar;if(els.settingsStorageCopy)els.settingsStorageCopy.textContent=`当前本地数据约 ${kb<1024?kb.toFixed(1)+' KB':(kb/1024).toFixed(2)+' MB'} · 建议定期导出完整备份。`;const latest=movies.map(m=>m.updatedAt).filter(Boolean).sort().at(-1);if(els.settingsLastUpdated)els.settingsLastUpdated.textContent=latest?`最近更新 ${String(latest).slice(0,10)}`:'暂无更新记录'}
   function saveAppearanceFromControls(){appState.settings=normalizeSettings(appState.settings);save();applyAppearance();renderSettings();toastMsg('外观设置已保存 ✦')}
   function downloadText(filename,text,type='text/plain;charset=utf-8'){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500)}
-  function exportFullBackup(){const safeState=structuredClone(appState);safeState.settings=normalizeSettings(safeState.settings);const payload={schemaVersion:2,exportedAt:new Date().toISOString(),app:'影视收藏夹 V2',state:safeState};downloadText(`影视收藏夹V2_完整备份_${localToday()}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');toastMsg('完整 JSON 备份已导出（不含 TMDb Key）')}
+  function exportFullBackup(){const payload=backupState(appState);downloadText(`影视收藏夹V2_完整备份_${localToday()}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');toastMsg('完整 JSON 备份已导出（不含 TMDb Key）')}
   function exportMoviesCsv(){const head=['mediaType','title','originalTitle','year','releaseDate','lastAirDate','numberOfSeasons','numberOfEpisodes','tvStatus','directors','countries','runtime','genres','posterUrl','status','rating','tags','shortReview','favorite','tmdbId','doubanId'];const rows=(appState.movies||[]).map(m=>[m.mediaType,m.info.title,m.info.originalTitle,m.info.year,m.info.releaseDate,m.info.lastAirDate,m.info.numberOfSeasons,m.info.numberOfEpisodes,m.info.tvStatus,(m.info.directors||[]).join(' / '),(m.info.countries||[]).join(' / '),m.info.runtime,(m.info.genres||[]).join(' / '),m.info.posterUrl,m.personal.status,m.personal.rating,(m.personal.tags||[]).join(' / '),m.personal.shortReview,m.personal.favorite?'1':'0',m.info.tmdbId,m.info.doubanId].map(csvEscape).join(','));downloadText(`影视收藏夹V2_影视库_${localToday()}.csv`,'\ufeff'+[head.join(','),...rows].join('\r\n'),'text/csv;charset=utf-8');toastMsg('影视库 CSV 已导出')}
   function parseCsv(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(q){if(c==='"'&&n==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else{if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}else if(c!=='\r')cell+=c}}if(cell||row.length){row.push(cell);rows.push(row)}return rows}
   function importMoviesCsvText(text){const rows=parseCsv(text.replace(/^\ufeff/,''));if(rows.length<2)throw new Error('CSV 没有数据');const header=rows[0].map(x=>x.trim()),idx=k=>header.indexOf(k),get=(r,k)=>idx(k)>=0?r[idx(k)]:'';let count=0;for(const r of rows.slice(1)){const title=get(r,'title')?.trim();if(!title)continue;const year=get(r,'year')?Number(get(r,'year')):null,type=['movie','tv','unknown'].includes(get(r,'mediaType'))?get(r,'mediaType'):'movie',existing=appState.movies.find(m=>m.info.title===title&&(!year||!m.info.year||Number(m.info.year)===year)),data=normalizeMovie({id:existing?.id||uid(),mediaType:type,info:{title,originalTitle:get(r,'originalTitle')||'',year,releaseDate:get(r,'releaseDate')||'',firstAirDate:type==='tv'?(get(r,'releaseDate')||''):'',lastAirDate:get(r,'lastAirDate')||'',numberOfSeasons:get(r,'numberOfSeasons')!==''?Number(get(r,'numberOfSeasons')):null,numberOfEpisodes:get(r,'numberOfEpisodes')!==''?Number(get(r,'numberOfEpisodes')):null,tvStatus:get(r,'tvStatus')||'',directors:splitList(get(r,'directors')),countries:splitList(get(r,'countries')),runtime:get(r,'runtime')?Number(get(r,'runtime')):null,genres:splitList(get(r,'genres')),posterUrl:get(r,'posterUrl')||'',overview:existing?.info?.overview||'',tmdbId:get(r,'tmdbId')||existing?.info?.tmdbId||null,doubanId:get(r,'doubanId')||existing?.info?.doubanId||null},personal:{status:get(r,'status')||existing?.personal?.status||'want',rating:get(r,'rating')!==''&&get(r,'rating')!=null?Number(get(r,'rating')):existing?.personal?.rating??null,tags:splitList(get(r,'tags')),shortReview:get(r,'shortReview')||'',favorite:['1','true','TRUE'].includes(get(r,'favorite'))},watchHistory:existing?.watchHistory||[],plans:existing?.plans||[],radar:existing?.radar||{discovered:false,ignored:false}});if(existing){const pos=appState.movies.indexOf(existing);appState.movies[pos]=data}else appState.movies.push(data);count++}save();renderAll();return count}
-  async function importBackupFile(file){const text=await file.text();const parsed=JSON.parse(text),candidate=parsed?.state||parsed;if(!candidate||!Array.isArray(candidate.movies))throw new Error('不是可识别的 V2 备份');const currentKey=String(appState.settings?.tmdbKey||'').trim(),restored={movies:candidate.movies.map(normalizeMovie),home:{...structuredClone(EMPTY_HOME),...(candidate.home||{})},settings:normalizeSettings({...candidate.settings,tmdbKey:currentKey||candidate.settings?.tmdbKey||''}),tmdbMatchCenter:{lastScanAt:'',lastTotal:0,lastAuto:0,lastManual:0,rows:[],resumeIds:[],paused:false,...(candidate.tmdbMatchCenter||{})}};if(!Array.isArray(restored.tmdbMatchCenter.rows))restored.tmdbMatchCenter.rows=[];if(!Array.isArray(restored.tmdbMatchCenter.resumeIds))restored.tmdbMatchCenter.resumeIds=[];appState=restored;save();applyAppearance();applyProfile();applyBrand();renderAll();renderSettings();toastMsg(`已完整恢复 ${appState.movies.length} 部影视作品与匹配中心状态`)}
+  async function importBackupFile(file){const text=await file.text(),parsed=JSON.parse(text),candidate=parsed?.state||parsed;appState=restoreState(candidate);appStore.replace(appState,{persist:true,silent:true,reason:'backup-restore'});applyAppearance();applyProfile();applyBrand();renderAll();renderSettings();toastMsg(`已完整恢复 ${appState.movies.length} 部影视作品与匹配中心状态`)}
   function doubanParseTitlePair(v){
     const raw=String(v||'').replace(/\s+/g,' ').trim();
     const parts=raw.split(/\s+\/\s+/,2);
