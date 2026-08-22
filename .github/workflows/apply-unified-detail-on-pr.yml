@@ -1,4 +1,4 @@
-name: Apply unified detail transform
+name: Finish unified detail continuity
 
 on:
   pull_request:
@@ -21,31 +21,35 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Fix staged transform replacement callbacks
+      - name: Preserve TMDb public score across in-place collection
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('scripts/unify-detail-renderer-v2.py')
-          text=p.read_text()
-          old1='index, count = pattern.subn(detail_block + "\\n  function renderWatchHistory", index, count=1)'
-          new1='index, count = pattern.subn(lambda _match: detail_block + "\\n  function renderWatchHistory", index, count=1)'
-          old2='search, count = pattern.subn(preview_block + "  function closePreview() {", search, count=1)'
-          new2='search, count = pattern.subn(lambda _match: preview_block + "  function closePreview() {", search, count=1)'
-          if old1 not in text or old2 not in text:
-              raise SystemExit('staged transform anchors missing')
-          p.write_text(text.replace(old1,new1,1).replace(old2,new2,1))
+
+          index_path=Path('index.html')
+          index=index_path.read_text()
+          old="radar:{discovered:false,ignored:false}})}"
+          new="radar:{discovered:false,ignored:false,publicReputation:data.publicScore!=null?Number(data.publicScore):null}})}"
+          if old in index:
+              index=index.replace(old,new,1)
+          elif new not in index:
+              raise SystemExit('tmdbMovieFromData radar anchor missing')
+          index_path.write_text(index)
+
+          test_path=Path('test/unified-detail-state.test.js')
+          test=test_path.read_text()
+          anchor="  assert.equal(movie.info.overview,'完整简介');\n"
+          addition="  assert.equal(movie.radar.publicReputation,8.7);\n"
+          if addition not in test:
+              if anchor not in test:
+                  raise SystemExit('unified detail test anchor missing')
+              test=test.replace(anchor,anchor+addition,1)
+          test=test.replace("countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',", "countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',publicScore:8.7,")
+          test_path.write_text(test)
           PY
 
-      - name: Apply core renderer transform
-        run: python3 scripts/unify-detail-renderer-v2.py
-
-      - name: Remove transport-only helpers
-        run: |
-          git rm -f scripts/unify-detail-renderer-v2.py
-          git rm -f .github/workflows/unify-detail-v2-transform.yml || true
-          git rm -f detail-renderer-unified-v2.js
-          git rm -f unify-detail-transform.trigger || true
+          rm -f unify-detail-continuity.trigger
 
       - name: Run repository checks
         run: npm run check
@@ -53,11 +57,11 @@ jobs:
       - name: Validate diff whitespace
         run: git diff --check
 
-      - name: Commit transformed result
+      - name: Commit continuity fix
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'refactor: unify TMDb and library detail rendering'
+          git commit -m 'fix: preserve TMDb score when detail becomes collected'
           git push origin HEAD:fix/unify-detail-renderer-v2
