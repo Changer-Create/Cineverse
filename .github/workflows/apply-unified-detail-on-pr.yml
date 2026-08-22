@@ -26,30 +26,37 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           index_path=Path('index.html')
           index=index_path.read_text()
-          old="radar:{discovered:false,ignored:false}})}"
-          new="radar:{discovered:false,ignored:false,publicReputation:data.publicScore!=null?Number(data.publicScore):null}})}"
-          if old in index:
-              index=index.replace(old,new,1)
-          elif new not in index:
-              raise SystemExit('tmdbMovieFromData radar anchor missing')
+          pattern=re.compile(r"(function tmdbMovieFromData\([^\n]+?radar:\{discovered:false,ignored:false)(\}\}\)\})")
+          replacement=r"\1,publicReputation:data.publicScore!=null?Number(data.publicScore):null\2"
+          if 'function tmdbMovieFromData' in index and 'radar:{discovered:false,ignored:false,publicReputation:data.publicScore' not in index:
+              index,count=pattern.subn(replacement,index,count=1)
+              if count!=1:
+                  raise SystemExit(f'tmdbMovieFromData targeted substitutions: {count}')
           index_path.write_text(index)
 
           test_path=Path('test/unified-detail-state.test.js')
           test=test_path.read_text()
+          old="countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',"
+          new=old+"publicScore:8.7,"
+          if 'publicScore:8.7' not in test:
+              if old not in test:
+                  raise SystemExit('bundle fixture anchor missing')
+              test=test.replace(old,new,1)
           anchor="  assert.equal(movie.info.overview,'完整简介');\n"
           addition="  assert.equal(movie.radar.publicReputation,8.7);\n"
           if addition not in test:
               if anchor not in test:
-                  raise SystemExit('unified detail test anchor missing')
+                  raise SystemExit('public score assertion anchor missing')
               test=test.replace(anchor,anchor+addition,1)
-          test=test.replace("countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',", "countries:['中国'],genres:['剧情'],overview:'完整简介',posterUrl:'https://image.tmdb.org/t/p/w500/example.jpg',publicScore:8.7,")
           test_path.write_text(test)
           PY
 
           rm -f unify-detail-continuity.trigger
+          rm -f unify-detail-continuity-retry.trigger
 
       - name: Run repository checks
         run: npm run check
