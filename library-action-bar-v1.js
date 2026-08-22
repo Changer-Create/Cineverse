@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  if (window.__CINEVERSE_MOVIE_ACTION_BAR_UNIFIED_V1__) return;
-  window.__CINEVERSE_MOVIE_ACTION_BAR_UNIFIED_V1__ = true;
+  if (window.__CINEVERSE_LIBRARY_ACTION_BAR_V1__) return;
+  window.__CINEVERSE_LIBRARY_ACTION_BAR_V1__ = true;
 
   const style = document.createElement('style');
   style.id = 'movieActionBarUnifiedStyleV1';
@@ -38,20 +38,7 @@
     });
   }
 
-  function syncDetailButtons() {
-    const root = document.getElementById('detailView');
-    if (!root) return;
-    const candidates = [...root.querySelectorAll('button')].filter(b => /想看|加入本月计划|计划|编辑资料|记录一次观看|添加观看记录/.test(b.textContent || ''));
-    if (candidates.length < 3) return;
-    const bar = candidates[0].parentElement;
-    if (!bar || bar.dataset.actionUnified === '1') return;
-    bar.dataset.actionUnified = '1';
-    bar.classList.add('movie-action-unified-v1');
-    const texts = ['想看', '添加观看记录', '计划', '编辑资料'];
-    candidates.slice(0,4).forEach((b,i)=>{ if(texts[i]) b.textContent = texts[i]; });
-  }
-
-  function run(){ syncLibraryCards(); syncDetailButtons(); }
+  function run(){ syncLibraryCards(); }
   run();
   const observer = new MutationObserver(run);
   observer.observe(document.body, {childList:true, subtree:true});

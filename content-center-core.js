@@ -47,9 +47,7 @@
     {key:'detail.overview.title',group:'详情页',label:'剧情简介标题',selector:'#detailView .detail-overview h3',prop:'text',defaultValue:'剧情简介'},
     {key:'detail.overview.empty',group:'详情页',label:'剧情简介空状态',selector:'#detailOverview',prop:'textIfEmpty',defaultValue:'暂无简介。可在编辑电影时通过 TMDb 搜索补全。'},
     {key:'detail.watch.title',group:'详情页',label:'观影记录标题',selector:'#detailView .detail-section-head h3',prop:'text',defaultValue:'观影记录'},
-    {key:'detail.review.title',group:'详情页',label:'影评笔记标题',selector:'#detailView .detail-subcard:first-child h3',prop:'text',defaultValue:'我的影评笔记'},
-    {key:'detail.review.placeholder',group:'详情页',label:'影评笔记占位文案',selector:'#detailReview',prop:'placeholder',defaultValue:'写下一句话短评，或记录这次电影留给你的东西……'},
-    {key:'detail.related.title',group:'详情页',label:'相关推荐标题',selector:'#detailView .detail-subcard:nth-child(2) h3',prop:'text',defaultValue:'与你的收藏相关'},
+    {key:'detail.related.title',group:'详情页',label:'相关推荐标题',selector:'#detailView .detail-related-block h3',prop:'text',defaultValue:'该作品相关'},
 
     {key:'settings.title',group:'设置',label:'设置页标题',selector:'#settingsView .settings-title h2',prop:'ownText',defaultValue:'设置与数据管理'},
     {key:'settings.sub',group:'设置',label:'设置页副文案',selector:'#settingsView .settings-title p',prop:'text',defaultValue:'调整你的电影宇宙，也把每一次观看安全地留在本地。'},
