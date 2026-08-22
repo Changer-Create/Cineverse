@@ -45,6 +45,7 @@ jobs:
           git rm -f scripts/unify-detail-renderer-v2.py
           git rm -f .github/workflows/unify-detail-v2-transform.yml || true
           git rm -f detail-renderer-unified-v2.js
+          git rm -f unify-detail-transform.trigger || true
 
       - name: Run repository checks
         run: npm run check
