@@ -1,0 +1,167 @@
+name: Codex browser smoke
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: github.head_ref == 'integrate/codex-c43829'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out integration head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install temporary browser runner
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start Cineverse on the allowed local origin
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/cineverse-http.log 2>&1 &
+          echo $! > /tmp/cineverse-http.pid
+          for i in {1..40}; do
+            if curl -fsS http://127.0.0.1:8765/index.html >/dev/null; then exit 0; fi
+            sleep 0.25
+          done
+          cat /tmp/cineverse-http.log
+          exit 1
+
+      - name: Run real Chromium smoke
+        shell: bash
+        run: |
+          cat > .browser-smoke-ci.cjs <<'NODE'
+          const fs = require('fs');
+          const { chromium } = require('playwright');
+
+          const BASE = 'http://127.0.0.1:8765';
+          const fixture = JSON.parse(fs.readFileSync('test/fixtures/app-state-v2.json', 'utf8'));
+          const report = { commit: process.env.GITHUB_SHA || '', browser: '', pageErrors: [], consoleErrors: [], localHttpErrors: [], checks: [] };
+          const pass = (name, detail='') => report.checks.push({ name, ok:true, detail });
+          const fail = (name, detail='') => { report.checks.push({ name, ok:false, detail }); throw new Error(`${name}: ${detail}`); };
+          const assert = (cond, name, detail='') => cond ? pass(name, detail) : fail(name, detail);
+
+          (async () => {
+            const browser = await chromium.launch({ headless:true });
+            report.browser = await browser.version();
+            const context = await browser.newContext({ viewport:{ width:1440, height:1100 } });
+            const page = await context.newPage();
+
+            page.on('pageerror', error => report.pageErrors.push(String(error?.stack || error)));
+            page.on('console', msg => { if (msg.type() === 'error') report.consoleErrors.push(msg.text()); });
+            page.on('response', response => {
+              try {
+                const url = new URL(response.url());
+                if (url.origin === BASE && response.status() >= 400) report.localHttpErrors.push(`${response.status()} ${url.pathname}`);
+              } catch {}
+            });
+
+            await page.goto(`${BASE}/index.html`, { waitUntil:'domcontentloaded', timeout:30000 });
+            await page.evaluate(state => {
+              localStorage.clear();
+              localStorage.setItem('movie-collection-v2', JSON.stringify(state));
+            }, fixture);
+            await page.reload({ waitUntil:'domcontentloaded', timeout:30000 });
+            await page.waitForTimeout(1800);
+
+            assert(report.pageErrors.length === 0, 'app entry has no uncaught page error', report.pageErrors.join('\n'));
+            assert(report.localHttpErrors.length === 0, 'app entry has no missing local resources', report.localHttpErrors.join('\n'));
+            assert(await page.evaluate(() => Boolean(window.CineverseConfig)), 'central runtime config is available');
+            assert(await page.evaluate(() => window.CineverseConfig?.publicAppUrl === 'https://changer-create.github.io/Cineverse/'), 'public app URL points to current Cineverse Pages site');
+            assert(await page.evaluate(() => typeof window.MovieMutationObserver === 'function'), 'scoped MutationObserver wrapper is available');
+
+            const viewIds = { home:'homeView', library:'libraryView', match:'matchView', radar:'radarView', plan:'planView', watched:'watchedView', stats:'statsView', settings:'settingsView' };
+            for (const [hash, id] of Object.entries(viewIds)) {
+              await page.evaluate(value => { location.hash = value; }, `#${hash}`);
+              await page.waitForFunction(target => {
+                const node = document.getElementById(target);
+                return node && !node.classList.contains('hidden');
+              }, id, { timeout:8000 });
+              pass(`navigation opens #${hash}`);
+            }
+
+            await page.evaluate(() => { location.hash = '#library'; });
+            await page.waitForFunction(() => document.querySelectorAll('#libraryGrid .lib-card').length > 0, null, { timeout:10000 });
+            const titleText = await page.locator('#libraryGrid .lib-card').first().innerText();
+            assert(titleText.includes('示例电影'), 'fixture movie renders in library', titleText.slice(0,120));
+            await page.screenshot({ path:'browser-smoke-library.png', fullPage:true });
+
+            const detailOpener = page.locator('#libraryGrid [data-open-detail], #libraryGrid .lib-poster').first();
+            assert(await detailOpener.count() > 0, 'library card exposes a detail opener');
+            await detailOpener.click();
+            await page.waitForFunction(() => {
+              const node = document.getElementById('detailView');
+              return node && !node.classList.contains('hidden') && document.getElementById('detailTitle')?.textContent?.includes('示例电影');
+            }, null, { timeout:10000 });
+            assert(await page.locator('#detailStatusActions [data-detail-status]').count() >= 2, 'unified detail status actions render');
+            const posterBox = await page.locator('#detailPoster').boundingBox();
+            const heroBox = await page.locator('.detail-hero').boundingBox();
+            assert(Boolean(posterBox && heroBox && posterBox.height >= 300 && posterBox.bottom <= heroBox.y + heroBox.height + 2), 'detail poster stays within hero and has usable height', JSON.stringify({posterBox,heroBox}));
+            await page.screenshot({ path:'browser-smoke-detail.png', fullPage:true });
+
+            const before = await page.evaluate(() => localStorage.getItem('movie-collection-v2'));
+            await page.reload({ waitUntil:'domcontentloaded', timeout:30000 });
+            await page.waitForTimeout(800);
+            const after = await page.evaluate(() => localStorage.getItem('movie-collection-v2'));
+            assert(before === after, 'refresh preserves fixture state without silent mutation');
+
+            const tmdb = await page.evaluate(async () => {
+              try {
+                const response = await fetch(window.CineverseConfig.endpoints.tmdbProxy, {
+                  method:'POST',
+                  headers:{'Content-Type':'application/json'},
+                  body:JSON.stringify({ path:'/configuration', params:{} })
+                });
+                return { ok:response.ok, status:response.status, text:(await response.text()).slice(0,180) };
+              } catch (error) {
+                return { ok:false, status:0, text:String(error) };
+              }
+            });
+            assert(tmdb.ok, 'TMDb proxy is reachable from supported localhost origin', JSON.stringify(tmdb));
+
+            await page.evaluate(() => { location.hash = '#settings'; });
+            await page.waitForFunction(() => !document.getElementById('settingsView')?.classList.contains('hidden'), null, { timeout:8000 });
+            await page.screenshot({ path:'browser-smoke-settings.png', fullPage:true });
+
+            const admin = await context.newPage();
+            await admin.goto(`${BASE}/admin-console.html`, { waitUntil:'domcontentloaded', timeout:30000 });
+            await admin.waitForURL(/\/admin\.html(?:$|[?#])/, { timeout:10000 });
+            pass('unauthenticated admin console redirects to admin login', admin.url());
+            await admin.screenshot({ path:'browser-smoke-admin-login.png', fullPage:true });
+
+            report.consoleErrors = [...new Set(report.consoleErrors)].slice(0,50);
+            fs.writeFileSync('browser-smoke-report.json', JSON.stringify(report, null, 2));
+            await browser.close();
+          })().catch(async error => {
+            report.fatal = String(error?.stack || error);
+            fs.writeFileSync('browser-smoke-report.json', JSON.stringify(report, null, 2));
+            console.error(report.fatal);
+            process.exitCode = 1;
+          });
+          NODE
+          node .browser-smoke-ci.cjs
+
+      - name: Upload browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cineverse-browser-smoke-${{ github.event.pull_request.head.sha }}
+          path: |
+            browser-smoke-report.json
+            browser-smoke-*.png
+          if-no-files-found: warn
+          retention-days: 7
