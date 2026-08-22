@@ -4,7 +4,7 @@
 
   const normalizeHash = hash => String(hash || '').replace(/^#/, '');
 
-  function createRouter({ pages, navigationSelector = '.nav a[data-view]', detail, fallback = 'home' }) {
+  function createRouter({ pages, navigationSelector = '.nav a[data-view]', detail, fallback = 'home', passthrough = [] }) {
     const pageNames = Object.keys(pages);
     let current = '';
 
@@ -38,6 +38,7 @@
         if (id && detail?.enter(id)) return navigate('detail', { updateHash:false });
         return navigate(detail?.fallback || 'library', { hash:detail?.fallback || 'library' });
       }
+      if (route && passthrough.some(owner => typeof owner === 'function' ? owner(route) : route.startsWith(String(owner)))) return false;
       return navigate(pages[route] ? route : fallback, {
         updateHash: route !== fallback || Boolean(rawHash),
         hash: pages[route] ? route : fallback

@@ -344,7 +344,7 @@
   function formatDate(v){if(!v)return '—';const d=String(v);return /^\d{4}-\d{2}-\d{2}$/.test(d)?d:d.slice(0,10)||'—'}
   function isCurrentWeek(v){if(!/^\d{4}-\d{2}-\d{2}/.test(String(v||'')))return false;const d=new Date(String(v).slice(0,10)+'T12:00:00'),now=new Date();now.setHours(12,0,0,0);const day=(now.getDay()+6)%7,start=new Date(now);start.setDate(now.getDate()-day);const end=new Date(start);end.setDate(start.getDate()+7);return d>=start&&d<end}
   function currentDetailMovie(){return appState.movies.find(m=>m.id===detailState.movieId)||detailState.detachedMovie}
-  function openDetail(id){const m=appState.movies.find(x=>x.id===id);if(!m)return;detailState.movieId=id;detailState.detachedMovie=null;setView('detail');renderDetail();location.hash='detail/'+encodeURIComponent(id)}
+  function openDetail(id){const m=appState.movies.find(x=>x.id===id);if(!m)return;detailState.movieId=id;detailState.detachedMovie=null;setView('detail',{hash:'detail/'+encodeURIComponent(id)})}
   function renderDetail(){
     const m=currentDetailMovie();if(!m)return;const info=m.info||{},personal=m.personal||{},tv=m.mediaType==='tv',history=[...(m.watchHistory||[])].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))),plans=m.plans||[],currentPlan=plans.find(p=>p.month===CURRENT_MONTH)||plans.find(p=>p.status!=='deferred');
     els.detailTitle.textContent=info.title||(tv?'未命名剧集':'未命名电影');els.detailOriginal.textContent=[info.originalTitle,info.year].filter(Boolean).join(' · ')||String(info.year||'');els.detailCreatorLabel.textContent=tv?'主创':'导演';els.detailDirectors.textContent=(info.directors||[]).join(' / ')||'未知';els.detailCountries.textContent=(info.countries||[]).join(' / ')||'未知';els.detailGenres.textContent=(info.genres||[]).join(' / ')||'待补全';els.detailRuntimeLabel.textContent=tv?'单集时长':'片长';els.detailRuntime.textContent=info.runtime?`${info.runtime} 分钟`:'未知';els.detailReleaseLabel.textContent=tv?'首播':'上映';els.detailRelease.textContent=(tv?(info.firstAirDate||info.releaseDate):info.releaseDate)||info.year||'未知';els.detailMediaType.textContent=mediaTypeLabel(m);els.detailSeriesFact.classList.toggle('hidden',!tv);els.detailSeriesMeta.textContent=tv?[info.numberOfSeasons!=null?info.numberOfSeasons+'季':null,info.numberOfEpisodes!=null?info.numberOfEpisodes+'集':null,info.lastAirDate?(info.lastAirDate.slice(0,4)+' '+(info.tvStatus||'')):info.tvStatus].filter(Boolean).join(' · ')||'待补全':'—';els.detailTmdb.textContent=info.tmdbId||'未关联';els.detailOverview.textContent=info.overview||`暂无简介。可在编辑${tv?'剧集':'电影'}时通过 TMDb 搜索补全资料。`;
@@ -390,7 +390,7 @@
     else toastMsg(action==='plan'?`《${m.info.title}》已加入影视库和本月计划`:`《${m.info.title}》已加入影视库，状态为想看`);
     return m;
   }
-  window.CineverseLibrary=Object.freeze({collectExternalDetail});
+  window.CineverseLibrary=window.CineverseLibrary.extend({collectExternalDetail});
   function radarFiltered(){
     const q=(els.radarKeyword?.value||'').trim().toLowerCase(),min=Number(els.radarMatch?.value||0),sort=els.radarSort?.value||'matchDesc';let rows=radarItems().filter(r=>{
       if(radarState.tab==='week'&&(r.category!=='week'||r.ignored||!isCurrentWeek(r.discoveredAt)))return false;
@@ -595,9 +595,10 @@
     detail:{
       enter(id){if(!appState.movies.some(movie=>movie.id===id))return false;detailState.movieId=id;detailState.detachedMovie=null;return true},
       fallback:'library'
-    }
+    },
+    passthrough:['external-preview/','radar-preview/']
   });
-  function setView(name){return router.navigate(name)}
+  function setView(name,options){return router.navigate(name,options)}
   function renderAll(){renderMetrics();renderRadar();renderRecent();renderPlan();renderRandom();renderMonthInsight();renderLibrary();if(els.matchView&&!els.matchView.classList.contains('hidden'))renderMatchCenter();if(!els.radarView.classList.contains('hidden'))renderRadarPage();if(!els.planView.classList.contains('hidden'))renderPlanPage();if(!els.watchedView.classList.contains('hidden'))renderWatchedPage();if(!els.statsView.classList.contains('hidden'))renderStatsPage();if(detailState.movieId&&!els.detailView.classList.contains('hidden'))renderDetail();if(els.settingsView&&!els.settingsView.classList.contains('hidden'))renderSettings()}
 
   document.addEventListener('click',e=>{
