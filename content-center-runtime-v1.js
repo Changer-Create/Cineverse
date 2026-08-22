@@ -39,7 +39,6 @@
     'bug-feedback-v1',
     'feedback-sidebar-entry-v1',
     'global-tmdb-search-v2',
-    'detail-renderer-unified-v2',
   ]);
 
   const sharedHead = [
@@ -90,7 +89,6 @@
     'bug-feedback-v1.js?v=20260822-0242',
     'feedback-sidebar-entry-v1.js?v=20260822-0302',
     'global-tmdb-search-v2.js?v=20260822-0322',
-    'detail-renderer-unified-v2.js?v=20260822-1053',
   ].map(src => {
     const id = src.split('?')[0].replace(/\.js$/i, '');
     return resource('script', src, appOnlyModuleIds.has(id) ? ['app'] : sharedTargets);

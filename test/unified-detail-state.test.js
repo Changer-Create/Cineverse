@@ -48,7 +48,8 @@ test('TMDb browsing has an explicit context and opening details does not save', 
   assert.match(index, /detailContext=\{source:'library',mediaType:'movie',tmdbId:null,libraryMovieId:null,data:\{\}\}/);
   const openDetail = functionLine('openDetail');
   assert.doesNotMatch(openDetail, /save\(/);
-  assert.match(search, /setDetailContext\(\{source:'tmdb'/);
+  assert.match(search, /openExternalDetail\(resultData\(result\)\)/);
+  assert.match(index, /function openExternalDetail\(data=\{\}\).*renderDetail\(\)/);
 });
 
 test('first library commit uses the complete cached TMDb bundle', () => {
@@ -135,4 +136,17 @@ test('search return context survives in-place library upgrade', () => {
 test('unified detail poster stretches without image distortion', () => {
   assert.match(index,/\.detail-poster\{grid-column:1;grid-row:1 \/ span 2;height:auto;min-height:360px;align-self:stretch/);
   assert.match(index,/\.detail-poster img\{width:100%;height:100%;object-fit:cover/);
+});
+
+
+test('library and TMDb details use one core renderer', () => {
+  assert.doesNotMatch(search, /function fillPreview/);
+  assert.doesNotMatch(search, /cv-search-detail-preview/);
+  assert.doesNotMatch(search, /globalSearchPreviewNote/);
+  assert.match(search, /detailApi\(\)\.openExternalDetail\(resultData\(result\)\)/);
+  assert.match(search, /detailApi\(\)\.openExternalDetail\(bundleData\(bundle\)\)/);
+  assert.ok(index.includes("view.dataset.detailRenderer='core-unified'"));
+  assert.ok(index.includes("view.dataset.detailMode=collected?'library':'tmdb'"));
+  assert.ok(index.includes("const entity=currentDetailEntity();if(!entity)return"));
+  assert.ok(index.includes('openExternalDetail,'));
 });
