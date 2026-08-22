@@ -136,6 +136,14 @@
     if (favorite) favorite.title = '加入影视库后可收藏';
   }
 
+  function snapshotLocalActions() {
+    for (const id of ACTION_IDS) {
+      const el = $(id);
+      if (!el || Object.prototype.hasOwnProperty.call(el.dataset, 'externalPreviewText')) continue;
+      el.dataset.externalPreviewText = el.textContent;
+    }
+  }
+
   function restoreLocalActions() {
     for (const id of ACTION_IDS) {
       const el = $(id);
@@ -143,6 +151,10 @@
       const wasDisabled = el.dataset.externalPreviewWasDisabled === '1';
       el.disabled = wasDisabled;
       delete el.dataset.externalPreviewWasDisabled;
+      if (Object.prototype.hasOwnProperty.call(el.dataset, 'externalPreviewText')) {
+        el.textContent = el.dataset.externalPreviewText;
+        delete el.dataset.externalPreviewText;
+      }
       el.classList.remove('external-detail-disabled');
       el.removeAttribute('aria-disabled');
     }
@@ -315,6 +327,7 @@
   function beginPreview(model, previousViewId, searchDropWasOpen = false) {
     requestSeq += 1;
     active = { source:model.source, previousViewId, searchDropWasOpen, model };
+    snapshotLocalActions();
     document.documentElement.classList.remove('cv-search-detail-preview','radar-detail-preview');
     document.documentElement.classList.add('cv-external-detail-preview');
     $('globalSearchPreviewNote')?.remove();
