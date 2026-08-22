@@ -1,0 +1,52 @@
+name: Fix inline index syntax
+
+on:
+  pull_request:
+    branches:
+      - integrate/codex-c43829
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  fix:
+    if: github.head_ref == 'fix/index-inline-syntax-guard'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out syntax-fix branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Repair malformed CSV import closure
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          text=p.read_text()
+          old="save();renderAll();return count}})}\n  async function importBackupFile"
+          new="save();renderAll();return count})}\n  async function importBackupFile"
+          if old not in text:
+              raise SystemExit('CSV import syntax anchor missing')
+          p.write_text(text.replace(old,new,1))
+          PY
+          rm -f inline-index-syntax.trigger
+
+      - name: Run repository checks
+        run: npm run check
+
+      - name: Validate whitespace
+        run: git diff --check
+
+      - name: Commit repaired inline script
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix: repair inline CSV import syntax'
+          git push origin HEAD:fix/index-inline-syntax-guard
