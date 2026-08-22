@@ -81,7 +81,7 @@
     button.type = 'button';
     button.className = 'tool-btn';
     button.id = BUTTON_ID;
-    button.textContent = '导入豆瓣片单';
+    button.textContent = '☑ 导入豆瓣片单';
     button.addEventListener('click', openImportDialog);
     matchButton.parentNode?.insertBefore(button, matchButton);
   }
