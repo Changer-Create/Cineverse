@@ -143,9 +143,9 @@
     const detailId = currentDetailMovieId();
     const movie = detailId ? getState()?.movies?.find(item => String(item?.id || '') === String(detailId)) : null;
     if (detail && movie) {
-      const status = normalizedStatus(movie, movie?.personal?.status);
-      detail.textContent = status === 'watching' ? '在看' : status === 'watched' ? '已看' : '想看';
-      detail.dataset.statusClass = status;
+      const wants = movie?.personal?.want == null ? movie?.personal?.status === 'want' : Boolean(movie.personal.want);
+      detail.textContent = wants ? '已想看' : '想看';
+      detail.dataset.statusClass = wants ? 'want' : '';
     }
   }
 
@@ -156,17 +156,6 @@
   }
 
   window.addEventListener('click', event => {
-    const detailStatus = event.target.closest?.('#detailStatusBtn');
-    if (detailStatus) {
-      const id = currentDetailMovieId();
-      if (!id) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      toggleStatus(id);
-      return;
-    }
-
     const cardStatus = event.target.closest?.('[data-library-status]');
     if (cardStatus?.closest('#libraryGrid')) {
       event.preventDefault();
