@@ -270,7 +270,9 @@
     if (pending.conflict && !confirm('云端和本机都有尚未合并的更新。使用云端将放弃本机未上传的更改，继续吗？')) return false;
     suppressUpload = true;
     try {
-      localStorage.setItem(APP_KEY,JSON.stringify(pending.data_json));
+      const gateway = window.CineverseStateGateway;
+      if (gateway?.replace) gateway.replace(pending.data_json,{ source:'cloud-auth', reason:'cloud-apply' });
+      else localStorage.setItem(APP_KEY,JSON.stringify(pending.data_json));
       commitSyncedState(currentUser.id,pending.data_json,pending.updated_at || new Date().toISOString());
     } finally { suppressUpload = false; }
     location.reload();

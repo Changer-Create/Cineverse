@@ -9,7 +9,14 @@
   const detailFetches = new Map();
 
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
-  const readState = () => safeParse(localStorage.getItem(STORAGE_KEY)) || { movies: [], home: { radar: [] }, settings: {} };
+  const stateGateway = () => window.CineverseStateGateway;
+  const readState = () => stateGateway()?.snapshot?.() || safeParse(localStorage.getItem(STORAGE_KEY)) || { movies: [], home: { radar: [] }, settings: {} };
+  const writeState = state => {
+    const gateway = stateGateway();
+    if (gateway?.replace) return gateway.replace(state, { source:'radar-experience', reason:'collect-preview' });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return state;
+  };
   const normalizeText = value => String(value || '').toLowerCase().normalize('NFKC').replace(/[\s·・:：,，.。!！?？'"“”‘’()（）\[\]【】_-]+/g, '');
   const movieYear = movie => Number(movie?.info?.year) || Number(String(movie?.info?.releaseDate || '').slice(0, 4)) || null;
 
@@ -251,7 +258,7 @@
     await enrichCollectedMovie(existing, radar, state);
     existing.personal = { ...(existing.personal || {}), status: 'want' };
     existing.updatedAt = new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    writeState(state);
 
     setRadarReturnContext();
     location.hash = `detail/${encodeURIComponent(existing.id)}`;

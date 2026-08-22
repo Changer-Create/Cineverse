@@ -15,6 +15,8 @@
 
 
   const appStore=window.CineverseState.createStore();
+  const stateGateway=window.CineverseState.createGateway(appStore);
+  window.CineverseStateGateway=stateGateway;
   let appState=appStore.getState();
   appState.settings=normalizeSettings(appState.settings);
   appState.tmdbMatchCenter={lastScanAt:'',lastTotal:0,lastAuto:0,lastManual:0,rows:[],resumeIds:[],paused:false,...(appState.tmdbMatchCenter||{})};
@@ -22,8 +24,8 @@
   appState.home=appState.home||{};
   if(Array.isArray(appState.home.radar))appState.home.radar=appState.home.radar.filter(r=>!String(r?.id||'').startsWith('radar-demo-'));
   appState.home.random=[];
-  appStore.replace(appState,{persist:true,silent:true,reason:'startup-normalize'});
-  function save(){appStore.replace(appState,{persist:true,silent:true,reason:'app-save'});if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
+  stateGateway.replace(appState,{persist:true,silent:true,source:'app-main',reason:'startup-normalize'});
+  function save(){stateGateway.replace(appState,{persist:true,silent:true,source:'app-main',reason:'app-save'});if(typeof updateSettingsStorage==='function'&&els?.settingsView&&!els.settingsView.classList.contains('hidden'))updateSettingsStorage()}
 
 
   const $=id=>document.getElementById(id);
@@ -110,6 +112,7 @@
 
   const {MEDIA_FILTER:LIB_MEDIA_FILTER,STATUS_FILTER:LIB_STATUS_FILTER,SORT_FILTER:LIB_SORT_FILTER}=window.CineverseLibrary;
   function populateDatalist(list,values,formatter=x=>x){if(!list)return;list.innerHTML='<option value="全部"></option>'+values.map(v=>`<option value="${escAttr(formatter(v))}"></option>`).join('')}
+  function populateSelect(select,values){if(!select)return;const current=select.value,emptyLabel=select.options[0]?.textContent||'全部';select.innerHTML=`<option value="">${esc(emptyLabel)}</option>`+values.map(value=>`<option value="${escAttr(value)}">${esc(value)}</option>`).join('');if(values.some(value=>String(value)===current))select.value=current}
   const resolveMappedFilter=window.CineverseLibrary.resolveMappedFilter;
   function renderLibraryFilters(){const movies=appState.movies||[];populateDatalist(els.libYearOptions,uniq(movies.map(m=>m.info.year).filter(Boolean)).sort((a,b)=>b-a).map(String));populateDatalist(els.libDirectorOptions,uniq(movies.flatMap(m=>m.info.directors||[])).sort((a,b)=>a.localeCompare(b,'zh-Hans-CN')));populateDatalist(els.libCountryOptions,uniq(movies.flatMap(m=>m.info.countries||[])).sort((a,b)=>a.localeCompare(b,'zh-Hans-CN')));populateDatalist(els.libTagOptions,uniq(movies.flatMap(m=>m.personal?.tags||[])).sort((a,b)=>a.localeCompare(b,'zh-Hans-CN')));populateDatalist(els.libPlanOptions,uniq(movies.flatMap(m=>(m.plans||[]).map(p=>p.month))).sort().reverse())}
   function syncRatingFilterUI(){const op=els.libRatingOp.value;const enabled=!['all','unrated'].includes(op);els.libRatingScore.disabled=!enabled;if(!enabled)els.libRatingScore.value='';const toggle=els.libRatingScore.closest('.manual-filter-input-wrap')?.querySelector('.manual-filter-toggle');if(toggle)toggle.disabled=!enabled}
@@ -600,6 +603,7 @@
   });
   function setView(name,options){return router.navigate(name,options)}
   function renderAll(){renderMetrics();renderRadar();renderRecent();renderPlan();renderRandom();renderMonthInsight();renderLibrary();if(els.matchView&&!els.matchView.classList.contains('hidden'))renderMatchCenter();if(!els.radarView.classList.contains('hidden'))renderRadarPage();if(!els.planView.classList.contains('hidden'))renderPlanPage();if(!els.watchedView.classList.contains('hidden'))renderWatchedPage();if(!els.statsView.classList.contains('hidden'))renderStatsPage();if(detailState.movieId&&!els.detailView.classList.contains('hidden'))renderDetail();if(els.settingsView&&!els.settingsView.classList.contains('hidden'))renderSettings()}
+  stateGateway.subscribe(state=>state,(nextState,_previousState,metadata)=>{if(metadata?.source==='app-main')return;appState=nextState;renderAll()});
 
   document.addEventListener('click',e=>{
     const nav=e.target.closest('.nav a[data-view]');if(nav){e.preventDefault();setView(nav.dataset.view);return}
