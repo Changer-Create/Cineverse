@@ -108,6 +108,12 @@
     return visibleSource() || currentReturnSource() || 'library';
   }
 
+  function isCoreBridgeTrigger(node) {
+    return node?.tagName === 'BUTTON'
+      && node.parentElement === document.body
+      && node.style.display === 'none';
+  }
+
   function handleLocalTrigger(event) {
     if (event.defaultPrevented) return false;
 
@@ -125,6 +131,10 @@
     if (direct) {
       const id = direct.dataset.openDetail;
       if (!movieExists(id)) return false;
+      if (isCoreBridgeTrigger(direct)) {
+        clearPreviewResidue();
+        return false;
+      }
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
