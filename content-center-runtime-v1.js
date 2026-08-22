@@ -4,7 +4,7 @@
   window.__CINEVERSE_CONTENT_RUNTIME_V1__ = true;
 
   const isAdminConsole=/(?:^|\/)(?:admin-console)\.html$/i.test(location.pathname);
-  document.write('<link rel="stylesheet" href="settings-responsive.css?v=20260821-1028"><link rel="stylesheet" href="large-screen-layout-v1.css?v=20260822-1000"><script src="global-config-sync.js?v=20260821-1149"></script><script src="site-brand.js"></script><script src="nav-order.js"></script><script src="library-pagination-top.js"></script>');
+  document.write('<link rel="stylesheet" href="settings-responsive.css?v=20260821-1028"><link rel="stylesheet" href="large-screen-layout-v1.css?v=20260822-1100"><script src="global-config-sync.js?v=20260821-1149"></script><script src="site-brand.js"></script><script src="nav-order.js"></script><script src="library-pagination-top.js"></script>');
   if(isAdminConsole){
     document.documentElement.style.visibility='hidden';
     let token='';

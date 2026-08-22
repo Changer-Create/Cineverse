@@ -151,7 +151,13 @@
   /* Compact the three dashboard-style pages so their primary information fits
      in a common laptop viewport without wasting vertical space. */
   #homeView {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(248px, .95fr) minmax(218px, 1.05fr);
+    gap: 10px;
     padding-right: 3px;
+    overflow: hidden;
   }
 
   #homeView .hero {
@@ -183,15 +189,17 @@
 
   #homeView .home-top-grid,
   #homeView .home-triple {
+    min-height: 0;
+    height: 100%;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 0;
   }
 
   #homeView .home-top-grid > #watched,
   #homeView .home-top-grid > .random-panel {
-    height: 248px;
+    height: 100%;
     min-height: 248px;
-    max-height: 248px;
+    max-height: none;
   }
 
   #homeView .home-top-grid > .random-panel {
@@ -212,8 +220,9 @@
   }
 
   #homeView .home-triple > .panel {
+    height: 100%;
     min-height: 218px;
-    max-height: 218px;
+    max-height: none;
   }
 
   #homeView .panel-head {
@@ -297,6 +306,31 @@
 
   #planView .plan-layout {
     gap: 9px;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  #planView .plan-calendar-panel {
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #planView .plan-calendar {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-auto-rows: minmax(64px, 1fr);
+  }
+
+  #planView .plan-side {
+    min-height: 0;
+    height: 100%;
+    grid-template-rows: minmax(0, 1.15fr) minmax(0, .85fr);
+  }
+
+  #planView .plan-side-card {
+    min-height: 0;
   }
 
   #planView .plan-panel-head {
@@ -452,6 +486,18 @@
 }
 
 @media (min-width: 821px) and (max-width: 1180px) and (min-height: 650px) {
+  #homeView {
+    height: auto;
+    display: block;
+    overflow-y: auto;
+  }
+
+  #homeView .home-top-grid,
+  #homeView .home-triple {
+    height: auto;
+    margin-top: 10px;
+  }
+
   #homeView .home-top-grid > #watched,
   #homeView .home-top-grid > .random-panel,
   #homeView .home-triple > .panel {
@@ -462,6 +508,15 @@
 
   #statsView .stats-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  #planView .plan-layout {
+    overflow: auto;
+  }
+
+  #planView .plan-calendar-panel,
+  #planView .plan-side {
+    height: auto;
   }
 }
 
