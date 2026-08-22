@@ -105,12 +105,9 @@
       if(e.target.closest?.('[data-ui-theme-choice],#settingsSaveAppearance,#settingsResetAppearance,#settingsWallpaperClear'))schedule();
     });
     document.addEventListener('change',e=>{
-      if(['settingsWallpaperFile','settingsStarDensity'].includes(e.target?.id)){
+      if(e.target?.id==='settingsWallpaperFile'){
         [0,120,500,1200].forEach(ms=>setTimeout(applyDefaultBackground,ms));
       }
-    });
-    document.addEventListener('input',e=>{
-      if(['settingsAccent','settingsPanelOpacity'].includes(e.target?.id))schedule();
     });
   }
 

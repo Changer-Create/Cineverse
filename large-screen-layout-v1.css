@@ -39,14 +39,12 @@
     scrollbar-color: rgba(141, 154, 196, .28) transparent;
   }
 
-  .main > .page-view:not(.hidden)::-webkit-scrollbar,
-  .workspace-scroll-module::-webkit-scrollbar {
+  .main > .page-view:not(.hidden)::-webkit-scrollbar {
     width: 7px;
     height: 7px;
   }
 
-  .main > .page-view:not(.hidden)::-webkit-scrollbar-thumb,
-  .workspace-scroll-module::-webkit-scrollbar-thumb {
+  .main > .page-view:not(.hidden)::-webkit-scrollbar-thumb {
     border-radius: 999px;
     background: rgba(141, 154, 196, .24);
   }
