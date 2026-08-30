@@ -37,10 +37,14 @@ for (const asset of ['app-router-v1.js', 'app-library-model-v1.js']) {
 for (const asset of ['app-state-storage-v1.js']) {
   assert.match(index, new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2300`));
 }
-assert.match(index, /content-center-runtime-v1\.js\?v=20260823-4k/);
+assert.match(index, /content-center-runtime-v1\.js\?v=20260827-nature2/);
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
 assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
-assert.match(index, /app-main-v1\.js\?v=20260822-2500/);
+assert.match(index, /app-main-v1\.js\?v=20260827-nature2/);
+  assert.match(index, /ui-theme-nature-v2\.css\?v=20260828-5/);
+assert.match(index, /data-theme-preset="forest"/);
+assert.match(index, /data-theme-preset="snow"/);
+assert.match(index, /data-theme-preset="ocean"/);
 
 for (const asset of ['radar-20.js', 'radar-experience-v3.js', 'library-card-system-v1.js', 'rating-sync-v3.js', 'watch-record-edit-v1.js', 'cloud-auth-v5.js']) {
   assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2300`));
