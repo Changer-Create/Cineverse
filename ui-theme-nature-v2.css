@@ -367,3 +367,146 @@ body[data-ui-theme="ocean"] .theme-preset.active{border-color:var(--line-bright)
   .sidebar .nav a[href="admin.html"],
   .sidebar .nav a[href="#feedback"]{display:none}
 }
+
+/* Daylight theme contrast guard
+   Legacy feature styles were authored for the dark theme. Keep their semantic
+   colors, controls and helper panels legible on the two photographic light skins. */
+body[data-ui-theme="snow"]{
+  --panel-rgb:244,250,255;
+  --daylight-heading:#102945;
+  --daylight-muted:#4f6984;
+  --daylight-subtle:#617a92;
+  --daylight-accent:#145b98;
+  --daylight-gold:#765108;
+  --daylight-success:#176b4a;
+  --daylight-danger:#96364b;
+  --gold:#765108;
+  --gold-2:#654300;
+}
+body[data-ui-theme="ocean"]{
+  --panel-rgb:255,252,246;
+  --daylight-heading:#123448;
+  --daylight-muted:#54717c;
+  --daylight-subtle:#667f87;
+  --daylight-accent:#0a6577;
+  --daylight-gold:#805108;
+  --daylight-success:#176b4a;
+  --daylight-danger:#96364b;
+  --gold:#805108;
+  --gold-2:#6e4300;
+}
+
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .settings-title h2,.library-head h2,.plan-title-row h2,.watched-title-row h2,
+  .stats-title-row h2,.radar-title-row h2,.detail-title,.random-title,.movie-name,
+  .plan-month-label,.plan-page-stat b,.watched-stat b,.stats-summary-card b,
+  .rating-donut-center b,.stats-insight b,.radar-page-stat b,.watch-stat b,
+  .related-title,.radar-side-item b,.batch-tmdb-progress-head b,.batch-tmdb-stat b,
+  .batch-tmdb-pending-title,.tmdb-candidate-title,.douban-guide summary,
+  .douban-guide-step>b,.guide-screen>b,.guide-drop b,.douban-drop b,
+  .library-page-info strong,.batch-bar strong,.watch-month-title b,
+  .watch-feed-date strong,.watch-feed-main b
+){
+  color:var(--daylight-heading)!important;
+  -webkit-text-fill-color:currentColor;
+  text-shadow:none;
+}
+
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .settings-title p,.library-head p,.watched-title-row p,.stats-title-row p,
+  .radar-title-row p,.eyebrow,.hero .sub,.stat-label,.stat-note,.panel-kicker,
+  .movie-meta,.random-meta,.random-quote,.setting-copy span,.settings-card-head span,
+  .theme-preset small,.data-note,.tmdb-status,.detail-meta,.detail-original,
+  .detail-overview p,.detail-side-meta,.detail-score-label,.detail-score small,
+  .detail-public-source,.watch-copy,.watch-stat span,.rating-trend h4,.related-meta,
+  .plan-page-stat span,.plan-page-stat small,.plan-panel-head span,.calendar-week span,
+  .plan-status-row,.unscheduled-item span,.plan-list-movie span,.watched-stat span,
+  .watched-stat small,.watched-feed-head span,.watched-side-head span,
+  .watch-month-title span,.watch-feed-date span,.watch-feed-meta,.watch-feed-note,
+  .watched-empty,.watched-bar span,.rating-row,.watched-pagination span,
+  .stats-summary-card span,.stats-summary-card small,.stats-card-head span,
+  .stats-month-col>span,.chart-legend,.rating-donut-center span,.donut-legend-row,
+  .rank-row>span,.rank-row b,.stats-insight span,.stats-insight small,.stats-empty,
+  .stats-film-row span,.stats-compare,.stats-summary-copy,.radar-page-stat span,
+  .radar-page-stat small,.radar-result-meta,.radar-score-box span,.radar-reason,
+  .radar-empty,.radar-side-copy,.radar-import-help,.tmdb-search-help,
+  .tmdb-search-state,.tmdb-candidate-meta,.storage-stat span,.settings-footer-note,
+  .batch-tmdb-inline-copy,.batch-tmdb-intro,.batch-tmdb-progress-head span,
+  .batch-tmdb-stat span,.batch-tmdb-item-head span,.batch-tmdb-candidate-copy span,
+  .douban-guide-step p,.guide-screen em,.guide-save>b,.guide-save span,
+  .guide-pages span,.guide-drop span,.douban-guide-tip,.douban-drop,
+  .douban-drop span,.douban-file,.douban-status,.douban-note,.douban-chip
+){
+  color:var(--daylight-muted)!important;
+  text-shadow:none;
+}
+
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .theme-preset,.theme-preset b,.setting-value,.manual-filter-toggle,
+  .manual-filter-option,.tool-btn,.library-count,.lib-meta,.lib-tag,
+  .library-page-info,.library-page-controls button,.batch-bar button,
+  .modal-close,.modal-field label,.modal-foot button,.detail-back,.detail-fact,
+  .detail-fact b,.detail-actions button,.watch-date,.watch-entry button,
+  .plan-month-nav button,.plan-view-switch button,.plan-add-btn,.plan-day-number,
+  .plan-day-chip,.unscheduled-item button,.plan-list-row input,.plan-list-row select,
+  .plan-row-actions button,.watched-actions button,.watched-toolbar input,
+  .watched-toolbar select,.watched-pagination button,.stats-controls select,
+  .stats-controls button,.radar-tab,.radar-filter-row input,.radar-filter-row select,
+  .radar-card-actions button,.radar-import-sample,.radar-import-text,
+  .profile-field label,.profile-field input,.setting-control select,
+  .setting-control input[type="text"],.setting-control input[type="password"],
+  .tmdb-search-row input,.modal-field textarea
+){
+  color:var(--daylight-heading)!important;
+}
+
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .settings-file-label,
+  .settings-actions button:not(.primary):not(.gold):not(.danger),
+  .movie-actions button,.lib-actions button,.library-page-controls button,
+  .batch-bar button,.modal-close,.modal-foot button:not(.save):not(.delete),
+  .detail-actions button:not(.primary):not(.gold),.watch-entry button,
+  .plan-month-nav button,.plan-view-switch button,.plan-add-btn,
+  .unscheduled-item button,.plan-row-actions button:not(.remove),
+  .watched-actions button:not(.primary),.watched-pagination button,
+  .stats-controls button,.radar-tab,.radar-card-actions button,
+  .tmdb-candidate button,.batch-tmdb-candidate button
+){
+  background:rgba(var(--panel-rgb),.90)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-heading)!important;
+}
+
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .douban-guide,.douban-guide-step,.douban-guide-visual,.douban-drop,
+  .douban-status,.douban-chip
+){
+  background:rgba(var(--panel-rgb),.86)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .guide-pill,.tmdb-status.ok,.douban-status.ok,.status.done,.status-pill.watched,
+  .radar-card-actions .success,.tmdb-linked,.stats-compare strong
+){color:var(--daylight-success)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .settings-actions .danger,.tmdb-status.bad,.douban-status.bad,.batch-bar button.danger,
+  .modal-foot .delete,.plan-row-actions .remove,.radar-card-actions .danger,
+  .stats-compare strong.down
+){color:var(--daylight-danger)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .spark,.star,.score-match,.recent .r,.lib-rating .score,.detail-stars,
+  .watch-rating,.related-score,.stats-summary-card.gold b,.stats-film-row strong,
+  .radar-score-box.match b,.settings-footer-note span,.guide-file
+){color:var(--daylight-gold)!important;text-shadow:none}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .score-public,.lib-rating .radar-mark,.status.wait,.status-pill.want,
+  .trend-bar span,.watch-feed-score span,.rewatch-item span,.stats-summary-card.purple b,
+  .stats-film-row .rank,.radar-score-box.public b,.radar-tag-cloud span,
+  .tmdb-search-help b,.tmdb-candidate button,.guide-drop
+){color:var(--daylight-accent)!important;text-shadow:none}
+
+body[data-ui-theme="ocean"] :is(
+  .primary,.modal-foot .save,.settings-actions .primary,.detail-actions .primary,
+  .radar-hero-actions .primary,.watched-actions .primary,.tmdb-search-row button
+){color:#3d2608!important}
+
