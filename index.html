@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="cineverse-app">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="app-shell-v1.css?v=20260822-1700">
 </head>
 <body>
+<div class="theme-backdrop" aria-hidden="true"></div>
 <div class="app">
   <aside class="sidebar">
     <div class="brand"><div><h1 id="sidebarBrandTitle">光影宇宙</h1><small id="sidebarBrandSubtitle">定制化影视收藏夹</small></div></div>
@@ -64,7 +65,21 @@
         <div class="panel-title"><span class="star">✦</span> 今晚交给星星决定</div>
         <div class="stat-note" style="margin-top:4px">从你的想看片单中，随机为你推荐一部</div>
         <div class="constellation" aria-hidden="true"><svg viewBox="0 0 110 82"><path d="M9 37 L36 21 L62 31 L89 11 M62 31 L78 62" fill="none" stroke="rgba(196,181,255,.45)" stroke-width="1"/></svg><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="random-content"><div class="random-poster" id="randomPoster"></div><div><div class="random-title" id="randomTitle">正在读取想看片单…</div><div class="random-meta" id="randomMeta">—</div><div class="random-quote" id="randomQuote">从你的真实想看片单中抽取一部作品。</div><div class="random-actions"><button class="primary" id="watchTonight">就看这一部 ✦</button><button class="secondary" id="reroll">换一部</button></div></div></div>
+        <div class="random-content">
+          <div class="random-poster" id="randomPoster"></div>
+          <div class="random-main">
+            <div class="random-title" id="randomTitle">正在读取想看片单…</div>
+            <div class="random-meta" id="randomMeta">—</div>
+            <div class="random-quote" id="randomQuote">从你的真实想看片单中抽取一部作品。</div>
+            <div class="random-actions"><button class="primary" id="watchTonight">就看这一部 ✦</button><button class="secondary" id="reroll">换一部</button></div>
+          </div>
+          <aside class="random-facts" aria-label="随机推荐影片信息">
+            <div><span>导演</span><strong id="randomDirector">—</strong></div>
+            <div><span>类型</span><strong id="randomGenres">—</strong></div>
+            <div><span>公众口碑</span><strong class="public" id="randomPublicScore">—</strong></div>
+            <div><span>片长</span><strong id="randomRuntime">—</strong></div>
+          </aside>
+        </div>
       </section>
     </section>
     <section class="home-triple">
@@ -425,13 +440,13 @@
               </div>
             </section>
             <section class="settings-card settings-card-appearance">
-              <div class="settings-card-head"><h3>外观 · 星空主题</h3></div>
+              <div class="settings-card-head"><h3>外观 · 场景主题</h3></div>
               <div class="settings-card-body">
                 <div class="theme-presets" id="themePresets">
-                  <button class="theme-preset" data-theme-preset="nebula"><div class="theme-swatch swatch-nebula"></div><b>深夜星云</b><small>默认 · 紫蓝与暖金</small></button>
-                  <button class="theme-preset" data-theme-preset="midnight"><div class="theme-swatch swatch-midnight"></div><b>午夜蓝</b><small>克制 · 深蓝与冷光</small></button>
-                  <button class="theme-preset" data-theme-preset="aurora"><div class="theme-swatch swatch-aurora"></div><b>极光</b><small>清冷 · 青绿与蓝紫</small></button>
-                  <button class="theme-preset" data-theme-preset="dusk"><div class="theme-swatch swatch-dusk"></div><b>黄昏星海</b><small>浪漫 · 暖金与暮紫</small></button>
+                  <button class="theme-preset" data-theme-preset="nebula"><div class="theme-swatch swatch-nebula"></div><b>星夜宇宙</b><small>经典 · 紫蓝与暖金</small></button>
+                  <button class="theme-preset" data-theme-preset="forest"><div class="theme-swatch swatch-forest-screening"></div><b>林间放映</b><small>木质 · 苔藓与暖光</small></button>
+                  <button class="theme-preset" data-theme-preset="snow"><div class="theme-swatch swatch-alpine-screen"></div><b>雪境银幕</b><small>冰晶 · 冷白与湖蓝</small></button>
+                  <button class="theme-preset" data-theme-preset="ocean"><div class="theme-swatch swatch-riviera-cinema"></div><b>潮汐影院</b><small>海玻璃 · 珊瑚与沙金</small></button>
                 </div>
                 <div class="setting-row"><div class="setting-copy"><b>自定义壁纸</b></div><div class="setting-control"><div class="settings-actions"><label class="settings-file-label">上传壁纸<input id="settingsWallpaperFile" type="file" accept="image/*"></label><button type="button" id="settingsWallpaperClear">清除</button></div></div></div>
                 <div id="settingsWallpaperPreview" class="wallpaper-preview-v2"><span>当前使用主题背景</span></div>

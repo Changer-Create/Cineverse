@@ -1,0 +1,467 @@
+/* Approved interface refinements — 2026-08-23. */
+
+/* Keep dashboard content readable on ultra-wide displays. */
+#homeView,
+#statsView .stats-shell,
+#settingsView .settings-shell {
+  width: 100%;
+  max-width: 1760px;
+  margin-inline: auto;
+}
+
+/* Home: stronger 40/60 feature band and aligned lower modules. */
+@media (min-width: 1181px) {
+  #homeView {
+    display: block;
+    height: auto;
+  }
+
+  #homeView .home-top-grid {
+    grid-template-columns: minmax(390px, .82fr) minmax(0, 1.18fr);
+    gap: 16px;
+    margin-top: 12px;
+    height: auto;
+  }
+
+  #homeView .home-top-grid > #watched,
+  #homeView .home-top-grid > .random-panel {
+    height: 342px;
+    min-height: 342px;
+    max-height: 342px;
+  }
+
+  #homeView .home-triple {
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, .94fr) minmax(0, 1fr);
+    grid-template-areas: "radar insight plan";
+    gap: 16px;
+    height: auto;
+    margin-top: 12px;
+  }
+
+  #homeView .home-triple > #radar { grid-area: radar; }
+  #homeView .home-triple > .insight { grid-area: insight; }
+  #homeView .home-triple > #plan { grid-area: plan; }
+  #homeView .home-triple > .panel {
+    height: auto;
+    min-height: 342px;
+  }
+
+  #homeView .home-triple .radar-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  #homeView .home-triple .movie-card .poster {
+    aspect-ratio: 2 / 3;
+    max-height: none;
+  }
+
+  #homeView .home-triple .movie-card .poster img {
+    object-fit: contain;
+    background: #080f20;
+  }
+}
+
+/* Recent watching: poster, identity, time, personal score, public score. */
+#homeView #watched { container-type: inline-size; }
+#homeView #watched .recent-grid {
+  gap: 7px;
+}
+
+#homeView #watched .recent {
+  grid-template-columns: 44px minmax(130px, 1.35fr) repeat(3, minmax(62px, .72fr));
+  gap: 9px;
+  align-items: center;
+  min-height: 0;
+  padding: 6px 9px;
+  border-radius: 12px;
+  background: linear-gradient(110deg, rgba(13, 28, 58, .78), rgba(8, 20, 45, .62));
+  transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+#homeView #watched .recent:hover {
+  border-color: rgba(98, 210, 162, .34);
+  background: linear-gradient(110deg, rgba(16, 34, 68, .88), rgba(9, 24, 51, .74));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .14);
+}
+
+#homeView #watched .mini-poster {
+  width: 44px;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  background: linear-gradient(155deg, #494372, #12172a);
+  display: grid;
+  place-items: center;
+  color: #9f7cff;
+}
+
+#homeView #watched .mini-poster img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+}
+
+#homeView #watched .recent-identity { min-width: 0; }
+#homeView #watched .recent .t {
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#homeView #watched .recent-creator {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+  min-width: 0;
+  color: #7f8caa;
+  font-size: 8px;
+}
+
+#homeView #watched .recent-creator span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#homeView #watched .recent-metric {
+  min-width: 0;
+  padding-left: 8px;
+  border-left: 1px solid rgba(161, 179, 255, .11);
+}
+
+#homeView #watched .recent-metric span,
+#homeView #watched .recent-metric strong {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#homeView #watched .recent-metric span {
+  color: #7784a3;
+  font-size: 8px;
+}
+
+#homeView #watched .recent-metric strong {
+  margin-top: 4px;
+  color: #dce4f4;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+#homeView #watched .recent-personal strong { color: var(--gold); }
+#homeView #watched .recent-public strong { color: #9be7de; }
+
+@container (max-width: 560px) {
+  #homeView #watched .recent {
+    grid-template-columns: 42px minmax(105px, 1fr) repeat(3, minmax(52px, .62fr));
+    gap: 6px;
+    padding-inline: 7px;
+  }
+  #homeView #watched .recent-creator { gap: 5px; }
+  #homeView #watched .recent-metric { padding-left: 5px; }
+}
+
+@container (max-width: 340px) {
+  #homeView #watched .recent {
+    grid-template-columns: 42px repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto auto;
+  }
+  #homeView #watched .mini-poster { grid-row: 1 / 3; }
+  #homeView #watched .recent-identity { grid-column: 2 / -1; }
+  #homeView #watched .recent-time { grid-column: 2; }
+  #homeView #watched .recent-personal { grid-column: 3; }
+  #homeView #watched .recent-public { grid-column: 4; }
+}
+
+/* Random recommendation: poster, synopsis, and facts use the full width. */
+#homeView .random-panel { container-type: inline-size; }
+#homeView .random-panel .random-content {
+  grid-template-columns: 136px minmax(230px, 1fr) minmax(140px, .32fr);
+  gap: 12px;
+  height: 238px;
+  min-height: 238px;
+  max-height: 238px;
+  align-items: stretch;
+}
+
+#homeView .random-panel .random-poster {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: 2 / 3;
+  align-self: center;
+}
+
+#homeView .random-panel .random-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent;
+}
+
+#homeView .random-panel .random-main {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#homeView .random-panel .random-quote {
+  flex: 1 1 auto;
+  margin: 8px 0;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+#homeView .random-panel .random-actions {
+  justify-content: flex-start;
+}
+
+#homeView .random-facts {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  padding: 12px 13px;
+  border: 1px solid rgba(161, 179, 255, .12);
+  border-radius: 14px;
+  background: rgba(5, 17, 38, .38);
+}
+
+#homeView .random-facts div { min-width: 0; }
+#homeView .random-facts span,
+#homeView .random-facts strong {
+  display: block;
+}
+#homeView .random-facts span {
+  color: #74809d;
+  font-size: 8px;
+}
+#homeView .random-facts strong {
+  margin-top: 3px;
+  color: #dbe3f2;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+#homeView .random-facts .public { color: var(--gold); font-size: 15px; }
+
+@media (max-width: 1180px) {
+  #homeView .random-panel .random-content {
+    grid-template-columns: 132px minmax(0, 1fr) minmax(145px, .36fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  #homeView .random-panel .random-content {
+    grid-template-columns: 96px minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  #homeView .random-panel .random-poster { height: 144px; }
+  #homeView .random-facts {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Analytics: intentional reading width and stable 68/32 hierarchy. */
+#statsView .stats-layout {
+  grid-template-columns: minmax(0, 2.1fr) minmax(330px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+#statsView .stats-side { gap: 16px; }
+#statsView .stats-card { height: auto; }
+#statsView .stats-month-chart { min-height: 250px; }
+#statsView .stats-film-row { min-height: 54px; padding: 9px 10px; }
+#statsView .stats-summary-copy { font-size: 10px; line-height: 1.8; }
+
+@media (max-width: 1300px) {
+  #statsView .stats-layout { grid-template-columns: 1fr; }
+  #statsView .stats-side { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 760px) {
+  #statsView .stats-side { grid-template-columns: 1fr; }
+  #statsView .stats-month-chart { min-height: 190px; }
+}
+
+/* Settings: independent content-height columns, compact tutorial, no forced stretch. */
+#settingsView .settings-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) !important;
+  grid-template-areas: none !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+#settingsView .settings-layout > .settings-stack {
+  display: grid !important;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+
+#settingsView .settings-layout .settings-card {
+  grid-area: auto !important;
+  height: auto !important;
+  min-height: 0;
+}
+
+#settingsView .settings-layout .settings-card-body,
+#settingsView .settings-card-profile .profile-fields,
+#settingsView .settings-card-tmdb .settings-card-body {
+  height: auto !important;
+  min-height: 0;
+}
+
+#settingsView .theme-presets {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+#settingsView .theme-swatch { height: 72px; }
+#settingsView .wallpaper-preview-v2 { height: 150px; }
+
+#settingsView .douban-guide-steps {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+#settingsView .douban-guide-step {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+#settingsView .douban-guide-visual {
+  height: 68px;
+  padding: 8px;
+}
+
+#settingsView .douban-guide-step > b { margin-top: 6px; }
+#settingsView .douban-guide-step p { line-height: 1.45; }
+#settingsView .guide-pages span { height: 38px; }
+
+@media (max-width: 1450px) {
+  #settingsView .douban-guide-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  #settingsView .settings-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 620px) {
+  #settingsView .theme-presets,
+  #settingsView .douban-guide-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 4K workspaces: use the available canvas instead of centering a 1760px island. */
+@media (min-width: 3000px) and (min-height: 1600px) {
+  #homeView,
+  #statsView .stats-shell,
+  #settingsView .settings-shell {
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  #homeView {
+    display: block;
+    height: 100%;
+  }
+
+  #homeView .home-top-grid {
+    grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+    height: 520px;
+    margin-top: 16px;
+  }
+
+  #homeView .home-top-grid > #watched,
+  #homeView .home-top-grid > .random-panel {
+    height: 520px;
+    min-height: 520px;
+    max-height: 520px;
+  }
+
+  #homeView #watched .recent-grid {
+    gap: 10px;
+    padding: 10px 16px 16px;
+  }
+
+  #homeView #watched .recent {
+    grid-template-columns: 64px minmax(220px, 1.35fr) repeat(3, minmax(120px, .72fr));
+    gap: 16px;
+    padding: 10px 14px;
+  }
+
+  #homeView #watched .mini-poster { width: 64px; }
+  #homeView #watched .recent .t { font-size: 14px; }
+  #homeView #watched .recent-creator,
+  #homeView #watched .recent-metric span { font-size: 10px; }
+  #homeView #watched .recent-metric strong { font-size: 13px; }
+
+  #homeView .random-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #homeView .random-panel .random-content {
+    flex: 1 1 auto;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(240px, .3fr);
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    gap: 22px;
+    margin-top: 14px;
+  }
+
+  #homeView .random-panel .random-poster {
+    width: 100%;
+    height: auto;
+    align-self: center;
+  }
+
+  #homeView .random-panel .random-title { font-size: 30px; }
+  #homeView .random-panel .random-meta,
+  #homeView .random-panel .random-quote { font-size: 14px; }
+  #homeView .random-facts { padding: 20px 22px; }
+  #homeView .random-facts span { font-size: 10px; }
+  #homeView .random-facts strong { font-size: 13px; }
+  #homeView .random-facts .public { font-size: 22px; }
+
+  #homeView .home-triple {
+    height: 700px;
+    margin-top: 16px;
+  }
+
+  #homeView .home-triple > .panel {
+    height: 700px;
+    min-height: 700px;
+    max-height: 700px;
+  }
+
+  #statsView .stats-month-chart { min-height: 380px; }
+  #statsView .stats-film-row { min-height: 68px; }
+  #statsView .stats-summary-copy { font-size: 12px; }
+
+  #settingsView .theme-swatch { height: 110px; }
+  #settingsView .wallpaper-preview-v2 { height: 220px; }
+  #settingsView .douban-guide-visual { height: 92px; }
+}

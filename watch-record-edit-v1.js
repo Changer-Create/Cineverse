@@ -6,7 +6,14 @@
   let editing = null;
 
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
-  const readState = () => safeParse(localStorage.getItem(APP_KEY));
+  const stateGateway = () => window.CineverseStateGateway;
+  const readState = () => stateGateway()?.snapshot?.() || safeParse(localStorage.getItem(APP_KEY));
+  const writeState = state => {
+    const gateway = stateGateway();
+    if (gateway?.replace) return gateway.replace(state, { source:'watch-record-edit', reason:'watch-edit' });
+    localStorage.setItem(APP_KEY, JSON.stringify(state));
+    return state;
+  };
   const currentMovieId = () => {
     const raw = location.hash.replace(/^#/, '');
     if (!raw.startsWith('detail/')) return '';
@@ -197,7 +204,7 @@
     if (plan) plan.status = 'completed';
     movie.updatedAt = new Date().toISOString();
 
-    localStorage.setItem(APP_KEY, JSON.stringify(state));
+    writeState(state);
     modal?.close();
     clearEditing();
 

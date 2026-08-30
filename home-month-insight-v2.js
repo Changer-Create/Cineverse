@@ -146,7 +146,7 @@
       }
       #homeView .month-insight-layout-v3{
         display:grid;
-        grid-template-rows:minmax(0,3fr) minmax(78px,1fr);
+        grid-template-rows:auto minmax(78px,auto);
         gap:12px;
         flex:1;
         min-height:260px;
@@ -154,9 +154,9 @@
       #homeView .month-top-work-v3{
         min-height:0;
         display:grid;
-        grid-template-columns:minmax(105px,42%) minmax(0,1fr);
+        grid-template-columns:minmax(120px,40%) minmax(0,1fr);
         gap:16px;
-        align-items:stretch;
+        align-items:center;
         padding:14px;
         border:1px solid rgba(161,179,255,.12);
         border-radius:17px;
@@ -169,12 +169,15 @@
         background:linear-gradient(145deg,rgba(28,42,83,.64),rgba(12,25,57,.48));
       }
       #homeView .month-top-poster-v3{
+        width:100%;
+        aspect-ratio:2 / 3;
         min-width:0;
         min-height:0;
-        height:100%;
+        height:auto;
+        align-self:center;
         border-radius:13px;
         border:1px solid rgba(161,179,255,.12);
-        background:rgba(4,10,24,.5);
+        background:transparent;
         overflow:hidden;
         display:grid;
         place-items:center;
@@ -184,7 +187,7 @@
         width:100%;
         height:100%;
         object-fit:contain;
-        background:#070d1c;
+        background:transparent;
       }
       #homeView .month-top-poster-empty-v3{
         display:grid;

@@ -25,10 +25,14 @@
     .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  const getState = () => safeParse(localStorage.getItem(STORAGE_KEY));
-  const saveState = state => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const stateGateway = () => window.CineverseStateGateway;
+  const getState = () => stateGateway()?.snapshot?.() || safeParse(localStorage.getItem(STORAGE_KEY));
+  const saveState = (state, reason = 'update') => {
+    const gateway = stateGateway();
+    if (gateway?.replace) gateway.replace(state, { source:'library-card-system', reason });
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     localStorage.setItem(CLOUD_DIRTY_KEY, '1');
+    return Boolean(gateway?.replace);
   };
   const today = () => {
     const d = new Date();
@@ -504,7 +508,7 @@
       plan.movedTo = null;
     }
     movie.updatedAt = new Date().toISOString();
-    saveState(state);
+    saveState(state, 'plan-update');
     ensurePlanDialog().close();
     activePlanMovieId = '';
     toast(`《${movie?.info?.title || '作品'}》已加入观看计划`);
@@ -558,7 +562,7 @@
     if (Array.isArray(state?.tmdbMatchCenter?.rows)) {
       state.tmdbMatchCenter.rows = state.tmdbMatchCenter.rows.filter(row => String(row?.movieId) !== String(deleteMovieId));
     }
-    saveState(state);
+    const notified = saveState(state, 'delete');
     ensureDeleteDialog().close();
     deleteMovieId = '';
     toast(`《${title}》已从影视库移除`);
