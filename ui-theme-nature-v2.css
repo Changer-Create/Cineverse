@@ -510,3 +510,224 @@ body[data-ui-theme="ocean"] :is(
   .radar-hero-actions .primary,.watched-actions .primary,.tmdb-search-row button
 ){color:#3d2608!important}
 
+
+/* Runtime-injected library and plan styles load after this stylesheet.
+   These page-scoped overrides deliberately use !important so daylight text
+   and controls cannot fall back to the legacy dark-skin palette. */
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView :is(
+  .library-hero,.library-tools,.library-toolbar.library-action-strip,.lib-card,
+  .lib-mini-stat,.library-pagination
+){
+  background:rgba(var(--panel-rgb),.94)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid :is(
+  .lib-title,.library-score-box b
+){color:var(--daylight-heading)!important;text-shadow:none}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid :is(
+  .lib-meta,.lib-tag,.library-score-box span
+){color:var(--daylight-muted)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-score-box{
+  background:rgba(var(--panel-rgb),.96)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-score-box.mine b{
+  color:var(--daylight-gold)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-score-box.public b{
+  color:var(--daylight-accent)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-status-display{
+  background:rgba(var(--panel-rgb),.94)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-muted)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-status-display.want{
+  background:rgba(73,93,180,.10)!important;
+  color:var(--daylight-accent)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-status-display.watching{
+  background:rgba(35,121,170,.10)!important;
+  color:#155d87!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-status-display.watched{
+  background:rgba(33,137,91,.10)!important;
+  color:var(--daylight-success)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid :is(
+  .library-add-watch-btn,.library-actions-system-v1 [data-library-plan]
+){
+  background:rgba(var(--panel-rgb),.96)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid :is(
+  .library-add-watch-btn,.library-actions-system-v1 [data-library-plan]
+):hover{
+  background:color-mix(in srgb,var(--purple) 10%,rgba(var(--panel-rgb),.96))!important;
+  border-color:var(--line-bright)!important;
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryGrid .library-delete-btn{
+  background:rgba(var(--panel-rgb),.94)!important;
+  border-color:rgba(150,54,75,.30)!important;
+  color:var(--daylight-danger)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView :is(
+  .library-filter-toggle,.filter-operation-row button,.filter-mode-btn
+){
+  background:rgba(var(--panel-rgb),.96)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView .filter-mode-btn.include.active,
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView .filter-mode-btn.rating-gte.active,
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView .filter-mode-btn.sort-desc.active{
+  background:rgba(33,137,91,.11)!important;
+  border-color:rgba(23,107,74,.34)!important;
+  color:var(--daylight-success)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView .filter-mode-btn.exclude.active,
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView .filter-mode-btn.rating-lt.active,
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #libraryView .filter-mode-btn.sort-asc.active{
+  background:rgba(150,54,75,.09)!important;
+  border-color:rgba(150,54,75,.30)!important;
+  color:var(--daylight-danger)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #favoriteFilterBtn.active{
+  background:rgba(128,81,8,.10)!important;
+  border-color:rgba(128,81,8,.32)!important;
+  color:var(--daylight-gold)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  #libraryPlanDialog,#libraryDeleteDialog,#libraryFilterSchemeDialog,
+  .plan-filter-calendar-system-v1
+){
+  background:rgba(var(--panel-rgb),.98)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-heading)!important;
+  box-shadow:0 24px 64px rgba(24,48,68,.22)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .library-plan-head small,.library-plan-body label,.library-plan-note,
+  .library-delete-head small,.library-delete-copy,.library-scheme-dialog-body p,
+  .library-scheme-dialog-body label,.plan-filter-weekdays
+){color:var(--daylight-muted)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .library-plan-movie,.library-delete-copy b,.library-plan-date,
+  .library-scheme-dialog-body input,.plan-filter-year,.plan-filter-month,
+  .plan-filter-day,.plan-filter-calendar-head button,.plan-filter-calendar-actions button
+){color:var(--daylight-heading)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .library-plan-date,.library-scheme-dialog-body input,.plan-filter-year,
+  .plan-filter-month,.plan-filter-day,.plan-filter-calendar-head button,
+  .plan-filter-calendar-actions button,.library-plan-actions button,
+  .library-delete-actions button,.library-scheme-dialog-actions button
+){
+  background:rgba(var(--panel-rgb),.96)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .library-plan-date,.library-scheme-dialog-body input,.plan-filter-year
+){color-scheme:light}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) :is(
+  .plan-filter-month:hover,.plan-filter-month.active,.plan-filter-day:hover
+){
+  background:rgba(20,91,152,.10)!important;
+  color:var(--daylight-accent)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) .plan-filter-day.active{
+  background:rgba(23,107,74,.11)!important;
+  border-color:rgba(23,107,74,.32)!important;
+  color:var(--daylight-success)!important;
+}
+
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView :is(
+  .plan-hero,.plan-page-stat,.plan-toolbar,.plan-calendar-panel,.plan-side-card,
+  .plan-list-panel,.unscheduled-item,.plan-list-row
+){
+  background:rgba(var(--panel-rgb),.94)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView :is(
+  .plan-panel-head h3,.plan-list-movie b,.unscheduled-item b,.plan-ring strong
+){color:var(--daylight-heading)!important;text-shadow:none}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView :is(
+  .plan-panel-head span,.calendar-week span,.plan-status-row,.plan-ring span,
+  .unscheduled-item span,.plan-list-movie span,.plan-empty
+){color:var(--daylight-muted)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .calendar-week{
+  background:rgba(var(--panel-rgb),.80)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day{
+  background:rgba(var(--panel-rgb),.72)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day:hover{
+  background:color-mix(in srgb,var(--purple) 8%,rgba(var(--panel-rgb),.92))!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day.blank{
+  background:rgba(var(--panel-rgb),.42)!important;
+  opacity:.58!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day.today{
+  background:linear-gradient(160deg,rgba(128,81,8,.10),rgba(var(--panel-rgb),.92))!important;
+  box-shadow:inset 0 0 0 1px rgba(128,81,8,.34)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day.today .plan-day-number{
+  background:rgba(128,81,8,.12)!important;
+  border-color:rgba(128,81,8,.30)!important;
+  color:var(--daylight-gold)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day-add{
+  color:var(--daylight-accent)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day-chip{
+  background:rgba(20,91,152,.09)!important;
+  border-color:rgba(20,91,152,.24)!important;
+  border-left-color:var(--daylight-accent)!important;
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day-chip.completed{
+  background:rgba(23,107,74,.09)!important;
+  border-left-color:var(--daylight-success)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day-chip.deferred{
+  background:rgba(128,81,8,.09)!important;
+  border-left-color:var(--daylight-gold)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-rich-title{
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView :is(
+  .plan-rich-director,.plan-rich-runtime
+){color:var(--daylight-muted)!important}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day-chip.completed .plan-rich-title{
+  color:var(--daylight-success)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-day-chip.deferred .plan-rich-title{
+  color:var(--daylight-gold)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-rich-poster{
+  background:rgba(var(--panel-rgb),.96)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-accent)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-ring::before{
+  background:rgba(var(--panel-rgb),.98)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView :is(
+  .plan-list-row input,.plan-list-row select,.plan-row-actions button,
+  .unscheduled-item button,.plan-empty button
+){
+  background:rgba(var(--panel-rgb),.96)!important;
+  border-color:var(--line)!important;
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-list-row select option{
+  background:#f5fbfc!important;
+  color:var(--daylight-heading)!important;
+}
+
