@@ -144,41 +144,8 @@
     });
   }
 
-  function createGateway(store) {
-    if (!store || typeof store.getState !== 'function' || typeof store.replace !== 'function') {
-      throw new TypeError('State Gateway requires a compatible store');
-    }
-
-    const identity = state => state;
-    return Object.freeze({
-      getState:() => store.getState(),
-      snapshot:() => structuredClone(store.getState()),
-      replace(nextState, metadata = {}) {
-        return store.replace(nextState, metadata);
-      },
-      update(updater, metadata = {}) {
-        if (typeof updater !== 'function') throw new TypeError('State updater must be a function');
-        return store.update(updater, metadata);
-      },
-      subscribe(selector, listener, options = {}) {
-        const select = typeof selector === 'function' ? selector : identity;
-        if (typeof listener !== 'function') throw new TypeError('State listener must be a function');
-        const equals = typeof options.equals === 'function' ? options.equals : Object.is;
-        let selected = select(store.getState());
-        if (options.immediate) listener(selected, undefined, { reason:'subscribe' }, store.getState());
-        return store.subscribe((state, metadata) => {
-          const nextSelected = select(state);
-          if (equals(selected, nextSelected)) return;
-          const previousSelected = selected;
-          selected = nextSelected;
-          listener(nextSelected, previousSelected, metadata, state);
-        });
-      }
-    });
-  }
-
   window.CineverseState = Object.freeze({
     keys:Object.freeze({ app:V2_KEY, legacy:LEGACY_KEY }),
-    normalizeSettings, normalizeMovie, normalizeState, load, persist, restore, backup, createStore, createGateway
+    normalizeSettings, normalizeMovie, normalizeState, load, persist, restore, backup, createStore
   });
 })();

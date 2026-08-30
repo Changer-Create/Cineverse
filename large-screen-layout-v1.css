@@ -3,20 +3,20 @@
    their primary list/grid module.  Compact/mobile layouts retain natural
    document scrolling for accessibility and browser UI compatibility. */
 @media (min-width: 821px) and (min-height: 650px) {
-  html.cineverse-app,
-  html.cineverse-app body {
+  html,
+  body {
     height: 100%;
     min-height: 0;
     overflow: hidden;
   }
 
-  .cineverse-app .app {
+  .app {
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
   }
 
-  .cineverse-app .main {
+  .main {
     height: 100dvh;
     min-height: 0;
     display: flex;
@@ -24,11 +24,11 @@
     overflow: hidden;
   }
 
-  .cineverse-app .main > .topbar {
+  .main > .topbar {
     flex: 0 0 auto;
   }
 
-  .cineverse-app .main > .page-view:not(.hidden) {
+  .main > .page-view:not(.hidden) {
     flex: 1 1 auto;
     min-height: 0;
     overflow-x: hidden;
@@ -39,12 +39,12 @@
     scrollbar-color: rgba(141, 154, 196, .28) transparent;
   }
 
-  .cineverse-app .main > .page-view:not(.hidden)::-webkit-scrollbar {
+  .main > .page-view:not(.hidden)::-webkit-scrollbar {
     width: 7px;
     height: 7px;
   }
 
-  .cineverse-app .main > .page-view:not(.hidden)::-webkit-scrollbar-thumb {
+  .main > .page-view:not(.hidden)::-webkit-scrollbar-thumb {
     border-radius: 999px;
     background: rgba(141, 154, 196, .24);
   }
@@ -155,8 +155,7 @@
     grid-template-rows: auto minmax(248px, .95fr) minmax(218px, 1.05fr);
     gap: 10px;
     padding-right: 3px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   #homeView .hero {

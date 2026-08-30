@@ -566,7 +566,7 @@
     ensureDeleteDialog().close();
     deleteMovieId = '';
     toast(`《${title}》已从影视库移除`);
-    if (!notified) document.dispatchEvent(new CustomEvent('movie-library:state-updated', { detail:{ state, reason:'delete' } }));
+    document.dispatchEvent(new CustomEvent('movie-library:state-updated', { detail:{ state, reason:'delete' } }));
   }
 
   document.addEventListener('click', event => {

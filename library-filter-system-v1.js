@@ -696,7 +696,6 @@
     if (!name) { schemeNameInput.focus(); return; }
     const schemes = loadSchemes();
     const index = selectedSchemeIndex;
-    if (schemes[index] && !confirm(`确认覆盖筛选方案“${schemes[index].name || `方案 ${index + 1}`}”？`)) return;
     schemes[index] = { ...schemeSnapshot(), name };
     saveSchemes(schemes);
     renderSchemeSlots();
