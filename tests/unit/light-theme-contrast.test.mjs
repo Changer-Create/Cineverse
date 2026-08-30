@@ -49,4 +49,14 @@ assert.match(css, /\.douban-guide-step>b/);
 assert.match(css, /\.stats-summary-card\.gold b/);
 assert.match(css, /body\[data-ui-theme="ocean"\][\s\S]*\.tmdb-search-row button[\s\S]*color:#3d2608!important/);
 
+assert.match(css, /Runtime-injected library and plan styles load after this stylesheet/);
+assert.match(css, /#libraryGrid \.library-score-box\{[\s\S]*background:[^;]+!important/);
+assert.match(css, /#libraryGrid \.library-score-box\.public b\{[\s\S]*color:var\(--daylight-accent\)!important/);
+assert.match(css, /#libraryGrid \.library-status-display\.watched\{[\s\S]*color:var\(--daylight-success\)!important/);
+assert.match(css, /#libraryView :is\([\s\S]*\.library-filter-toggle,[\s\S]*\.filter-mode-btn[\s\S]*color:var\(--daylight-heading\)!important/);
+assert.match(css, /#planView \.plan-rich-title\{[\s\S]*color:var\(--daylight-heading\)!important/);
+assert.match(css, /#planView :is\([\s\S]*\.plan-rich-director,\.plan-rich-runtime[\s\S]*color:var\(--daylight-muted\)!important/);
+assert.match(css, /#planView \.plan-ring::before\{[\s\S]*background:[^;]+!important/);
+assert.match(css, /#planView :is\([\s\S]*\.plan-list-row input,[\s\S]*\.plan-empty button[\s\S]*color:var\(--daylight-heading\)!important/);
+
 console.log('Light theme contrast tests passed.');
