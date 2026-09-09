@@ -21,6 +21,8 @@
   let lastSyncError = '';
   let pendingApply = false;
   let pendingConflict = false;
+  let localRevision = 0;
+  let uploadRequested = false;
 
   const $ = id => document.getElementById(id);
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
@@ -279,30 +281,35 @@
     return true;
   }
 
-  async function upsertLocal(data,{ silent=false }={}) {
+  async function upsertLocal(data,{ silent=false,userId=currentUser?.id }={}) {
+    if (!userId || currentUser?.id !== userId) return false;
     const now = new Date().toISOString();
-    const { error } = await client.from('user_data').upsert({ user_id:currentUser.id,data_json:data,updated_at:now },{ onConflict:'user_id' });
+    const { error } = await client.from('user_data').upsert({ user_id:userId,data_json:data,updated_at:now },{ onConflict:'user_id' });
     if (error) throw error;
-    commitSyncedState(currentUser.id,data,now);
+    if (currentUser?.id !== userId) return false;
+    commitSyncedState(userId,data,now);
     if (!silent) toast('云端数据已同步');
     return true;
   }
 
-  async function performSync({ silent=false,force=false,startup=false,cloudMeta=null }={}) {
+  async function performSync({ silent=false,force=false,startup=false,cloudMeta=null,context=null }={}) {
     if (!currentUser) return false;
+    const userId = context?.userId || currentUser.id;
+    if (currentUser.id !== userId) return false;
     const local = localData();
     if (!hasUsableData(local)) return false;
     const owner = localStorage.getItem(OWNER_KEY) || '';
     if (!force && owner && owner !== currentUser.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
-    if (force) return upsertLocal(local,{ silent });
+    if (force) return upsertLocal(local,{ silent,userId });
 
     const baseline = readBaseline(currentUser.id);
     const baselineFp = baseline?.fingerprint || '';
     const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
     const localFp = fingerprint(local);
-    const meta = cloudMeta || await fetchCloudMeta(currentUser.id);
+    const meta = cloudMeta || await fetchCloudMeta(userId);
+    if (currentUser?.id !== userId) return false;
 
-    if (!meta) return upsertLocal(local,{ silent:true });
+    if (!meta) return upsertLocal(local,{ silent:true,userId });
 
     // 正常状态只读取 updated_at。只要云端版本戳仍与 baseline 一致，
     // 就可以确认云端内容未变化，无需下载整份 data_json。
@@ -314,14 +321,15 @@
           return true;
         }
         clearPendingCloud(currentUser.id);
-        return upsertLocal(local,{ silent:true });
+        return upsertLocal(local,{ silent:true,userId });
       }
     }
 
     // 只有首次建立 baseline、云端版本戳变化，或旧数据需要兜底比对时，才下载完整 JSON。
-    const row = await fetchCloudRow(currentUser.id);
+    const row = await fetchCloudRow(userId);
+    if (currentUser?.id !== userId) return false;
     const cloud = row?.data_json;
-    if (!hasUsableData(cloud)) return upsertLocal(local,{ silent:true });
+    if (!hasUsableData(cloud)) return upsertLocal(local,{ silent:true,userId });
 
     const cloudFp = fingerprint(cloud);
     if (localFp === cloudFp) {
@@ -333,7 +341,7 @@
     if (baselineFp) {
       if (cloudFp === baselineFp && localFp !== baselineFp) {
         clearPendingCloud(currentUser.id);
-        return upsertLocal(local,{ silent:true });
+        return upsertLocal(local,{ silent:true,userId });
       }
       if (localFp === baselineFp && cloudFp !== baselineFp) {
         stageCloudData(currentUser,row,{ conflict:false });
@@ -348,7 +356,7 @@
     // 旧版升级的一次性兜底。正常运行建立 baseline 后不再依赖时间戳。
     if (dirty && (!lastSync || ts(row.updated_at) <= ts(lastSync) + 1500)) {
       clearPendingCloud(currentUser.id);
-      return upsertLocal(local,{ silent:true });
+      return upsertLocal(local,{ silent:true,userId });
     }
     if (!dirty && lastSync && ts(row.updated_at) > ts(lastSync) + 500) {
       stageCloudData(currentUser,row,{ conflict:false });
@@ -359,12 +367,17 @@
   }
 
   function uploadCurrentData(options={}) {
-    if (syncPromise) return syncPromise;
+    if (syncPromise) {
+      uploadRequested = true;
+      return syncPromise;
+    }
     if (!currentUser) return Promise.resolve(false);
+    const context = { userId:currentUser.id, revision:localRevision };
+    uploadRequested = false;
     syncing = true;
     lastSyncError = '';
     renderProfile();
-    syncPromise = performSync(options)
+    syncPromise = performSync({ ...options, context })
       .catch(error => {
         lastSyncError = error;
         localStorage.setItem(DIRTY_KEY,'1');
@@ -372,11 +385,17 @@
         return false;
       })
       .finally(() => {
+        const changedDuringUpload = localRevision !== context.revision || uploadRequested;
+        if (changedDuringUpload) localStorage.setItem(DIRTY_KEY,'1');
         syncing = false;
         syncPromise = null;
         restorePendingCloud(currentUser?.id);
         renderProfile();
         if ($('movieAccountDialog')?.open && currentUser) renderSignedIn();
+        if (changedDuringUpload && currentUser?.id === context.userId && !lastSyncError) {
+          clearTimeout(uploadTimer);
+          uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),0);
+        }
       });
     return syncPromise;
   }
@@ -389,11 +408,18 @@
     clearTimeout(uploadTimer);
     if (!currentUser) return true;
     if (readPendingCloud(currentUser.id)) return false;
-    if (localStorage.getItem(DIRTY_KEY) !== '1') return true;
-    return uploadCurrentData({ silent:true });
+    for (let attempt=0; attempt<3; attempt += 1) {
+      if (localStorage.getItem(DIRTY_KEY) !== '1' && !syncPromise) return true;
+      const revision = localRevision;
+      const ok = await uploadCurrentData({ silent:true });
+      if (!ok) return false;
+      if (revision === localRevision && localStorage.getItem(DIRTY_KEY) !== '1') return true;
+    }
+    return false;
   }
   function queueUpload() {
     if (!currentUser || suppressUpload) return;
+    localRevision += 1;
     localStorage.setItem(DIRTY_KEY,'1');
     const pending = readPendingCloud(currentUser.id);
     if (pending) {
@@ -402,6 +428,10 @@
       pendingApply = true;
       pendingConflict = true;
       renderProfile();
+      return;
+    }
+    if (syncPromise) {
+      uploadRequested = true;
       return;
     }
     clearTimeout(uploadTimer);

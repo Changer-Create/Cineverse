@@ -6,7 +6,7 @@
   "scripts": {
     "check": "node scripts/audit-runtime.mjs",
     "test": "node --test tests/unit/*.test.mjs",
-    "test:browser": "node tests/browser/smoke.cjs && node tests/browser/radar-concurrency.cjs"
+    "test:browser": "node tests/browser/smoke.cjs && node tests/browser/radar-concurrency.cjs && node tests/browser/cloud-sync.cjs"
   },
   "devDependencies": {
     "playwright": "1.55.0"
