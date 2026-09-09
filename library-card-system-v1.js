@@ -247,7 +247,9 @@
 
   function cachedScore(movie) {
     const state = scoreCacheState(movie);
-    return state.kind === 'success' ? state.score : null;
+    if (state.kind === 'success') return state.score;
+    if (state.kind === 'empty' || state.kind === 'backoff') return null;
+    return window.CineverseDomain.publicScore(movie, scoreCache());
   }
 
   function writeCachedScore(key, score, kind = 'success') {
