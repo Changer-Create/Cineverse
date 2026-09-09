@@ -61,7 +61,7 @@
         const found = (movie.plans || []).some(plan => String(plan.month || '').toLowerCase().includes(String(c.plan).toLowerCase()));
         if (c.exclude.plan ? found : !found) return false;
       }
-      if (c.planDate && /^\\d{4}-\\d{2}-\\d{2}$/.test(String(c.planDate))) {
+      if (c.planDate && /^\d{4}-\d{2}-\d{2}$/.test(String(c.planDate))) {
         const found = (movie.plans || []).some(plan => String(plan?.plannedDate || '') === String(c.planDate));
         if (c.exclude.plan ? found : !found) return false;
       }
