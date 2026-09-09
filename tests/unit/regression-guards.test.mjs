@@ -34,8 +34,8 @@ assert.match(deleteFlow, /const notified = saveState\(state, 'delete'\)/, 'libra
 for (const asset of ['app-router-v1.js', 'app-library-model-v1.js']) {
   assert.match(index, new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2015`));
 }
-assert.match(index, /app-state-storage-v1\\.js\\?v=20260909-b01/);
-assert.match(index, /app-domain-model-v1\\.js\\?v=20260908-home-plan/);
+assert.match(index, /app-state-storage-v1\.js\?v=20260909-b01/);
+assert.match(index, /app-domain-model-v1\.js\?v=20260908-home-plan/);
 assert.match(index, /content-center-runtime-v1\.js\?v=20260908-home-plan/);
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
 assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
