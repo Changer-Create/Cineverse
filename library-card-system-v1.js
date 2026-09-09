@@ -67,10 +67,6 @@
     location.reload();
   }
 
-  function injectStyles() {
-    if (document.getElementById('libraryCardSystemStyleV1')) return;
-    const style = document.createElement('style');
-    style.id = 'libraryCardSystemStyleV1';
   function currentStateMovieMap() {
     const state = getState();
     return {
@@ -452,8 +448,6 @@
 
   const recentGrid = document.getElementById('recentGrid');
   if (recentGrid) gridObserver.observe(recentGrid, { childList:true, subtree:false });
-
-  injectStyles();
   ensurePlanDialog();
   ensureDeleteDialog();
   updateFixedWorkspace();
