@@ -64,6 +64,15 @@ async function main() {
   await page.waitForFunction(() => window.__cloudTest.uploads.length === 2, null, { timeout: 5000 });
   const secondPayload = await page.evaluate(() => window.__cloudTest.uploads[1].data_json.movies[0].info.title);
   if (secondPayload !== '评分 2') throw new Error(`latest edit was not uploaded: ${secondPayload}`);
+  await page.evaluate(() => window.__cloudTest.release());
+  await wait(200);
+  const third = page.evaluate(() => window.MovieCloudAccount.sync({ force: true, silent: true }));
+  await page.waitForFunction(() => window.__cloudTest.uploads.length === 3);
+  await page.evaluate(() => window.__cloudTest.switchUser());
+  await page.evaluate(() => window.__cloudTest.release());
+  await third;
+  const ownerAfterSwitch = await page.evaluate(() => localStorage.getItem('movie-cloud-owner-v1'));
+  if (ownerAfterSwitch !== 'user-a') throw new Error('stale account request changed the active owner marker');
   console.log('Cloud sync revision regression passed: latest edit queued after in-flight upload.');
 }
 
