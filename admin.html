@@ -17,6 +17,7 @@ button{width:100%;margin-top:18px;border:1px solid rgba(159,124,255,.42);border-
 </style>
 </head>
 <body>
+<script src="public-config-v1.js?v=20260909-a05"></script>
 <main class="card">
   <div class="mark">◇</div>
   <h1>管理员验证</h1>
@@ -32,7 +33,7 @@ button{width:100%;margin-top:18px;border:1px solid rgba(159,124,255,.42);border-
 </main>
 <script>
 (() => {
-  const ENDPOINT='https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/admin-auth';
+  const ENDPOINT=window.CineversePublicConfig?.adminAuthUrl || '';
   const TOKEN_KEY='movie-collection-admin-session-v1';
   const META_KEY='movie-collection-admin-session-meta-v1';
   const next=new URLSearchParams(location.search).get('next')||'';
