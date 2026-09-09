@@ -1,9 +1,10 @@
 (() => {
   'use strict';
 
-  const SUPABASE_URL = 'https://bjjralybdcuczwllxbvo.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_QiJNdLR-qykVqPkPrmePFg_x5wW7Owu';
-  const ADMIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/admin-global-config`;
+  const PUBLIC_CONFIG = window.CineversePublicConfig || {};
+  const SUPABASE_URL = PUBLIC_CONFIG.supabaseUrl || '';
+  const SUPABASE_PUBLISHABLE_KEY = PUBLIC_CONFIG.supabasePublishableKey || '';
+  const ADMIN_FUNCTION_URL = PUBLIC_CONFIG.adminGlobalConfigUrl || '';
   const TABLE_URL = `${SUPABASE_URL}/rest/v1/global_site_config?select=config_key,data_json,updated_at&order=config_key.asc`;
   const ADMIN_TOKEN_KEY = 'movie-collection-admin-session-v1';
   const ADMIN_RELOAD_KEY = 'movie-global-config-admin-reload-v1';
