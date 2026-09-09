@@ -235,9 +235,7 @@
   }
 
   function scoreCacheState(movie) {
-    const key = scoreKey(movie);
-    if (!key || !SCORE_POLICY) return { kind:'miss', row:null };
-    return SCORE_POLICY.read(scoreCache(), key);
+    return scoreService()?.state?.(movie) || { kind:'miss', row:null };
   }
 
   function freshCacheRow(movie) {
@@ -246,10 +244,7 @@
   }
 
   function cachedScore(movie) {
-    const state = scoreCacheState(movie);
-    if (state.kind === 'success') return state.score;
-    if (state.kind === 'empty' || state.kind === 'backoff') return null;
-    return window.CineverseDomain.publicScore(movie, scoreCache());
+    return scoreService()?.read?.(movie) ?? window.CineverseDomain.publicScore(movie, scoreCache());
   }
 
   function writeCachedScore(key, score, kind = 'success') {
@@ -274,57 +269,18 @@
     });
   }
 
-  const pendingScores = [];
-  const runningScores = new Set();
-  let scoreWorkers = 0;
-
+  const scoreService = () => window.CineversePublicScoreService;
   async function fetchPublicScore(movie) {
-    const key = scoreKey(movie);
+    const key = scoreService()?.scoreKey?.(movie);
     if (!key) return;
-    const state = scoreCacheState(movie);
-    if (state.kind === 'success' || state.kind === 'empty' || state.kind === 'backoff') {
-      updateScoreNodes(key, state.kind === 'success' ? state.score : null);
+    const service = scoreService();
+    if (!service) return;
+    if (!service.shouldFetch(movie)) {
+      updateScoreNodes(key, service.read(movie));
       return;
     }
-    if (runningScores.has(key) || pendingScores.some(item => item.key === key)) return;
-    pendingScores.push({ key, movie });
-    runScoreQueue();
-  }
-
-  function runScoreQueue() {
-    while (scoreWorkers < 4 && pendingScores.length) {
-      const job = pendingScores.shift();
-      scoreWorkers += 1;
-      runningScores.add(job.key);
-      (async () => {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        try {
-          const id = Number(job.movie?.info?.tmdbId);
-          const type = job.movie?.mediaType === 'tv' ? 'tv' : 'movie';
-          const response = await fetch(TMDB_PROXY_URL, {
-            method:'POST',
-            headers:{ 'Content-Type':'application/json' },
-            body:JSON.stringify({ path:`/${type}/${id}`, params:{ language:'zh-CN' } }),
-            signal:controller.signal
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const data = await response.json();
-          const raw = Number(data?.vote_average);
-          const value = Number.isFinite(raw) && raw > 0 && raw <= 10 ? raw : null;
-          writeCachedScore(job.key, value, value == null ? 'empty' : 'success');
-          updateScoreNodes(job.key, value);
-        } catch {
-          writeCachedScore(job.key, null, 'error');
-          updateScoreNodes(job.key, cachedScore(job.movie));
-        } finally {
-          clearTimeout(timeout);
-          runningScores.delete(job.key);
-          scoreWorkers -= 1;
-          runScoreQueue();
-        }
-      })();
-    }
+    const value = await service.fetch(movie);
+    updateScoreNodes(key, value);
   }
 
   let scoreObserver = null;

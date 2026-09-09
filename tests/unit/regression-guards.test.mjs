@@ -40,7 +40,7 @@ for (const asset of ['app-state-storage-v1.js', 'app-domain-model-v1.js']) {
 assert.match(index, /content-center-runtime-v1\.js\?v=20260908-home-plan/);
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
 assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
-assert.match(index, /app-main-v1\.js\?v=20260908-home-plan/);
+assert.match(index, /app-main-v1\.js\?v=20260909-a06b/);
   assert.match(index, /ui-theme-nature-v2\.css\?v=20260908-home-plan/);
 assert.match(index, /data-theme-preset="forest"/);
 assert.match(index, /data-theme-preset="snow"/);
@@ -54,4 +54,5 @@ assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), /cloud-auth-v
 console.log('Regression guard tests passed.');
 
 assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /score-cache-policy-v1\.js\?v=20260909-a06a/);
-assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20260909-a06a/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /public-score-service-v1\.js\?v=20260909-a06b/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20260909-a06b/);

@@ -216,6 +216,8 @@
 
   function renderUnified(model) {
     const tv = model.type === 'tv';
+    const scoreMovie = { mediaType:tv ? 'tv' : 'movie', info:{ tmdbId:model.tmdbId, tmdbVoteAverage:model.publicScore } };
+    const scoreService = window.CineversePublicScoreService;
     setText('detailTitle', model.title || (tv ? '未命名剧集' : '未命名电影'));
     setText('detailOriginal', [model.originalTitle && normalize(model.originalTitle) !== normalize(model.title) ? model.originalTitle : '', model.year].filter(Boolean).join(' · '), '');
     setText('detailCreatorLabel', tv ? '主创' : '导演');
@@ -247,7 +249,8 @@
 
     setText('detailRadarBadge', model.badge || (model.source === 'radar' ? '电影雷达' : 'TMDb 搜索'));
     setText('detailRadarDate', model.discoveredAt || '—');
-    setText('detailPublicScore', model.publicScore != null && Number.isFinite(Number(model.publicScore)) ? Number(model.publicScore).toFixed(1) : '—');
+    const publicScore = scoreService?.read?.(scoreMovie) ?? model.publicScore;
+    setText('detailPublicScore', publicScore != null && Number.isFinite(Number(publicScore)) ? Number(publicScore).toFixed(1) : '—');
     setText('detailMatchScore', model.matchScore != null && Number.isFinite(Number(model.matchScore)) ? `${Math.round(Number(model.matchScore))}%` : '—');
     setText('detailRadarReason', model.reason || (model.source === 'radar' ? '来自电影雷达的推荐。' : '来自顶部 TMDb 全库搜索。'));
 
@@ -255,6 +258,7 @@
     disableLocalActions();
     const back = $('detailBack');
     if (back) back.textContent = model.source === 'radar' ? '‹ 返回电影雷达' : '‹ 返回搜索结果';
+    if (scoreService?.shouldFetch?.(scoreMovie)) scoreService.fetch(scoreMovie).then(value => setText('detailPublicScore', value != null ? Number(value).toFixed(1) : '—')).catch(() => {});
   }
 
   function baseFromSearchRow(row) {
