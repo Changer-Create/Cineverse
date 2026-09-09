@@ -2,7 +2,7 @@
   'use strict';
   if (window.CineverseTmdbClient) return;
 
-  const DEFAULT_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const DEFAULT_PROXY_URL = window.CineversePublicConfig?.tmdbProxyUrl || '';
 
   function createClient({ proxyUrl = DEFAULT_PROXY_URL, getLanguage = () => 'zh-CN', fetchImpl = window.fetch.bind(window) } = {}) {
     async function request(path, params = {}) {
