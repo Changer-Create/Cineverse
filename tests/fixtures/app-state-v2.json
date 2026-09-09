@@ -1,0 +1,101 @@
+{
+  "movies": [
+    {
+      "id": "fixture-movie-rated",
+      "mediaType": "movie",
+      "info": {
+        "title": "示例电影",
+        "originalTitle": "Fixture Movie",
+        "year": 2026,
+        "releaseDate": "2026-01-12",
+        "directors": ["测试导演"],
+        "countries": ["中国"],
+        "runtime": 120,
+        "genres": ["剧情"],
+        "posterUrl": "",
+        "overview": "用于浏览器回归的电影 fixture。",
+        "tmdbId": 10001,
+        "doubanId": "fixture-10001",
+        "tmdbVoteAverage": 8.6
+      },
+      "personal": {
+        "status": "watched",
+        "want": false,
+        "rating": 9,
+        "tags": ["fixture", "收藏"],
+        "shortReview": "回归测试记录",
+        "favorite": true
+      },
+      "watchHistory": [{"date": "2026-09-05", "rating": 9, "note": "fixture", "venue": "家"}],
+      "plans": [
+        {"month": "2026-09", "status": "completed", "plannedDate": "2026-09-05"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-20"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-21"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-22"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-23"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-24"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-25"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-26"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-27"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-28"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-29"},
+        {"month": "2026-09", "status": "planned", "plannedDate": "2026-09-30"}
+      ],
+      "radar": {"discovered": false, "ignored": false, "publicReputation": 8.6}
+    },
+    {
+      "id": "fixture-tv-unrated",
+      "mediaType": "tv",
+      "info": {
+        "title": "示例剧集",
+        "originalTitle": "Fixture Series",
+        "year": 2026,
+        "firstAirDate": "2026-02-01",
+        "directors": ["测试主创"],
+        "countries": ["美国"],
+        "runtime": 48,
+        "genres": ["科幻"],
+        "posterUrl": "",
+        "overview": "用于无公众评分场景的剧集 fixture。",
+        "tmdbId": 10002,
+        "numberOfSeasons": 1,
+        "numberOfEpisodes": 8,
+        "tvStatus": "Returning Series"
+      },
+      "personal": {
+        "status": "want",
+        "want": true,
+        "rating": null,
+        "tags": ["fixture"],
+        "shortReview": "",
+        "favorite": false
+      },
+      "watchHistory": [{"date": "2026-09-04", "rating": null, "note": "fixture 无公众评分", "venue": "家"}],
+      "plans": [{"month": "2026-09", "status": "planned", "plannedDate": "2026-09-28"}],
+      "radar": {"discovered": false, "ignored": false}
+    }
+  ],
+  "settings": {
+    "profileName": "测试观影者",
+    "profileRole": "A01 回归",
+    "themePreset": "star",
+    "motion": false
+  },
+  "home": {
+    "radar": [
+      {"id": "fixture-radar-01", "title": "雷达片 01", "year": 2026, "category": "week", "discoveredAt": "2026-09-07", "match": 98, "public": 9.1, "badge": "高匹配", "poster": "p1"},
+      {"id": "fixture-radar-02", "title": "雷达片 02", "year": 2026, "category": "week", "discoveredAt": "2026-09-07", "match": 94, "public": 8.8, "badge": "推荐", "poster": "p2"},
+      {"id": "fixture-radar-03", "title": "雷达片 03", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 91, "public": 8.4, "badge": "推荐", "poster": "p3"},
+      {"id": "fixture-radar-04", "title": "雷达片 04", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 88, "public": 8.1, "badge": "关注", "poster": "p4"},
+      {"id": "fixture-radar-05", "title": "雷达片 05", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 85, "public": 7.9, "badge": "关注", "poster": "p1"},
+      {"id": "fixture-radar-06", "title": "雷达片 06", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 82, "public": 7.7, "badge": "关注", "poster": "p2"},
+      {"id": "fixture-radar-07", "title": "雷达片 07", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 79, "public": 7.5, "badge": "关注", "poster": "p3"},
+      {"id": "fixture-radar-08", "title": "雷达片 08", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 76, "public": 7.3, "badge": "关注", "poster": "p4"},
+      {"id": "fixture-radar-09", "title": "雷达片 09", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 73, "public": 7.1, "badge": "关注", "poster": "p1"},
+      {"id": "fixture-radar-10", "title": "雷达片 10", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 70, "public": 6.9, "badge": "关注", "poster": "p2"},
+      {"id": "fixture-radar-11", "title": "雷达片 11", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 67, "public": 6.7, "badge": "关注", "poster": "p3"},
+      {"id": "fixture-radar-12", "title": "雷达片 12", "year": 2026, "category": "week", "discoveredAt": "2026-09-08", "match": 64, "public": 6.5, "badge": "关注", "poster": "p4"}
+    ]
+  },
+  "tmdbMatchCenter": {"lastScanAt": "", "lastTotal": 0, "lastAuto": 0, "lastManual": 0, "rows": [], "resumeIds": [], "paused": false }
+}

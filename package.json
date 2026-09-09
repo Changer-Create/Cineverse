@@ -1,0 +1,14 @@
+{
+  "name": "cineverse",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Local-first Cineverse movie collection",
+  "scripts": {
+    "check": "node scripts/audit-runtime.mjs",
+    "test": "node --test tests/unit/*.test.mjs",
+    "test:browser": "node tests/browser/smoke.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.55.0"
+  }
+}
