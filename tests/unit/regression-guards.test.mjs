@@ -49,7 +49,7 @@ assert.match(index, /data-theme-preset="ocean"/);
 for (const asset of ['radar-20.js', 'radar-experience-v3.js', 'rating-sync-v3.js', 'watch-record-edit-v1.js']) {
   assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2300`));
 }
-assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), /cloud-auth-v5\\.js\\?v=20260909-a05/);
+assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), /cloud-auth-v5\.js\?v=20260909-a05/);
 
 console.log('Regression guard tests passed.');
 
