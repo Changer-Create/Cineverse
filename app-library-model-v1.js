@@ -56,21 +56,39 @@
       if (!passes(movie.info.directors || [], c.director, c.exclude.director)) return false;
       if (!passes(movie.info.countries || [], c.country, c.exclude.country)) return false;
       if (!passes(movie.personal?.tags || [], c.tag, c.exclude.tag)) return false;
+      if (c.favoriteOnly && !movie.personal?.favorite) return false;
       if (c.plan && c.plan !== '全部') {
         const found = (movie.plans || []).some(plan => String(plan.month || '').toLowerCase().includes(String(c.plan).toLowerCase()));
         if (c.exclude.plan ? found : !found) return false;
       }
-      if (status && displayStatus(movie)[0] !== status) return false;
+      if (c.planDate && /^\\d{4}-\\d{2}-\\d{2}$/.test(String(c.planDate))) {
+        const found = (movie.plans || []).some(plan => String(plan?.plannedDate || '') === String(c.planDate));
+        if (c.exclude.plan ? found : !found) return false;
+      }
+      if (status) {
+        const match = displayStatus(movie)[0] === status;
+        if (c.exclude.status ? match : !match) return false;
+      }
       return ratingPass(movie.personal?.rating, c.ratingOp || 'all', c.ratingTarget);
     });
     const sort = resolveMappedFilter(c.sort, SORT_FILTER, 'updatedDesc');
+    const direction = c.sortDirection === 'asc' ? 'asc' : 'desc';
+    const sign = direction === 'asc' ? 1 : -1;
+    const titleCompare = (a, b) => String(a?.info?.title || '').localeCompare(String(b?.info?.title || ''), 'zh-Hans-CN');
+    const numberCompare = (a, b, emptyValue) => {
+      const av = Number.isFinite(Number(a)) ? Number(a) : emptyValue;
+      const bv = Number.isFinite(Number(b)) ? Number(b) : emptyValue;
+      return (av - bv) * sign;
+    };
     return rows.sort((a, b) => {
-      if (sort === 'ratingDesc') return (b.personal?.rating ?? -1) - (a.personal?.rating ?? -1) || a.info.title.localeCompare(b.info.title, 'zh-Hans-CN');
-      if (sort === 'yearDesc') return (b.info.year || 0) - (a.info.year || 0);
-      if (sort === 'yearAsc') return (a.info.year || 9999) - (b.info.year || 9999);
-      if (sort === 'titleAsc') return a.info.title.localeCompare(b.info.title, 'zh-Hans-CN');
-      if (sort === 'runtimeDesc') return (b.info.runtime || 0) - (a.info.runtime || 0);
-      return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
+      let result = 0;
+      if (sort === 'ratingDesc') result = numberCompare(a.personal?.rating, b.personal?.rating, -1);
+      else if (sort === 'yearDesc') result = numberCompare(a.info?.year, b.info?.year, 0);
+      else if (sort === 'yearAsc') result = numberCompare(a.info?.year, b.info?.year, 9999);
+      else if (sort === 'titleAsc') result = titleCompare(a, b) * sign;
+      else if (sort === 'runtimeDesc') result = numberCompare(a.info?.runtime, b.info?.runtime, 0);
+      else result = String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')) * sign;
+      return result || titleCompare(a, b);
     });
   }
 

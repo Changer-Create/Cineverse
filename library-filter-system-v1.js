@@ -421,53 +421,6 @@
     if (hasCurrentPlan(movie)) return '已计划';
     return status === 'watched' ? '看过' : '想看';
   }
-  function isCoreLibrarySort(compareFn) {
-    if (typeof compareFn !== 'function') return false;
-    const source = Function.prototype.toString.call(compareFn);
-    return source.includes("sort==='ratingDesc'") && source.includes('runtimeDesc') && source.includes('updatedAt');
-  }
-
-  if (!Array.prototype.__movieLibraryFilterSystemV1) {
-    const previousSort = Array.prototype.sort;
-    Object.defineProperty(Array.prototype, '__movieLibraryFilterSystemV1', { value: true, configurable: true });
-    Array.prototype.sort = function(compareFn) {
-      if (!isCoreLibrarySort(compareFn)) return previousSort.call(this, compareFn);
-
-      if (favoriteOnly) {
-        let write = 0;
-        for (let read = 0; read < this.length; read += 1) {
-          if (this[read]?.personal?.favorite) this[write++] = this[read];
-        }
-        this.length = write;
-      }
-
-      const selectedStatus = normalizeStatusQuery(nativeGet(statusInput));
-      if (selectedStatus) {
-        const excluded = modeFor('status') === 'exclude';
-        let write = 0;
-        for (let read = 0; read < this.length; read += 1) {
-          const match = selectedStatus !== '__nomatch__' && statusLabel(this[read]) === selectedStatus;
-          if (excluded ? !match : match) this[write++] = this[read];
-        }
-        this.length = write;
-      }
-
-      const planVisual = nativeGet(planInput).trim();
-      if (/^\d{4}-\d{2}-\d{2}$/.test(planVisual)) {
-        const excluded = modeFor('plan') === 'exclude';
-        let write = 0;
-        for (let read = 0; read < this.length; read += 1) {
-          const match = (this[read]?.plans || []).some(plan => String(plan?.plannedDate || '') === planVisual);
-          if (excluded ? !match : match) this[write++] = this[read];
-        }
-        this.length = write;
-      }
-
-      const compare = comparatorFor(normalizeSortLabel(nativeGet(sortInput)));
-      return previousSort.call(this, (a, b) => compare(a, b) || titleCompare(a, b));
-    };
-  }
-
   let favoriteButton = $('favoriteFilterBtn');
   if (!favoriteButton) {
     favoriteButton = document.createElement('button');
@@ -748,5 +701,13 @@
   window.addEventListener('scroll', positionPicker, true);
 
   MODE_KEYS.forEach(syncModeVisual);
+  window.CineverseLibraryFilterState = Object.freeze({
+    get: () => ({
+      favoriteOnly,
+      sortDirection,
+      planDate: nativeGet(planInput).trim(),
+      exclude: Object.fromEntries(MODE_KEYS.map(key => [key, modeFor(key) === 'exclude']))
+    })
+  });
   dispatchInput(sortInput);
 })();

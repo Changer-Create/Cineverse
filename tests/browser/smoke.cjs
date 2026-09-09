@@ -135,6 +135,11 @@ async function main() {
     await page.setViewportSize(viewport);
     await page.goto(`${BASE}/index.html#library`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(350);
+    if (viewport.width === 1024) {
+      await page.locator('#favoriteFilterBtn').click();
+      check('library star filter button narrows to starred items', await page.locator('#libraryGrid .lib-card').count() === 1);
+      await page.locator('#clearLibFilters').click();
+    }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     check(`${viewport.width}px library has no horizontal overflow`, overflow <= 0, String(overflow));
     await page.screenshot({ path: path.join(ARTIFACTS, `library-${viewport.width}.png`), fullPage: false });
