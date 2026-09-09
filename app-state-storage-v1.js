@@ -145,6 +145,38 @@
     });
   }
 
+  function createActions(gateway) {
+    if (!gateway || typeof gateway.update !== 'function') throw new TypeError('State Actions require a compatible gateway');
+    const updateMovie = (movieId, mutator, reason) => {
+      let changed = false;
+      gateway.update(state => {
+        const movie = (state.movies || []).find(item => String(item?.id) === String(movieId));
+        if (!movie) return;
+        mutator(movie, state);
+        movie.updatedAt = new Date().toISOString();
+        changed = true;
+      }, { source:'state-actions', reason });
+      return changed;
+    };
+    return Object.freeze({
+      setFavorite(movieId, favorite) {
+        return updateMovie(movieId, movie => {
+          movie.personal = movie.personal || {};
+          movie.personal.favorite = Boolean(favorite);
+        }, 'favorite');
+      },
+      setWanted(movieId, wanted) {
+        return updateMovie(movieId, (movie) => {
+          movie.personal = movie.personal || {};
+          movie.personal.want = Boolean(wanted);
+          const watched = Array.isArray(movie.watchHistory) && movie.watchHistory.length > 0;
+          if (wanted && !watched) movie.personal.status = 'want';
+          if (!wanted && movie.personal.status === 'want') movie.personal.status = watched ? 'watched' : 'follow';
+        }, 'want');
+      }
+    });
+  }
+
   function createGateway(store) {
     if (!store || typeof store.getState !== 'function' || typeof store.replace !== 'function') {
       throw new TypeError('State Gateway requires a compatible store');
@@ -180,6 +212,6 @@
 
   window.CineverseState = Object.freeze({
     keys:Object.freeze({ app:V2_KEY, legacy:LEGACY_KEY }),
-    normalizeSettings, normalizeMovie, normalizeState, load, persist, restore, backup, createStore, createGateway
+    normalizeSettings, normalizeMovie, normalizeState, load, persist, restore, backup, createStore, createGateway, createActions
   });
 })();
