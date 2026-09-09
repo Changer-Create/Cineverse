@@ -53,4 +53,5 @@ assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), /cloud-auth-v
 
 console.log('Regression guard tests passed.');
 
-assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20260908-home-plan/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /score-cache-policy-v1\.js\?v=20260909-a06a/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20260909-a06a/);
