@@ -8,7 +8,8 @@
   const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';
   const SCORE_CACHE_KEY = 'movie-tmdb-score-cache-v1';
   const SCORE_TTL = 7 * 24 * 60 * 60 * 1000;
-  const TMDB_PROXY_URL = 'https://bjjralybdcuczwllxbvo.supabase.co/functions/v1/tmdb-proxy';
+  const TMDB_PROXY_URL = window.CineversePublicConfig?.tmdbProxyUrl || '';
+  const SCORE_POLICY = window.CineverseScoreCachePolicy;
   const grid = document.getElementById('libraryGrid');
   const libraryView = document.getElementById('libraryView');
   if (!grid || !libraryView) return;
@@ -233,29 +234,29 @@
     return `${movie?.mediaType === 'tv' ? 'tv' : 'movie'}:${id}`;
   }
 
-  function freshCacheRow(movie) {
+  function scoreCacheState(movie) {
     const key = scoreKey(movie);
-    if (!key) return null;
-    const row = scoreCache()[key];
-    return row && Number(row.expiresAt) >= Date.now() ? row : null;
+    if (!key || !SCORE_POLICY) return { kind:'miss', row:null };
+    return SCORE_POLICY.read(scoreCache(), key);
+  }
+
+  function freshCacheRow(movie) {
+    const state = scoreCacheState(movie);
+    return state.kind === 'success' || state.kind === 'empty' ? state.row : null;
   }
 
   function cachedScore(movie) {
-    return window.CineverseDomain.publicScore(movie, scoreCache());
+    const state = scoreCacheState(movie);
+    return state.kind === 'success' ? state.score : null;
   }
 
-  function writeCachedScore(key, score) {
-    if (!key) return;
+  function writeCachedScore(key, score, kind = 'success') {
+    if (!key || !SCORE_POLICY) return;
     const cache = scoreCache();
-    cache[key] = {
-      score:Number.isFinite(Number(score)) ? Number(score) : null,
-      expiresAt:Date.now() + SCORE_TTL
-    };
-    const keys = Object.keys(cache);
-    if (keys.length > 500) {
-      keys.sort((a, b) => Number(cache[b]?.expiresAt || 0) - Number(cache[a]?.expiresAt || 0));
-      for (const old of keys.slice(450)) delete cache[old];
-    }
+    if (kind === 'error') SCORE_POLICY.writeFailure(cache, key);
+    else if (kind === 'empty') SCORE_POLICY.writeEmpty(cache, key);
+    else SCORE_POLICY.writeSuccess(cache, key, score);
+    SCORE_POLICY.prune(cache);
     localStorage.setItem(SCORE_CACHE_KEY, JSON.stringify(cache));
   }
 
@@ -278,9 +279,9 @@
   async function fetchPublicScore(movie) {
     const key = scoreKey(movie);
     if (!key) return;
-    const known = cachedScore(movie);
-    if (known != null || freshCacheRow(movie)) {
-      updateScoreNodes(key, known);
+    const state = scoreCacheState(movie);
+    if (state.kind === 'success' || state.kind === 'empty' || state.kind === 'backoff') {
+      updateScoreNodes(key, state.kind === 'success' ? state.score : null);
       return;
     }
     if (runningScores.has(key) || pendingScores.some(item => item.key === key)) return;
@@ -294,24 +295,28 @@
       scoreWorkers += 1;
       runningScores.add(job.key);
       (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
         try {
           const id = Number(job.movie?.info?.tmdbId);
           const type = job.movie?.mediaType === 'tv' ? 'tv' : 'movie';
           const response = await fetch(TMDB_PROXY_URL, {
             method:'POST',
             headers:{ 'Content-Type':'application/json' },
-            body:JSON.stringify({ path:`/${type}/${id}`, params:{ language:'zh-CN' } })
+            body:JSON.stringify({ path:`/${type}/${id}`, params:{ language:'zh-CN' } }),
+            signal:controller.signal
           });
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const data = await response.json();
           const raw = Number(data?.vote_average);
-          const value = Number.isFinite(raw) && raw > 0 ? raw : null;
-          writeCachedScore(job.key, value);
+          const value = Number.isFinite(raw) && raw > 0 && raw <= 10 ? raw : null;
+          writeCachedScore(job.key, value, value == null ? 'empty' : 'success');
           updateScoreNodes(job.key, value);
         } catch {
-          writeCachedScore(job.key, null);
-          updateScoreNodes(job.key, null);
+          writeCachedScore(job.key, null, 'error');
+          updateScoreNodes(job.key, cachedScore(job.movie));
         } finally {
+          clearTimeout(timeout);
           runningScores.delete(job.key);
           scoreWorkers -= 1;
           runScoreQueue();
