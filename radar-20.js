@@ -6,6 +6,7 @@
   const TOTAL_TARGET = 20;
   const WANT_TARGET = 10;
   let generating = false;
+  let generationRequestId = 0;
 
   const pad = n => String(n).padStart(2, '0');
   const localToday = () => {
@@ -294,6 +295,17 @@
     }
   }
 
+  function commitRadarBatch(latestState, batch, requestId) {
+    if (requestId !== generationRequestId) return false;
+    const latest = latestState || {};
+    const currentRadar = Array.isArray(latest.home?.radar) ? latest.home.radar : [];
+    const ignoredKeys = new Set(currentRadar.filter(r => r?.ignored).map(radarKey));
+    const retained = currentRadar.filter(r => !isCurrentWeek(r?.discoveredAt));
+    const safeBatch = batch.filter(r => !ignoredKeys.has(radarKey(r))).slice(0, TOTAL_TARGET);
+    latest.home = { ...(latest.home || {}), radar: [...retained, ...safeBatch] };
+    return latest;
+  }
+
   async function generateRadar20({ reload = true } = {}) {
     if (generating) return;
     const state = readState();
@@ -301,10 +313,10 @@
       showToast('电影雷达暂时无法读取本地收藏数据');
       return;
     }
+    const requestId = ++generationRequestId;
     setBusy(true);
     showToast('正在生成 20 部电影雷达：想看 + TMDb…', 10000);
     try {
-      state.home = state.home || {};
       const allRadar = Array.isArray(state.home.radar) ? state.home.radar : [];
       const ignoredKeys = new Set(allRadar.filter(r => r?.ignored).map(radarKey));
       const prefs = tasteProfile(Array.isArray(state.movies) ? state.movies : []);
@@ -318,10 +330,13 @@
         throw new Error(`可用 TMDb 推荐不足：需要 ${tmdbNeeded} 部，目前得到 ${tmdbSelected.length} 部`);
       }
 
-      const retained = allRadar.filter(r => !isCurrentWeek(r?.discoveredAt));
       const batch = [...wantSelected, ...tmdbSelected].slice(0, TOTAL_TARGET);
-      state.home.radar = [...retained, ...batch];
-      writeState(state);
+      const gateway = stateGateway();
+      const committed = gateway?.update
+        ? gateway.update(latest => commitRadarBatch(latest, batch, requestId), { source:'radar-20', reason:'radar-generate' })
+        : commitRadarBatch(readState(), batch, requestId);
+      if (!committed) throw new Error('电影雷达生成结果已过期，未覆盖当前状态');
+      if (!gateway?.update) writeState(committed);
 
       sessionStorage.setItem('movie-radar20-last-count', String(batch.length));
       sessionStorage.setItem('movie-radar20-last-want', String(wantSelected.length));
