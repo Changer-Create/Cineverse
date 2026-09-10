@@ -202,6 +202,11 @@
           if (!plan) { plan = { month, status, plannedDate:date, movedTo:null }; movie.plans.push(plan); }
           else { plan.status = status; plan.plannedDate = date; plan.movedTo = null; }
         }, 'plan-update');
+      },
+      restoreAll(candidate) {
+        const next = restore(candidate);
+        gateway.replace(next, { source:'state-actions', reason:'restore-all', contextReplace:true });
+        return next;
       }
     });
   }
