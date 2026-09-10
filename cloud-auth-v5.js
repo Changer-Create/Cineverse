@@ -24,7 +24,13 @@
   let pendingConflict = false;
   let localRevision = 0;
   let uploadRequested = false;
+  let contextVersion = 0;
+  let syncPromiseContext = null;
+  let uploadRequestedContextVersion = 0;
 
+  function activeContext() { return { userId: currentUser?.id || '', contextVersion }; }
+  function isContextActive(context) { return Boolean(context?.userId) && context.contextVersion === contextVersion && currentUser?.id === context.userId; }
+  function beginUserContext(user) { contextVersion += 1; currentUser = user || null; localRevision=0; uploadRequestedContextVersion=0; clearTimeout(uploadTimer); syncPromiseContext=null; return activeContext(); }
   const $ = id => document.getElementById(id);
   const safeParse = raw => { try { return JSON.parse(raw); } catch { return null; } };
   const escapeHtml = value => String(value ?? '').replace(/[&<>"]/g,ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' })[ch]);
@@ -82,20 +88,14 @@
     pendingConflict = Boolean(pending?.conflict);
     return pending;
   }
-  function clearPendingCloud(userId=currentUser?.id) {
-    const pending = safeParse(localStorage.getItem(PENDING_KEY));
-    if (!pending || !userId || pending.userId === userId) localStorage.removeItem(PENDING_KEY);
-    pendingApply = false;
-    pendingConflict = false;
+  function clearPendingCloud(userId=currentUser?.id,context=null) {
+    const pending=safeParse(localStorage.getItem(PENDING_KEY));
+    if (!pending || !userId || pending.userId===userId) localStorage.removeItem(PENDING_KEY);
+    if (!context || isContextActive(context)) { pendingApply=false; pendingConflict=false; }
   }
-  function commitSyncedState(userId,data,updatedAt='') {
-    const stamp = updatedAt || new Date().toISOString();
-    localStorage.setItem(OWNER_KEY,userId);
-    localStorage.setItem(LAST_SYNC_KEY,stamp);
-    writeBaseline(userId,data,stamp);
-    localStorage.removeItem(DIRTY_KEY);
-    clearPendingCloud(userId);
-    lastSyncError = '';
+  function commitSyncedState(userId,data,updatedAt='',context=null) {
+    if (context && !isContextActive(context)) return false;
+    const stamp=updatedAt || new Date().toISOString(); localStorage.setItem(OWNER_KEY,userId); localStorage.setItem(LAST_SYNC_KEY,stamp); writeBaseline(userId,data,stamp); localStorage.removeItem(DIRTY_KEY); clearPendingCloud(userId,context); lastSyncError=''; return true;
   }
 
   function toast(message) {
@@ -242,25 +242,11 @@
     const baselineTs = ts(baselineUpdatedAt);
     return Boolean(remoteTs && baselineTs && remoteTs === baselineTs);
   }
-  function stageCloudData(user,row,{ conflict=false }={}) {
-    const cloud = row?.data_json;
-    if (!hasUsableData(cloud)) return false;
-    if (hasUsableData(localData()) && fingerprint(cloud) === fingerprint(localData())) {
-      commitSyncedState(user.id,cloud,row.updated_at || '');
-      return false;
-    }
-    localStorage.setItem(PENDING_KEY,JSON.stringify({
-      userId:user.id,
-      data_json:cloud,
-      updated_at:row.updated_at || new Date().toISOString(),
-      conflict:Boolean(conflict),
-      staged_at:new Date().toISOString()
-    }));
-    pendingApply = true;
-    pendingConflict = Boolean(conflict);
-    renderProfile();
-    if ($('movieAccountDialog')?.open) renderSignedIn();
-    return true;
+  function stageCloudData(user,row,{ conflict=false,context=null }={}) {
+    if (context && !isContextActive(context)) return false;
+    const cloud=row?.data_json; if (!hasUsableData(cloud)) return false;
+    if (hasUsableData(localData()) && fingerprint(cloud)===fingerprint(localData())) { commitSyncedState(user.id,cloud,row.updated_at||'',context); return false; }
+    localStorage.setItem(PENDING_KEY,JSON.stringify({userId:user.id,data_json:cloud,updated_at:row.updated_at||new Date().toISOString(),conflict:Boolean(conflict),staged_at:new Date().toISOString()})); pendingApply=true; pendingConflict=Boolean(conflict); renderProfile(); if ($('movieAccountDialog')?.open) renderSignedIn(); return true;
   }
   function applyPendingCloud() {
     const pending = readPendingCloud();
@@ -293,113 +279,10 @@
     return true;
   }
 
-  async function performSync({ silent=false,force=false,startup=false,cloudMeta=null,context=null }={}) {
-    if (!currentUser) return false;
-    const userId = context?.userId || currentUser.id;
-    if (currentUser.id !== userId) return false;
-    const local = localData();
-    if (!hasUsableData(local)) return false;
-    const owner = localStorage.getItem(OWNER_KEY) || '';
-    if (!force && owner && owner !== currentUser.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
-    if (force) return upsertLocal(local,{ silent,userId });
+  async function performSync({silent=false,force=false,startup=false,cloudMeta=null,context=null}={}) { if(!isContextActive(context))return false; const userId=context.userId; const local=localData(); if(!hasUsableData(local))return false; const owner=localStorage.getItem(OWNER_KEY)||''; if(!force&&owner&&owner!==userId)throw new Error('本机数据属于另一个账号，已阻止自动上传'); if(force)return upsertLocal(local,{silent,context}); const baseline=readBaseline(userId),baselineFp=baseline?.fingerprint||'',lastSync=localStorage.getItem(LAST_SYNC_KEY)||'',localFp=fingerprint(local); const meta=cloudMeta||await fetchCloudMeta(userId); if(!isContextActive(context))return false; if(!meta)return upsertLocal(local,{silent:true,context}); if(baselineFp){const stamp=baseline?.updated_at||lastSync;if(sameCloudVersion(meta.updated_at,stamp)){if(localFp===baselineFp)return commitSyncedState(userId,local,meta.updated_at||stamp||new Date().toISOString(),context);clearPendingCloud(userId,context);return upsertLocal(local,{silent:true,context});}} const row=await fetchCloudRow(userId); if(!isContextActive(context))return false; const cloud=row?.data_json;if(!hasUsableData(cloud))return upsertLocal(local,{silent:true,context});const cloudFp=fingerprint(cloud);if(localFp===cloudFp)return commitSyncedState(userId,cloud,row.updated_at||new Date().toISOString(),context);const dirty=localStorage.getItem(DIRTY_KEY)==='1';if(baselineFp){if(cloudFp===baselineFp&&localFp!==baselineFp){clearPendingCloud(userId,context);return upsertLocal(local,{silent:true,context});}if(localFp===baselineFp&&cloudFp!==baselineFp){stageCloudData(currentUser,row,{conflict:false,context});return false;}stageCloudData(currentUser,row,{conflict:true,context});return false;}if(dirty&&(!lastSync||ts(row.updated_at)<=ts(lastSync)+1500)){clearPendingCloud(userId,context);return upsertLocal(local,{silent:true,context});}if(!dirty&&lastSync&&ts(row.updated_at)>ts(lastSync)+500){stageCloudData(currentUser,row,{conflict:false,context});return false;}stageCloudData(currentUser,row,{conflict:true,context});return false; }
 
-    const baseline = readBaseline(currentUser.id);
-    const baselineFp = baseline?.fingerprint || '';
-    const lastSync = localStorage.getItem(LAST_SYNC_KEY) || '';
-    const localFp = fingerprint(local);
-    const meta = cloudMeta || await fetchCloudMeta(userId);
-    if (currentUser?.id !== userId) return false;
+  function uploadCurrentData(options={}) { const context=options.context||{...activeContext(),revision:localRevision}; if(!isContextActive(context))return Promise.resolve(false); if(syncPromise&&syncPromiseContext?.contextVersion===context.contextVersion&&isContextActive(syncPromiseContext)){uploadRequestedContextVersion=context.contextVersion;return syncPromise;} uploadRequestedContextVersion=0;syncing=true;lastSyncError='';renderProfile();syncPromiseContext=context;const promise=performSync({...options,context}).catch(error=>{if(!isContextActive(context))return false;lastSyncError=error;localStorage.setItem(DIRTY_KEY,'1');if(!options.silent)toast('同步失败：'+friendlyError(error));return false;}).finally(()=>{if(syncPromiseContext?.contextVersion!==context.contextVersion||!isContextActive(context))return;const changed=localRevision!==context.revision||uploadRequestedContextVersion===context.contextVersion;if(changed)localStorage.setItem(DIRTY_KEY,'1');syncing=false;syncPromise=null;syncPromiseContext=null;restorePendingCloud(context.userId);renderProfile();if($('movieAccountDialog')?.open&&currentUser)renderSignedIn();if(changed&&!lastSyncError){clearTimeout(uploadTimer);const next={...activeContext(),revision:localRevision};uploadTimer=setTimeout(()=>uploadCurrentData({silent:true,context:next}),0);}});syncPromise=promise;return promise; }
 
-    if (!meta) return upsertLocal(local,{ silent:true,userId });
-
-    // 正常状态只读取 updated_at。只要云端版本戳仍与 baseline 一致，
-    // 就可以确认云端内容未变化，无需下载整份 data_json。
-    if (baselineFp) {
-      const baselineStamp = baseline?.updated_at || lastSync;
-      if (sameCloudVersion(meta.updated_at,baselineStamp)) {
-        if (localFp === baselineFp) {
-          commitSyncedState(currentUser.id,local,meta.updated_at || baselineStamp || new Date().toISOString());
-          return true;
-        }
-        clearPendingCloud(currentUser.id);
-        return upsertLocal(local,{ silent:true,userId });
-      }
-    }
-
-    // 只有首次建立 baseline、云端版本戳变化，或旧数据需要兜底比对时，才下载完整 JSON。
-    const row = await fetchCloudRow(userId);
-    if (currentUser?.id !== userId) return false;
-    const cloud = row?.data_json;
-    if (!hasUsableData(cloud)) return upsertLocal(local,{ silent:true,userId });
-
-    const cloudFp = fingerprint(cloud);
-    if (localFp === cloudFp) {
-      commitSyncedState(currentUser.id,cloud,row.updated_at || new Date().toISOString());
-      return true;
-    }
-
-    const dirty = localStorage.getItem(DIRTY_KEY) === '1';
-    if (baselineFp) {
-      if (cloudFp === baselineFp && localFp !== baselineFp) {
-        clearPendingCloud(currentUser.id);
-        return upsertLocal(local,{ silent:true,userId });
-      }
-      if (localFp === baselineFp && cloudFp !== baselineFp) {
-        stageCloudData(currentUser,row,{ conflict:false });
-        if (!startup && !silent) toast('检测到另一设备的云端更新，请在账户面板应用');
-        return false;
-      }
-      stageCloudData(currentUser,row,{ conflict:true });
-      if (!startup && !silent) toast('云端与本机都有更新，请选择保留版本');
-      return false;
-    }
-
-    // 旧版升级的一次性兜底。正常运行建立 baseline 后不再依赖时间戳。
-    if (dirty && (!lastSync || ts(row.updated_at) <= ts(lastSync) + 1500)) {
-      clearPendingCloud(currentUser.id);
-      return upsertLocal(local,{ silent:true,userId });
-    }
-    if (!dirty && lastSync && ts(row.updated_at) > ts(lastSync) + 500) {
-      stageCloudData(currentUser,row,{ conflict:false });
-      return false;
-    }
-    stageCloudData(currentUser,row,{ conflict:true });
-    return false;
-  }
-
-  function uploadCurrentData(options={}) {
-    if (syncPromise) {
-      uploadRequested = true;
-      return syncPromise;
-    }
-    if (!currentUser) return Promise.resolve(false);
-    const context = { userId:currentUser.id, revision:localRevision };
-    uploadRequested = false;
-    syncing = true;
-    lastSyncError = '';
-    renderProfile();
-    syncPromise = performSync({ ...options, context })
-      .catch(error => {
-        lastSyncError = error;
-        localStorage.setItem(DIRTY_KEY,'1');
-        if (!options.silent) toast(`同步失败：${friendlyError(error)}`);
-        return false;
-      })
-      .finally(() => {
-        const changedDuringUpload = localRevision !== context.revision || uploadRequested;
-        if (changedDuringUpload) localStorage.setItem(DIRTY_KEY,'1');
-        syncing = false;
-        syncPromise = null;
-        restorePendingCloud(currentUser?.id);
-        renderProfile();
-        if ($('movieAccountDialog')?.open && currentUser) renderSignedIn();
-        if (changedDuringUpload && currentUser?.id === context.userId && !lastSyncError) {
-          clearTimeout(uploadTimer);
-          uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),0);
-        }
-      });
-    return syncPromise;
-  }
   async function forceUploadLocal() {
     const pending = readPendingCloud();
     if (pending?.conflict && !confirm('这会用本机当前数据覆盖云端较新的版本。确认保留本机并覆盖云端吗？')) return false;
@@ -418,26 +301,8 @@
     }
     return false;
   }
-  function queueUpload() {
-    if (!currentUser || suppressUpload) return;
-    localRevision += 1;
-    localStorage.setItem(DIRTY_KEY,'1');
-    const pending = readPendingCloud(currentUser.id);
-    if (pending) {
-      pending.conflict = true;
-      localStorage.setItem(PENDING_KEY,JSON.stringify(pending));
-      pendingApply = true;
-      pendingConflict = true;
-      renderProfile();
-      return;
-    }
-    if (syncPromise) {
-      uploadRequested = true;
-      return;
-    }
-    clearTimeout(uploadTimer);
-    uploadTimer = setTimeout(() => uploadCurrentData({ silent:true }),500);
-  }
+  function queueUpload() { const context=activeContext();if(!isContextActive(context)||suppressUpload)return;localRevision+=1;localStorage.setItem(DIRTY_KEY,'1');const pending=readPendingCloud(context.userId);if(pending){pending.conflict=true;localStorage.setItem(PENDING_KEY,JSON.stringify(pending));pendingApply=true;pendingConflict=true;renderProfile();return;}if(syncPromise&&syncPromiseContext?.contextVersion===context.contextVersion){uploadRequestedContextVersion=context.contextVersion;return;}clearTimeout(uploadTimer);const scheduled={...context,revision:localRevision};uploadTimer=setTimeout(()=>{if(isContextActive(scheduled))uploadCurrentData({silent:true,context:scheduled});},500);}
+
   function installStorageHook() {
     if (Storage.prototype.__movieCloudAuthPatchedV5) return;
     const previousSetItem = Storage.prototype.setItem;
@@ -449,54 +314,9 @@
     };
   }
 
-  async function reconcileUserData(user) {
-    const local = localData();
-    const owner = localStorage.getItem(OWNER_KEY) || '';
-    const meta = await fetchCloudMeta(user.id);
+  async function reconcileUserData(user,context=activeContext()) { if(!isContextActive(context))return false; const local=localData(),owner=localStorage.getItem(OWNER_KEY)||''; const meta=await fetchCloudMeta(user.id); if(!isContextActive(context))return false; if(!meta){clearPendingCloud(user.id,context);if(hasUsableData(local)){if(owner&&owner!==user.id)throw new Error('本机数据属于另一个账号，已阻止自动上传');await upsertLocal(local,{silent:true,context});}return true;} if(!hasUsableData(local)||(owner&&owner!==user.id)){const row=await fetchCloudRow(user.id);if(!isContextActive(context))return false;if(!hasUsableData(row?.data_json)){clearPendingCloud(user.id,context);if(hasUsableData(local)){if(owner&&owner!==user.id)throw new Error('本机数据属于另一个账号，已阻止自动上传');await upsertLocal(local,{silent:true,context});}return true;}stageCloudData(user,row,{conflict:false,context});return true;} await uploadCurrentData({silent:true,startup:true,cloudMeta:meta,context});return true; }
 
-    if (!meta) {
-      clearPendingCloud(user.id);
-      if (hasUsableData(local)) {
-        if (owner && owner !== user.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
-        await upsertLocal(local,{ silent:true });
-      }
-      return;
-    }
-
-    // 没有可用本机数据或切换了账号时，必须真正下载云端内容以供应用。
-    if (!hasUsableData(local) || (owner && owner !== user.id)) {
-      const row = await fetchCloudRow(user.id);
-      if (!hasUsableData(row?.data_json)) {
-        clearPendingCloud(user.id);
-        if (hasUsableData(local)) {
-          if (owner && owner !== user.id) throw new Error('本机数据属于另一个账号，已阻止自动上传');
-          await upsertLocal(local,{ silent:true });
-        }
-        return;
-      }
-      stageCloudData(user,row,{ conflict:false });
-      return;
-    }
-
-    // 已有本机 baseline 的正常启动只复用轻量 metadata，避免再次查询整份 JSON。
-    await uploadCurrentData({ silent:true,startup:true,cloudMeta:meta });
-  }
-
-  async function setUser(user,{ reconcile=true }={}) {
-    currentUser = user || null;
-    lastSyncError = '';
-    pendingApply = false;
-    pendingConflict = false;
-    if (currentUser) restorePendingCloud(currentUser.id);
-    renderProfile();
-    if (!currentUser || !reconcile) return;
-    try { await reconcileUserData(currentUser); }
-    catch (error) {
-      lastSyncError = error;
-      renderProfile();
-      toast(`账号已登录，但云同步失败：${friendlyError(error)}`);
-    }
-  }
+  async function setUser(user,{reconcile=true}={}) { const context=beginUserContext(user); lastSyncError='';pendingApply=false;pendingConflict=false;if(context.userId)restorePendingCloud(context.userId);renderProfile();if(!context.userId||!reconcile)return;try{await reconcileUserData(user,context);}catch(error){if(!isContextActive(context))return;lastSyncError=error;renderProfile();toast('账号已登录，但云同步失败：'+friendlyError(error));} }
 
   async function handleAuthSubmit(form) {
     const mode = form.dataset.mode || 'login';
@@ -536,7 +356,7 @@
     if (!readPendingCloud(currentUser.id) && localStorage.getItem(DIRTY_KEY) === '1') await uploadCurrentData({ silent:true });
     const { error } = await client.auth.signOut();
     if (error) return toast(`退出失败：${friendlyError(error)}`);
-    currentUser = null;
+    beginUserContext(null);
     pendingApply = false;
     pendingConflict = false;
     renderProfile();
@@ -584,16 +404,18 @@
         syncNow:(options={}) => uploadCurrentData({ silent:true,...options }),
         syncBeforeReload,
         open:openDialog,
-        getState:() => ({ syncing,pendingApply,pendingConflict,dirty:localStorage.getItem(DIRTY_KEY)==='1',lastSync:localStorage.getItem(LAST_SYNC_KEY)||'' })
+        getState:() => ({ syncing,pendingApply,pendingConflict,dirty:localStorage.getItem(DIRTY_KEY)==='1',lastSync:localStorage.getItem(LAST_SYNC_KEY)||'',contextVersion }),
+        getContext: () => activeContext(),
+        isContextActive
       };
-      const { data:{ session } } = await client.auth.getSession();
-      await setUser(session?.user || null,{ reconcile:true });
       client.auth.onAuthStateChange((event,session) => {
         if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
         const next = session?.user || null;
         if (next?.id === currentUser?.id) { renderProfile(); return; }
         setUser(next,{ reconcile:Boolean(next) });
       });
+      const { data:{ session } } = await client.auth.getSession();
+      await setUser(session?.user || null,{ reconcile:true });
     } catch (error) {
       lastSyncError = error;
       const { role } = profileElements();
