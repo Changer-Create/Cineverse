@@ -292,19 +292,17 @@
     const state = getState();
     const movie = state?.movies?.find(item => String(item?.id) === String(activePlanMovieId));
     if (!movie) return;
-    const month = plannedDate.slice(0, 7);
-    movie.plans = Array.isArray(movie.plans) ? movie.plans : [];
-    let plan = movie.plans.find(item => item?.month === month);
-    if (!plan) {
-      plan = { month, status:'planned', plannedDate, movedTo:null };
-      movie.plans.push(plan);
-    } else {
-      plan.status = 'planned';
-      plan.plannedDate = plannedDate;
-      plan.movedTo = null;
+    const actions = window.CineverseStateActions;
+    if (actions?.setPlan) actions.setPlan(activePlanMovieId, plannedDate, 'planned');
+    else {
+      const month = plannedDate.slice(0, 7);
+      movie.plans = Array.isArray(movie.plans) ? movie.plans : [];
+      let plan = movie.plans.find(item => item?.month === month);
+      if (!plan) { plan = { month, status:'planned', plannedDate, movedTo:null }; movie.plans.push(plan); }
+      else { plan.status = 'planned'; plan.plannedDate = plannedDate; plan.movedTo = null; }
+      movie.updatedAt = new Date().toISOString();
+      saveState(state, 'plan-update');
     }
-    movie.updatedAt = new Date().toISOString();
-    saveState(state, 'plan-update');
     ensurePlanDialog().close();
     activePlanMovieId = '';
     toast(`《${movie?.info?.title || '作品'}》已加入观看计划`);
