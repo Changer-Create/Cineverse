@@ -98,7 +98,7 @@
     const stamp=updatedAt || new Date().toISOString(); localStorage.setItem(OWNER_KEY,userId); localStorage.setItem(LAST_SYNC_KEY,stamp); writeBaseline(userId,data,stamp); localStorage.removeItem(DIRTY_KEY); clearPendingCloud(userId,context); lastSyncError=''; return true;
   }
 
-  function toast  function toast(message) {
+  function toast(message) {
     const el = $('toast');
     if (!el) return;
     el.textContent = message;
