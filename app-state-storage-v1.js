@@ -191,6 +191,17 @@
           movie.personal = movie.personal || {};
           movie.personal.status = 'watched';
         }, 'watch-record');
+      },
+      setPlan(movieId, plannedDate, status = 'planned') {
+        return updateMovie(movieId, movie => {
+          const date = String(plannedDate || '');
+          const month = date.slice(0, 7);
+          if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || !/^\\d{4}-\\d{2}$/.test(month)) return;
+          movie.plans = Array.isArray(movie.plans) ? movie.plans : [];
+          let plan = movie.plans.find(item => item?.month === month);
+          if (!plan) { plan = { month, status, plannedDate:date, movedTo:null }; movie.plans.push(plan); }
+          else { plan.status = status; plan.plannedDate = date; plan.movedTo = null; }
+        }, 'plan-update');
       }
     });
   }
