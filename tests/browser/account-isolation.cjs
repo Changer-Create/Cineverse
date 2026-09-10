@@ -121,12 +121,17 @@ async function fullRowSwitchScenario() {
     await page.evaluate(() => window.__cloudIsolation.releaseMeta('user-b', { updated_at: '2026-09-10T00:01:00.000Z' }));
     await page.waitForFunction(() => window.__cloudIsolation.requests.row['user-b'] === 1);
     await page.evaluate(() => window.__cloudIsolation.releaseRow('user-b', {
-      movies: [{ id: 'movie-b', info: { title: 'B 的云端影片' } }]
+      data_json: { movies: [{ id: 'movie-b', info: { title: 'B 的云端影片' } }] },
+      updated_at: '2026-09-10T00:01:00.000Z'
     }));
-    await page.waitForTimeout(80);
+    await page.waitForFunction(() => {
+      const pending = JSON.parse(window.__cloudIsolation.snapshot().pending || '{}');
+      return pending.userId === 'user-b' && pending.data_json?.movies?.[0]?.id === 'movie-b';
+    });
     const before = await page.evaluate(() => window.__cloudIsolation.snapshot());
     await page.evaluate(() => window.__cloudIsolation.releaseRow('user-a', {
-      movies: [{ id: 'movie-a-cloud', info: { title: 'A 的云端影片' } }]
+      data_json: { movies: [{ id: 'movie-a-cloud', info: { title: 'A 的云端影片' } }] },
+      updated_at: '2026-09-10T00:02:00.000Z'
     }));
     await page.waitForTimeout(120);
     const after = await page.evaluate(() => window.__cloudIsolation.snapshot());
