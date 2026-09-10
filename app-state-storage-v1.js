@@ -125,9 +125,12 @@
   function createStore(initialState = load()) {
     let state = initialState;
     const listeners = new Set();
+    let contextVersion = 0;
     return Object.freeze({
       getState:() => state,
+      getContextVersion:() => contextVersion,
       replace(nextState, metadata = {}) {
+        if (metadata.contextReplace) contextVersion += 1;
         state = nextState;
         if (metadata.persist !== false) persist(state);
         if (!metadata.silent) listeners.forEach(listener => listener(state, metadata));

@@ -7,6 +7,12 @@
   const WANT_TARGET = 10;
   let generating = false;
   let generationRequestId = 0;
+  const radarContext = () => ({ account: window.MovieCloudAccount?.getContext?.() || null, stateVersion: stateGateway()?.getContextVersion?.() || 0 });
+  const radarContextActive = context => {
+    const account = window.MovieCloudAccount?.isContextActive;
+    if (context.account && account && !account(context.account)) return false;
+    return (stateGateway()?.getContextVersion?.() || 0) === context.stateVersion;
+  };
 
   const pad = n => String(n).padStart(2, '0');
   const localToday = () => {
@@ -314,6 +320,7 @@
       return;
     }
     const requestId = ++generationRequestId;
+    const requestContext = radarContext();
     setBusy(true);
     showToast('正在生成 20 部电影雷达：想看 + TMDb…', 10000);
     try {
@@ -331,9 +338,13 @@
       }
 
       const batch = [...wantSelected, ...tmdbSelected].slice(0, TOTAL_TARGET);
+      if (requestId !== generationRequestId || !radarContextActive(requestContext)) throw new Error('电影雷达生成结果已过期，未覆盖当前状态');
       const gateway = stateGateway();
       const committed = gateway?.update
-        ? gateway.update(latest => commitRadarBatch(latest, batch, requestId), { source:'radar-20', reason:'radar-generate' })
+        ? gateway.update(latest => {
+            if (requestId !== generationRequestId || !radarContextActive(requestContext)) return latest;
+            return commitRadarBatch(latest, batch, requestId);
+          }, { source:'radar-20', reason:'radar-generate' })
         : commitRadarBatch(readState(), batch, requestId);
       if (!committed) throw new Error('电影雷达生成结果已过期，未覆盖当前状态');
       if (!gateway?.update) writeState(committed);
