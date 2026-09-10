@@ -214,13 +214,6 @@
   };
   nativeSet(sortInput, normalizeSortLabel(initialSortRaw));
 
-  try {
-    Object.defineProperty(statusInput, 'value', {
-      configurable: true,
-      get() { return ''; },
-      set(value) { nativeSet(this, value); }
-    });
-  } catch {}
 
   const planCell = planInput.closest('.filter-cell');
   const planLabel = planCell?.querySelector('label');
@@ -228,20 +221,6 @@
   planInput.readOnly = true;
   planInput.removeAttribute('data-manual-list');
   planInput.closest('.manual-filter-input-wrap')?.querySelectorAll('.manual-filter-toggle,.library-filter-toggle-v3').forEach(button => button.remove());
-  try {
-    Object.defineProperty(planInput, 'value', {
-      configurable: true,
-      get() {
-        const visual = nativeGet(this).trim();
-        if (/^\d{4}-\d{2}-\d{2}$/.test(visual)) {
-          const excluded = coreToggleFor('plan')?.classList.contains('active');
-          return excluded ? '' : visual.slice(0, 7);
-        }
-        return visual;
-      },
-      set(value) { nativeSet(this, value); }
-    });
-  } catch {}
 
   function coreToggleFor(key) {
     let toggle = grid.querySelector(`.exclude-toggle[data-exclude="${key}"]`);
