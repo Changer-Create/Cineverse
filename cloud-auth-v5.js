@@ -408,14 +408,14 @@
         getContext: () => activeContext(),
         isContextActive
       };
-      const { data:{ session } } = await client.auth.getSession();
-      await setUser(session?.user || null,{ reconcile:true });
       client.auth.onAuthStateChange((event,session) => {
         if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
         const next = session?.user || null;
         if (next?.id === currentUser?.id) { renderProfile(); return; }
         setUser(next,{ reconcile:Boolean(next) });
       });
+      const { data:{ session } } = await client.auth.getSession();
+      await setUser(session?.user || null,{ reconcile:true });
     } catch (error) {
       lastSyncError = error;
       const { role } = profileElements();
