@@ -318,7 +318,7 @@
 
   async function setUser(user,{reconcile=true}={}) { const context=beginUserContext(user); lastSyncError='';pendingApply=false;pendingConflict=false;if(context.userId)restorePendingCloud(context.userId);renderProfile();if(!context.userId||!reconcile)return;try{await reconcileUserData(user,context);}catch(error){if(!isContextActive(context))return;lastSyncError=error;renderProfile();toast('账号已登录，但云同步失败：'+friendlyError(error));} }
 
-  async function handleAuthSubmit  async function handleAuthSubmit(form) {
+  async function handleAuthSubmit(form) {
     const mode = form.dataset.mode || 'login';
     const email = String($('movieAuthEmail')?.value || '').trim();
     const password = String($('movieAuthPassword')?.value || '');
