@@ -12,10 +12,14 @@
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   };
-  const getState = () => safeParse(localStorage.getItem(STORAGE_KEY));
+  const stateGateway = () => window.CineverseStateGateway;
+  const getState = () => stateGateway()?.snapshot?.() || safeParse(localStorage.getItem(STORAGE_KEY));
   const saveState = state => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const gateway = stateGateway();
+    if (gateway?.replace) gateway.replace(state, { source:'status-model', reason:'status-edit' });
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     localStorage.setItem(CLOUD_DIRTY_KEY, '1');
+    return state;
   };
   const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
   async function waitForCloudAccount(timeout=2200) {

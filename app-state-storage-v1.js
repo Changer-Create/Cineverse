@@ -176,6 +176,21 @@
           if (wanted && !watched) movie.personal.status = 'want';
           if (!wanted && movie.personal.status === 'want') movie.personal.status = watched ? 'watched' : 'follow';
         }, 'want');
+      },
+      setRating(movieId, rating) {
+        return updateMovie(movieId, movie => {
+          movie.personal = movie.personal || {};
+          const value = Number(rating);
+          movie.personal.rating = Number.isFinite(value) && value > 0 ? Math.min(10, value) : null;
+        }, 'rating');
+      },
+      appendWatchRecord(movieId, record) {
+        return updateMovie(movieId, movie => {
+          movie.watchHistory = Array.isArray(movie.watchHistory) ? movie.watchHistory : [];
+          movie.watchHistory.push(structuredClone(record));
+          movie.personal = movie.personal || {};
+          movie.personal.status = 'watched';
+        }, 'watch-record');
       }
     });
   }
