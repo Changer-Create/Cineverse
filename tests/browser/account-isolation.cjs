@@ -47,7 +47,8 @@ async function openScenario() {
       releaseMeta(userId, value) { release('meta', userId, value); },
       releaseRow(userId, value) { release('row', userId, value); },
       switchUser(userId) {
-        authListener?.('SIGNED_IN', { user: { id: userId, email: `${userId}@example.com` } });
+        if (!authListener) return setTimeout(() => window.__cloudIsolation.switchUser(userId), 0);
+        authListener('SIGNED_IN', { user: { id: userId, email: `${userId}@example.com` } });
       },
       snapshot() {
         return {
