@@ -31,6 +31,9 @@ jobs:
       - name: Run runtime and syntax checks
         run: npm run check
 
+      - name: Run unit regression
+        run: npm test
+
       - name: Run browser regression
         run: npm run test:browser
 
