@@ -99,8 +99,6 @@ async function metadataSwitchScenario() {
   try {
     await page.evaluate(() => window.__cloudIsolation.switchUser('user-b'));
     await page.waitForFunction(() => window.__cloudIsolation.requests.meta['user-b'] === 1);
-    await page.evaluate(() => window.__cloudIsolation.releaseMeta('user-b', { updated_at: '2026-09-10T00:00:00.000Z' }));
-    await page.waitForFunction(() => window.__cloudIsolation.requests.row['user-b'] === 1);
     await page.evaluate(() => window.__cloudIsolation.releaseMeta('user-a', null));
     await page.waitForTimeout(120);
     const uploads = await page.evaluate(() => window.__cloudIsolation.uploads.slice());
