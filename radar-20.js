@@ -306,7 +306,7 @@
     const latest = latestState || {};
     const currentRadar = Array.isArray(latest.home?.radar) ? latest.home.radar : [];
     const ignoredKeys = new Set(currentRadar.filter(r => r?.ignored).map(radarKey));
-    const retained = currentRadar.filter(r => !isCurrentWeek(r?.discoveredAt));
+    const retained = currentRadar.filter(r => r?.ignored || !isCurrentWeek(r?.discoveredAt));
     const safeBatch = batch.filter(r => !ignoredKeys.has(radarKey(r))).slice(0, TOTAL_TARGET);
     latest.home = { ...(latest.home || {}), radar: [...retained, ...safeBatch] };
     return latest;
