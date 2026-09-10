@@ -324,7 +324,7 @@
       tmdbFetch(detailPath, { language }),
       tmdbFetch(creditsPath, { language })
     ]);
-    if (!active || token !== requestSeq) return;
+    if (!active || token !== requestSeq || active.model?.source !== model.source || active.model?.type !== model.type || String(active.model?.tmdbId || '') !== String(model.tmdbId || '')) return;
     const detail = detailResult.status === 'fulfilled' ? detailResult.value : null;
     const credits = creditsResult.status === 'fulfilled' ? creditsResult.value : null;
     if (!detail && !credits) return;
