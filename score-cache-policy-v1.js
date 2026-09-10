@@ -15,7 +15,7 @@
     const score = validScore(row.score);
     if (row.status === 'success' && score != null) return { ...row, score, status:'success' };
     if (row.status === 'empty' && Number(row.expiresAt) > 0) return { ...row, score:null, status:'empty' };
-    if (row.status === 'error' && Number(row.retryAt) > 0) return { ...row, score:null, status:'error' };
+    if (row.status === 'error' && Number(row.retryAt) > 0) return { ...row, score:validScore(row.score ?? row.lastScore), status:'error' };
     // Legacy null/0 rows represented an unverified result and must be retried.
     if (!row.status && score != null && Number(row.expiresAt) > 0) return { ...row, score, status:'success' };
     return null;
@@ -25,9 +25,9 @@
     const row = normalizeRow(cache?.[key]);
     if (!row) return { kind:'miss', row:null };
     if (row.status === 'error') {
-      return row.retryAt > now ? { kind:'backoff', row } : { kind:'miss', row };
+      return row.retryAt > now ? { kind:'backoff', score:row.score, row } : { kind:'miss', score:row.score, row };
     }
-    if (Number(row.expiresAt) < now) return { kind:'miss', row };
+    if (Number(row.expiresAt) < now) return { kind:'miss', score:row.score, row };
     return row.status === 'success'
       ? { kind:'success', score:row.score, row }
       : { kind:'empty', score:null, row };
@@ -49,7 +49,8 @@
     if (!key) return cache;
     const previous = normalizeRow(cache[key]);
     if (previous?.status === 'success' && Number(previous.expiresAt) >= now) return cache;
-    cache[key] = { status:'error', score:null, retryAt:now + backoff, expiresAt:now + backoff };
+    const lastScore = previous?.status === 'success' ? previous.score : previous?.score ?? null;
+    cache[key] = { status:'error', score:lastScore, lastScore, retryAt:now + backoff, expiresAt:now + backoff };
     return cache;
   }
 

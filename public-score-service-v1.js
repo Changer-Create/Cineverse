@@ -24,7 +24,7 @@
   }
   function read(movie) {
     const current = state(movie);
-    if (current.kind === 'success') return current.score;
+    if (current.score != null && Number.isFinite(Number(current.score))) return current.score;
     if (current.kind === 'empty' || current.kind === 'backoff') return null;
     return fallback(movie);
   }
@@ -64,7 +64,8 @@
         policy().writeFailure(currentCache, key);
         policy().prune(currentCache);
         save(currentCache);
-        return fallback(movie);
+        const preserved = policy().read(currentCache, key);
+        return preserved.score != null ? preserved.score : fallback(movie);
       } finally {
         clearTimeout(timeout);
         requests.delete(key);
