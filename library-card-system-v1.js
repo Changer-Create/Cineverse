@@ -210,7 +210,7 @@
   }
   function decorateLibraryCards() {
     const { movieMap } = currentStateMovieMap();
-    grid.querySelectorAll(':scope > .lib-card').forEach(card => {
+    grid.querySelectorAll(':scope > .lib-card[data-library-card="v1"]').forEach(card => {
       const movie = movieMap.get(String(cardMovieId(card)));
       if (!movie) return;
       decoratePoster(card, movie);
