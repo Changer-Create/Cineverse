@@ -31,6 +31,21 @@ const initial = State.normalizeState({
 const store = State.createStore(initial);
 const gateway = State.createGateway(store);
 
+assert.equal(gateway.getContextVersion(), 0);
+const guarded = gateway.update(state => {
+  state.movies.push(State.normalizeMovie({ id:'stale', info:{ title:'stale' } }));
+}, { source:'test-stale', guard:() => false });
+assert.equal(guarded.movies.length, 1, 'stale guarded update must not persist');
+gateway.replace(gateway.getState(), { silent:true, persist:false, contextReplace:true });
+assert.equal(gateway.getContextVersion(), 1, 'context replacement must advance the generation');
+
+const actions = State.createActions(gateway);
+assert.equal(actions.setPlan('movie-1', '2026-09-11'), true);
+assert.equal(gateway.getState().movies[0].plans[0].plannedDate, '2026-09-11');
+const planCount = gateway.getState().movies[0].plans.length;
+assert.equal(actions.setPlan('movie-1', '2026-9-11'), false);
+assert.equal(gateway.getState().movies[0].plans.length, planCount, 'invalid plan date must not add a plan');
+
 const snapshot = gateway.snapshot();
 snapshot.movies.push({ id:'detached' });
 assert.equal(gateway.getState().movies.length, 1, 'snapshots must not mutate live state');

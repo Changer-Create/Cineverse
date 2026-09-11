@@ -306,7 +306,7 @@
     const latest = latestState || {};
     const currentRadar = Array.isArray(latest.home?.radar) ? latest.home.radar : [];
     const ignoredKeys = new Set(currentRadar.filter(r => r?.ignored).map(radarKey));
-    const retained = currentRadar.filter(r => !isCurrentWeek(r?.discoveredAt));
+    const retained = currentRadar.filter(r => r?.ignored || !isCurrentWeek(r?.discoveredAt));
     const safeBatch = batch.filter(r => !ignoredKeys.has(radarKey(r))).slice(0, TOTAL_TARGET);
     latest.home = { ...(latest.home || {}), radar: [...retained, ...safeBatch] };
     return latest;
@@ -340,13 +340,15 @@
       const batch = [...wantSelected, ...tmdbSelected].slice(0, TOTAL_TARGET);
       if (requestId !== generationRequestId || !radarContextActive(requestContext)) throw new Error('电影雷达生成结果已过期，未覆盖当前状态');
       const gateway = stateGateway();
+      let applied = false;
       const committed = gateway?.update
         ? gateway.update(latest => {
             if (requestId !== generationRequestId || !radarContextActive(requestContext)) return latest;
+            applied = true;
             return commitRadarBatch(latest, batch, requestId);
-          }, { source:'radar-20', reason:'radar-generate' })
+          }, { source:'radar-20', reason:'radar-generate', guard:() => requestId === generationRequestId && radarContextActive(requestContext) })
         : commitRadarBatch(readState(), batch, requestId);
-      if (!committed) throw new Error('电影雷达生成结果已过期，未覆盖当前状态');
+      if (!committed || (gateway?.update && !applied)) throw new Error('电影雷达生成结果已过期，未覆盖当前状态');
       if (!gateway?.update) writeState(committed);
 
       sessionStorage.setItem('movie-radar20-last-count', String(batch.length));
