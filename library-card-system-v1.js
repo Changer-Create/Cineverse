@@ -218,26 +218,11 @@
     });
   }
 
-  function decorateRecentScores() {
-    const { movieMap } = currentStateMovieMap();
-    document.querySelectorAll('#recentGrid .recent[data-open-detail]').forEach(card => {
-      const movie = movieMap.get(String(card.dataset.openDetail));
-      const node = card.querySelector('.recent-public strong');
-      if (!movie || !node) return;
-      const key = scoreKey(movie);
-      const score = cachedScore(movie);
-      node.textContent = scoreText(score);
-      if (key) node.dataset.tmdbScoreKey = key;
-      if (key && score == null && !freshCacheRow(movie)) fetchPublicScore(movie);
-    });
-  }
-
   function scheduleDecorate() {
     if (decorateFrame) return;
     decorateFrame = requestAnimationFrame(() => {
       decorateFrame = 0;
       decorateLibraryCards();
-      decorateRecentScores();
     });
   }
 
@@ -444,8 +429,6 @@
   const gridObserver = new MutationObserver(scheduleDecorate);
   gridObserver.observe(grid, { childList:true, subtree:false });
 
-  const recentGrid = document.getElementById('recentGrid');
-  if (recentGrid) gridObserver.observe(recentGrid, { childList:true, subtree:false });
   ensurePlanDialog();
   ensureDeleteDialog();
   updateFixedWorkspace();
