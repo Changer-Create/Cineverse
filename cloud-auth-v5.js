@@ -260,7 +260,7 @@
     suppressUpload = true;
     try {
       const gateway = window.CineverseStateGateway;
-      if (gateway?.replace) gateway.replace(pending.data_json,{ source:'cloud-auth', reason:'cloud-apply' });
+      if (gateway?.replace) gateway.replace(pending.data_json,{ source:'cloud-auth', reason:'cloud-apply', contextReplace:true });
       else localStorage.setItem(APP_KEY,JSON.stringify(pending.data_json));
       commitSyncedState(currentUser.id,pending.data_json,pending.updated_at || new Date().toISOString());
     } finally { suppressUpload = false; }
@@ -268,13 +268,14 @@
     return true;
   }
 
-  async function upsertLocal(data,{ silent=false,userId=currentUser?.id }={}) {
-    if (!userId || currentUser?.id !== userId) return false;
+  async function upsertLocal(data,{ silent=false,userId=currentUser?.id,context=null }={}) {
+    const uploadContext = context || activeContext();
+    if (!isContextActive(uploadContext) || !userId || uploadContext.userId !== userId) return false;
     const now = new Date().toISOString();
     const { error } = await client.from('user_data').upsert({ user_id:userId,data_json:data,updated_at:now },{ onConflict:'user_id' });
     if (error) throw error;
-    if (currentUser?.id !== userId) return false;
-    commitSyncedState(userId,data,now);
+    if (!isContextActive(uploadContext)) return false;
+    if (!commitSyncedState(userId,data,now,uploadContext)) return false;
     if (!silent) toast('云端数据已同步');
     return true;
   }

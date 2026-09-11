@@ -258,7 +258,11 @@
     disableLocalActions();
     const back = $('detailBack');
     if (back) back.textContent = model.source === 'radar' ? '‹ 返回电影雷达' : '‹ 返回搜索结果';
-    if (scoreService?.shouldFetch?.(scoreMovie)) scoreService.fetch(scoreMovie).then(value => setText('detailPublicScore', value != null ? Number(value).toFixed(1) : '—')).catch(() => {});
+    const renderContext = { source:model.source, type:model.type, tmdbId:String(model.tmdbId || ''), requestSeq };
+    if (scoreService?.shouldFetch?.(scoreMovie)) scoreService.fetch(scoreMovie).then(value => {
+      if (!active || renderContext.requestSeq !== requestSeq || active.source !== renderContext.source || active.type !== renderContext.type || String(active.model?.tmdbId || '') !== renderContext.tmdbId) return;
+      setText('detailPublicScore', value != null ? Number(value).toFixed(1) : '—');
+    }).catch(() => {});
   }
 
   function baseFromSearchRow(row) {

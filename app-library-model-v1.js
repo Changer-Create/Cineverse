@@ -58,7 +58,11 @@
       if (!passes(movie.personal?.tags || [], c.tag, c.exclude.tag)) return false;
       if (c.favoriteOnly && !movie.personal?.favorite) return false;
       if (c.plan && c.plan !== '全部') {
-        const found = (movie.plans || []).some(plan => String(plan.month || '').toLowerCase().includes(String(c.plan).toLowerCase()));
+        const planQuery = String(c.plan).trim().toLowerCase();
+        const found = (movie.plans || []).some(plan => {
+          const month = String(plan.month || '').trim().toLowerCase();
+          return month === planQuery || (c.planDate && month === String(c.planDate).slice(0, 7).toLowerCase());
+        });
         if (c.exclude.plan ? found : !found) return false;
       }
       if (c.planDate && /^\d{4}-\d{2}-\d{2}$/.test(String(c.planDate))) {
@@ -83,8 +87,8 @@
     return rows.sort((a, b) => {
       let result = 0;
       if (sort === 'ratingDesc') result = numberCompare(a.personal?.rating, b.personal?.rating, -1);
-      else if (sort === 'yearDesc') result = numberCompare(a.info?.year, b.info?.year, 0);
-      else if (sort === 'yearAsc') result = numberCompare(a.info?.year, b.info?.year, 9999);
+      else if (sort === 'yearDesc') result = numberCompare(a.info?.year, b.info?.year, 0) * (direction === 'asc' ? -1 : 1);
+      else if (sort === 'yearAsc') result = numberCompare(a.info?.year, b.info?.year, 9999) * (direction === 'asc' ? 1 : -1);
       else if (sort === 'titleAsc') result = titleCompare(a, b) * sign;
       else if (sort === 'runtimeDesc') result = numberCompare(a.info?.runtime, b.info?.runtime, 0);
       else result = String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')) * sign;

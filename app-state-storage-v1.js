@@ -137,6 +137,7 @@
         return state;
       },
       update(updater, metadata = {}) {
+        if (typeof metadata.guard === 'function' && !metadata.guard(state)) return state;
         const nextState = structuredClone(state);
         updater(nextState);
         return this.replace(nextState, metadata);
@@ -155,7 +156,7 @@
       gateway.update(state => {
         const movie = (state.movies || []).find(item => String(item?.id) === String(movieId));
         if (!movie) return;
-        mutator(movie, state);
+        if (mutator(movie, state) === false) return;
         movie.updatedAt = new Date().toISOString();
         changed = true;
       }, { source:'state-actions', reason });
@@ -196,11 +197,12 @@
         return updateMovie(movieId, movie => {
           const date = String(plannedDate || '');
           const month = date.slice(0, 7);
-          if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || !/^\\d{4}-\\d{2}$/.test(month)) return;
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{4}-\d{2}$/.test(month)) return false;
           movie.plans = Array.isArray(movie.plans) ? movie.plans : [];
           let plan = movie.plans.find(item => item?.month === month);
           if (!plan) { plan = { month, status, plannedDate:date, movedTo:null }; movie.plans.push(plan); }
           else { plan.status = status; plan.plannedDate = date; plan.movedTo = null; }
+          return true;
         }, 'plan-update');
       },
       restoreAll(candidate) {
@@ -219,6 +221,7 @@
     const identity = state => state;
     return Object.freeze({
       getState:() => store.getState(),
+      getContextVersion:() => store.getContextVersion(),
       snapshot:() => structuredClone(store.getState()),
       replace(nextState, metadata = {}) {
         return store.replace(nextState, metadata);

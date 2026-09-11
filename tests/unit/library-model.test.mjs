@@ -28,6 +28,8 @@ const options = { displayStatus, mediaTypeLabel: () => '电影' };
 const originalOrder = movies.map(movie => movie.id);
 assert.deepEqual(model.filterMovies(movies, { favoriteOnly:true }, options).map(movie => movie.id), ['fav']);
 assert.deepEqual(model.filterMovies(movies, { planDate:'2026-09-21' }, options).map(movie => movie.id), ['plain']);
+assert.deepEqual(model.filterMovies(movies, { plan:'2026-09', planDate:'2026-09-21' }, options).map(movie => movie.id), ['plain']);
+assert.deepEqual(model.filterMovies(movies, { sort:'年份升序' }, options).map(movie => movie.id), ['fav','plain']);
 assert.deepEqual(model.filterMovies(movies, { status:'看过', exclude:{ status:true } }, options).map(movie => movie.id), ['fav']);
 assert.deepEqual(model.filterMovies(movies, { sort:'评分', sortDirection:'asc' }, options).map(movie => movie.id), ['fav','plain']);
 assert.deepEqual(movies.map(movie => movie.id), originalOrder, 'filtering must not mutate the input array');
