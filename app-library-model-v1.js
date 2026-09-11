@@ -5,8 +5,8 @@
   const MEDIA_FILTER = Object.freeze({ 电影:'movie', 剧集:'tv', 待识别:'unknown' });
   const STATUS_FILTER = Object.freeze({ 想看:'want', 看过:'watched', 已计划:'planned' });
   const SORT_FILTER = Object.freeze({
-    最近更新:'updatedDesc', 评分从高到低:'ratingDesc', 年份降序:'yearDesc', 年份升序:'yearAsc',
-    '片名 A-Z':'titleAsc', 时长从长到短:'runtimeDesc'
+    最近更新:'updatedDesc', 标记时间:'updated', 评分:'rating', 评分从高到低:'ratingDesc', 年份:'year', 年份降序:'yearDesc', 年份升序:'yearAsc',
+    '片名（拼音）':'title', '片名 A-Z':'titleAsc', 时长:'runtime', 时长从长到短:'runtimeDesc'
   });
 
   function resolveMappedFilter(raw, map, defaultValue = '') {
@@ -59,15 +59,16 @@
       if (c.favoriteOnly && !movie.personal?.favorite) return false;
       if (c.plan && c.plan !== '全部') {
         const planQuery = String(c.plan).trim().toLowerCase();
-        const found = (movie.plans || []).some(plan => {
+        const found = /^\d{4}-\d{2}-\d{2}$/.test(planQuery) ? true : (movie.plans || []).some(plan => {
           const month = String(plan.month || '').trim().toLowerCase();
-          return month === planQuery || (c.planDate && month === String(c.planDate).slice(0, 7).toLowerCase());
+          return month === planQuery;
         });
         if (c.exclude.plan ? found : !found) return false;
       }
       if (c.planDate && /^\d{4}-\d{2}-\d{2}$/.test(String(c.planDate))) {
         const found = (movie.plans || []).some(plan => String(plan?.plannedDate || '') === String(c.planDate));
-        if (c.exclude.plan ? found : !found) return false;
+        const excluded = Boolean(c.exclude.planDate || c.exclude.plan);
+        if (excluded ? found : !found) return false;
       }
       if (status) {
         const match = displayStatus(movie)[0] === status;
@@ -84,14 +85,24 @@
       const bv = Number.isFinite(Number(b)) ? Number(b) : emptyValue;
       return (av - bv) * sign;
     };
+    const fixedNumberCompare = (a, b, emptyValue, multiplier) => {
+      const av = Number.isFinite(Number(a)) ? Number(a) : emptyValue;
+      const bv = Number.isFinite(Number(b)) ? Number(b) : emptyValue;
+      return (av - bv) * multiplier;
+    };
     return rows.sort((a, b) => {
       let result = 0;
-      if (sort === 'ratingDesc') result = numberCompare(a.personal?.rating, b.personal?.rating, -1);
-      else if (sort === 'yearDesc') result = numberCompare(a.info?.year, b.info?.year, 0) * (direction === 'asc' ? -1 : 1);
-      else if (sort === 'yearAsc') result = numberCompare(a.info?.year, b.info?.year, 9999) * (direction === 'asc' ? 1 : -1);
-      else if (sort === 'titleAsc') result = titleCompare(a, b) * sign;
-      else if (sort === 'runtimeDesc') result = numberCompare(a.info?.runtime, b.info?.runtime, 0);
-      else result = String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')) * sign;
+      if (sort === 'rating') result = numberCompare(a.personal?.rating, b.personal?.rating, -1);
+      else if (sort === 'ratingDesc') result = fixedNumberCompare(a.personal?.rating, b.personal?.rating, -1, -1);
+      else if (sort === 'year') result = numberCompare(a.info?.year, b.info?.year, 9999);
+      else if (sort === 'yearDesc') result = fixedNumberCompare(a.info?.year, b.info?.year, 0, -1);
+      else if (sort === 'yearAsc') result = fixedNumberCompare(a.info?.year, b.info?.year, 9999, 1);
+      else if (sort === 'title') result = titleCompare(a, b) * sign;
+      else if (sort === 'titleAsc') result = titleCompare(a, b);
+      else if (sort === 'runtime') result = numberCompare(a.info?.runtime, b.info?.runtime, 0);
+      else if (sort === 'runtimeDesc') result = fixedNumberCompare(a.info?.runtime, b.info?.runtime, 0, -1);
+      else if (sort === 'updated') result = String(a.updatedAt || '').localeCompare(String(b.updatedAt || '')) * sign;
+      else result = String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
       return result || titleCompare(a, b);
     });
   }
