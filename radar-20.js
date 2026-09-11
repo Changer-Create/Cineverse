@@ -7,7 +7,7 @@
   const WANT_TARGET = 10;
   let generating = false;
   let generationRequestId = 0;
-  const radarContext = () => ({ account: window.MovieCloudAccount?.getContext?.() || null, stateVersion: stateGateway()?.getContextVersion?.() || 0 });
+  const radarContext = () => { const account = window.MovieCloudAccount?.getContext?.() || null; return { account: account?.userId ? account : null, stateVersion: stateGateway()?.getContextVersion?.() || 0 }; };
   const radarContextActive = context => {
     const account = window.MovieCloudAccount?.isContextActive;
     if (context.account && account && !account(context.account)) return false;
