@@ -87,6 +87,7 @@ async function main(){
  await page.waitForTimeout(200);
  check('library scores agree',await page.locator('.library-score-box.public b').filter({hasText:'★ 7.9'}).count()===2);
  await page.locator('#libraryGrid [data-open-detail="empty"]').first().click();
+ await page.waitForFunction(()=>!document.getElementById('detailView').classList.contains('hidden') && document.getElementById('detailPublicScore').textContent==='暂无评分');
  check('local detail respects empty',await page.locator('#detailPublicScore').textContent()==='暂无评分');
  await page.locator('.nav [data-view="home"]').click();
  for(let i=0;i<3;i++){await page.locator('.nav [data-view="library"]').click();await page.locator('.nav [data-view="home"]').click();}
@@ -140,3 +141,4 @@ main().catch(e=>{report.failure=e.stack;process.exitCode=1;}).finally(async()=>{
  fs.mkdirSync(OUT,{recursive:true});fs.writeFileSync(path.join(OUT,BASE_REF?'baseline.json':'result.json'),JSON.stringify(report,null,2));
  console.log(JSON.stringify(report,null,2));
 });
+
