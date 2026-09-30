@@ -10,7 +10,7 @@ assert.doesNotMatch(cards,/proxy\.hidden/);
 assert.match(main,/data-library-delete/);
 assert.match(main,/CineverseLibraryActions\.openWatch/);
 assert.match(runtime,/library-card-system-v2\.css\?v=20260909-b02/);
-assert.match(runtime,/library-card-system-v1\.js\?v=20260909-b02/);
+assert.match(runtime,/library-card-system-v1\.js\?v=20261001-score/);
 assert.match(css,/--card-surface/);
 assert.match(css,/#libraryGrid \.lib-actions/);
 assert.doesNotMatch(css,/!important/);

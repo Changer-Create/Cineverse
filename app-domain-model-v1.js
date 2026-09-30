@@ -16,17 +16,16 @@
   // One public-rating source for library and home, including the TMDb cache.
   const publicScore = (movie, cache = {}, now = Date.now()) => {
     const valid = value => {
-      const number = Number(value);
-      return Number.isFinite(number) && number > 0 && number <= 10 ? number : null;
+      return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 10 ? value : null;
     };
-    for (const value of [movie?.radar?.publicReputation, movie?.info?.tmdbVoteAverage]) {
-      const score = valid(value);
-      if (score != null) return score;
-    }
     const id = Number(movie?.info?.tmdbId);
     if (!Number.isFinite(id) || id <= 0) return null;
     const row = cache[`${movie?.mediaType === 'tv' ? 'tv' : 'movie'}:${id}`];
-    return row && Number(row.expiresAt) >= now ? valid(row.score) : null;
+    if (row?.status === 'empty') return null;
+    if (row && Number(row.expiresAt) > now && valid(row.score) != null) return valid(row.score);
+    // Imported TMDb fields have no verified freshness; UI labels them as prior values.
+    const legacy = valid(movie?.info?.tmdbVoteAverage);
+    return legacy != null && legacy > 0 ? legacy : null;
   };
 
   const hasPlan = (movie, month) => (movie?.plans || []).some(plan => !month || plan.month === month);

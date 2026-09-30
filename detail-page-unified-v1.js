@@ -216,7 +216,7 @@
 
   function renderUnified(model) {
     const tv = model.type === 'tv';
-    const scoreMovie = { mediaType:tv ? 'tv' : 'movie', info:{ tmdbId:model.tmdbId, tmdbVoteAverage:model.publicScore } };
+    const scoreMovie = { mediaType:tv ? 'tv' : 'movie', info:{ tmdbId:model.tmdbId, tmdbVoteAverage:model.source === 'search' ? model.publicScore : null } };
     const scoreService = window.CineversePublicScoreService;
     setText('detailTitle', model.title || (tv ? '未命名剧集' : '未命名电影'));
     setText('detailOriginal', [model.originalTitle && normalize(model.originalTitle) !== normalize(model.title) ? model.originalTitle : '', model.year].filter(Boolean).join(' · '), '');
@@ -249,8 +249,12 @@
 
     setText('detailRadarBadge', model.badge || (model.source === 'radar' ? '电影雷达' : 'TMDb 搜索'));
     setText('detailRadarDate', model.discoveredAt || '—');
-    const publicScore = scoreService?.read?.(scoreMovie) ?? model.publicScore;
-    setText('detailPublicScore', publicScore != null && Number.isFinite(Number(publicScore)) ? Number(publicScore).toFixed(1) : '—');
+    const renderScore = () => {
+      const display = scoreService?.display(scoreMovie) || { text:'暂未获取', title:'评分服务未就绪' };
+      setText('detailPublicScore', display.text.replace(/^★ /,''));
+      if ($('detailPublicScore')) $('detailPublicScore').title = display.title;
+    };
+    renderScore();
     setText('detailMatchScore', model.matchScore != null && Number.isFinite(Number(model.matchScore)) ? `${Math.round(Number(model.matchScore))}%` : '—');
     setText('detailRadarReason', model.reason || (model.source === 'radar' ? '来自电影雷达的推荐。' : '来自顶部 TMDb 全库搜索。'));
 
@@ -259,9 +263,9 @@
     const back = $('detailBack');
     if (back) back.textContent = model.source === 'radar' ? '‹ 返回电影雷达' : '‹ 返回搜索结果';
     const renderContext = { source:model.source, type:model.type, tmdbId:String(model.tmdbId || ''), requestSeq };
-    if (scoreService?.shouldFetch?.(scoreMovie)) scoreService.fetch(scoreMovie).then(value => {
+    if (scoreService?.shouldFetch?.(scoreMovie)) scoreService.fetch(scoreMovie).then(() => {
       if (!active || renderContext.requestSeq !== requestSeq || active.source !== renderContext.source || active.type !== renderContext.type || String(active.model?.tmdbId || '') !== renderContext.tmdbId) return;
-      setText('detailPublicScore', value != null ? Number(value).toFixed(1) : '—');
+      renderScore();
     }).catch(() => {});
   }
 
@@ -315,7 +319,7 @@
       overview:detail?.overview || model.overview || '暂无剧情简介。',
       posterUrl,
       tmdbId:detail?.id || model.tmdbId,
-      publicScore:detail?.vote_average || model.publicScore
+      publicScore:model.publicScore
     };
   }
 
@@ -324,12 +328,22 @@
     const language = readState()?.settings?.tmdbLanguage || 'zh-CN';
     const detailPath = `/${model.type}/${model.tmdbId}`;
     const creditsPath = `/${model.type}/${model.tmdbId}/credits`;
+    const scoreMovie = { mediaType:model.type, info:{ tmdbId:model.tmdbId } };
+    const service = window.CineversePublicScoreService;
+    const sharedDetail = async () => {
+      if (!service) return tmdbFetch(detailPath, { language });
+      const detail = await service.detail(scoreMovie);
+      if (detail) return detail;
+      if (service.state(scoreMovie).row?.status === 'error') return null;
+      // Persisted score rows do not contain full credits/metadata after a reload.
+      return tmdbFetch(detailPath, { language });
+    };
     const [detailResult, creditsResult] = await Promise.allSettled([
-      tmdbFetch(detailPath, { language }),
+      sharedDetail(),
       tmdbFetch(creditsPath, { language })
     ]);
     if (!active || token !== requestSeq || active.model?.source !== model.source || active.model?.type !== model.type || String(active.model?.tmdbId || '') !== String(model.tmdbId || '')) return;
-    const detail = detailResult.status === 'fulfilled' ? detailResult.value : null;
+    const detail = detailResult.status === 'fulfilled' && detailResult.value?.id === Number(model.tmdbId) ? detailResult.value : null;
     const credits = creditsResult.status === 'fulfilled' ? creditsResult.value : null;
     if (!detail && !credits) return;
     const merged = mergeTmdb(model, detail, credits);

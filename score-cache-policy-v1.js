@@ -3,21 +3,21 @@
   if (window.CineverseScoreCachePolicy) return;
 
   const SUCCESS_TTL = 7 * 24 * 60 * 60 * 1000;
+  const EMPTY_TTL = 24 * 60 * 60 * 1000;
   const FAILURE_BACKOFF = 30 * 1000;
 
   const validScore = value => {
-    const number = Number(value);
-    return Number.isFinite(number) && number > 0 && number <= 10 ? number : null;
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 10 ? value : null;
   };
 
   function normalizeRow(row) {
     if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
     const score = validScore(row.score);
-    if (row.status === 'success' && score != null) return { ...row, score, status:'success' };
+    if (row.status === 'success' && score != null && Number.isFinite(row.expiresAt) && row.expiresAt > 0) return { ...row, score, status:'success' };
     if (row.status === 'empty' && Number(row.expiresAt) > 0) return { ...row, score:null, status:'empty' };
     if (row.status === 'error' && Number(row.retryAt) > 0) return { ...row, score:validScore(row.score ?? row.lastScore), status:'error' };
     // Legacy null/0 rows represented an unverified result and must be retried.
-    if (!row.status && score != null && Number(row.expiresAt) > 0) return { ...row, score, status:'success' };
+    if (!row.status && score != null && score > 0 && Number(row.expiresAt) > 0) return { ...row, score, status:'success' };
     return null;
   }
 
@@ -27,30 +27,29 @@
     if (row.status === 'error') {
       return row.retryAt > now ? { kind:'backoff', score:row.score, row } : { kind:'miss', score:row.score, row };
     }
-    if (Number(row.expiresAt) < now) return { kind:'miss', score:row.score, row };
+    if (Number(row.expiresAt) <= now) return { kind:'miss', score:row.score, row };
     return row.status === 'success'
       ? { kind:'success', score:row.score, row }
       : { kind:'empty', score:null, row };
   }
 
-  function writeSuccess(cache, key, score, now = Date.now(), ttl = SUCCESS_TTL) {
+  function writeSuccess(cache, key, score, now = Date.now(), ttl = SUCCESS_TTL, voteCount = null) {
     if (!key) return cache;
-    cache[key] = { status:'success', score:validScore(score), expiresAt:now + ttl };
+    cache[key] = { status:'success', score:validScore(score), voteCount, fetchedAt:now, expiresAt:now + ttl };
     return cache;
   }
 
-  function writeEmpty(cache, key, now = Date.now(), ttl = SUCCESS_TTL) {
+  function writeEmpty(cache, key, now = Date.now(), ttl = EMPTY_TTL) {
     if (!key) return cache;
-    cache[key] = { status:'empty', score:null, expiresAt:now + ttl };
+    cache[key] = { status:'empty', score:null, voteCount:0, fetchedAt:now, expiresAt:now + ttl };
     return cache;
   }
 
   function writeFailure(cache, key, now = Date.now(), backoff = FAILURE_BACKOFF) {
     if (!key) return cache;
     const previous = normalizeRow(cache[key]);
-    if (previous?.status === 'success' && Number(previous.expiresAt) >= now) return cache;
     const lastScore = previous?.status === 'success' ? previous.score : previous?.score ?? null;
-    cache[key] = { status:'error', score:lastScore, lastScore, retryAt:now + backoff, expiresAt:now + backoff };
+    cache[key] = { status:'error', score:lastScore, lastScore, fetchedAt:previous?.fetchedAt, voteCount:previous?.voteCount, retryAt:now + backoff, expiresAt:now + backoff };
     return cache;
   }
 
@@ -63,7 +62,7 @@
   }
 
   window.CineverseScoreCachePolicy = Object.freeze({
-    SUCCESS_TTL, FAILURE_BACKOFF, validScore, normalizeRow, read,
+    SUCCESS_TTL, EMPTY_TTL, FAILURE_BACKOFF, validScore, normalizeRow, read,
     writeSuccess, writeEmpty, writeFailure, prune
   });
 })();
