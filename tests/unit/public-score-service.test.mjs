@@ -13,11 +13,11 @@ function setup({rows={}, noProxy=false, storageThrows=false, writeThrows=false}=
   for(const file of ['app-domain-model-v1.js','score-cache-policy-v1.js','public-score-service-v1.js'])
     vm.runInContext(readFileSync(file,'utf8'),context);
   const service=context.window.CineversePublicScoreService;
-  const movie=(id=42,type='movie')=>({mediaType:type,info:{tmdbId:id,tmdbVoteAverage:9},radar:{publicReputation:9.9},personal:{rating:6.2}});
+  const movie=(id=42,type='movie')=>({mediaType:type,info:{tmdbId:id,tmdbVoteAverage:9,tmdbScoreSourceKey:`${type}:${id}`},radar:{publicReputation:9.9},personal:{rating:6.2}});
   const response=(data={id:42,vote_average:7.86,vote_count:120},status=200)=>async(url,opts)=>{
     calls.push(JSON.parse(opts.body).path);return {ok:status===200,status,json:async()=>data};
   };
-  return {service,movie,response,calls,storage,policy:context.window.CineverseScoreCachePolicy,tick:ms=>{now+=ms;}};
+  return {domain:context.window.CineverseDomain,service,movie,response,calls,storage,policy:context.window.CineverseScoreCachePolicy,tick:ms=>{now+=ms;}};
 }
 test('cold score, concurrent entries, vote metadata, precision, personal fields',async()=>{
   const t=setup(), m=t.movie(), before=JSON.stringify(m);
@@ -79,4 +79,20 @@ test('timeout produces error and bounded backoff',async()=>{
   const t=setup();await t.service.fetch(t.movie(),{timeoutMs:5,fetchImpl:(u,{signal})=>new Promise((r,j)=>{
     signal.addEventListener('abort',()=>{const error=Error('abort');error.name='AbortError';j(error);});
   })});assert.equal(t.service.state(t.movie()).row.status,'error');assert.equal(t.service.shouldFetch(t.movie()),false);
+});
+
+test('changed ID/type cannot show old field or late request while new request is pending',async()=>{
+  for(const next of [{id:43,type:'movie'},{id:42,type:'tv'}]){
+    const t=setup(),m=t.movie();
+    let oldResponse,newResponse;
+    const old=t.service.refresh(m,{fetchImpl:()=>new Promise(r=>{oldResponse=r;})});
+    // Also cover writers which mutate the association directly: provenance must reject them.
+    m.info.tmdbId=next.id;m.mediaType=next.type;
+    assert.equal(t.service.read(m),null);
+    const fresh=t.service.fetch(m,{fetchImpl:()=>new Promise(r=>{newResponse=r;})});
+    oldResponse({ok:true,json:async()=>({id:42,vote_average:9.8,vote_count:100})});await old;
+    assert.equal(t.service.read(m),null);assert.equal(t.service.display(m).text,'暂未获取');
+    newResponse({ok:true,json:async()=>({id:next.id,vote_average:6.4,vote_count:100})});await fresh;
+    assert.equal(t.service.read(m),6.4);assert.equal(m.personal.rating,6.2);
+  }
 });

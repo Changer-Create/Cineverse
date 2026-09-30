@@ -13,12 +13,7 @@
     return memory;
   }
   function save() { try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache())); } catch {} }
-  const scoreKey = movie => {
-    const raw = movie?.info?.tmdbId;
-    const id = typeof raw === 'number' || (typeof raw === 'string' && /^\d+$/.test(raw)) ? Number(raw) : NaN;
-    return Number.isSafeInteger(id) && id > 0 && ['movie','tv'].includes(movie?.mediaType)
-      ? `${movie.mediaType}:${id}` : '';
-  };
+  const scoreKey = movie => window.CineverseDomain?.tmdbSourceKey(movie) || '';
   const requests = new Map();
   const details = new Map();
   const configured = proxyUrl => Boolean(policy() && typeof proxyUrl === 'string' && proxyUrl.trim());

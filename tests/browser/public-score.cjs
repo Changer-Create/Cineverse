@@ -18,6 +18,7 @@ const random=make('random','movie',42,'同 ID 想看推荐');random.watchHistory
 const cache={'movie:43':{status:'success',score:8.1,fetchedAt:1,expiresAt:2}};
 const report={base:BASE_REF||'working-tree',url:'',viewport:[],requests:[],errors:[],console:[],checks:[]};
 let server,browser;
+let reassociating=false, releaseOldScore, releaseNewScore;
 function check(name,value){report.checks.push({name,passed:Boolean(value)});assert.ok(value,name);}
 async function main(){
  fs.mkdirSync(OUT,{recursive:true});
@@ -60,7 +61,9 @@ async function main(){
     const id=Number(p.split('/')[2]),status=p==='/movie/43'?503:200;
     const data={id,vote_average:(p.startsWith('/tv/') || id===77)?0:7.86,vote_count:(p.startsWith('/tv/') || id===77)?0:120,title:'Mock',credits:{crew:[]},genres:[]};
     report.requests.push({path:p,status,id,score:data.vote_average,voteCount:data.vote_count});
-    await new Promise(r=>setTimeout(r,id===77?600:150));
+    if(reassociating && p==='/movie/42') await new Promise(r=>{releaseOldScore=r;});
+    else if(reassociating && p==='/movie/84') await new Promise(r=>{releaseNewScore=r;});
+    else await new Promise(r=>setTimeout(r,id===77?600:150));
     return route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
    }
    const results = p==='/search/multi' ? [{id:77,media_type:'movie',title:'外部暂无评分',release_date:'2026-01-01'},{id:78,media_type:'movie',title:'外部有效评分',release_date:'2026-01-01'}] : [];
@@ -118,6 +121,32 @@ async function main(){
  check('external detail respects cached empty',await page.locator('#detailPublicScore').textContent()==='暂无评分');
  await page.locator('.nav [data-view="home"]').click();
 
+
+ // Exercise the real manual editor with both old and new scoring requests held in flight.
+ reassociating=true;
+ await page.evaluate(()=>{
+   const movie=window.CineverseStateGateway.snapshot().movies.find(m=>m.id==='cold');
+   window.oldScorePending=window.CineversePublicScoreService.refresh(movie);
+ });
+ await page.locator('#recentGrid [data-open-detail="cold"]').click();
+ await page.locator('#detailEditBtn').click();
+ // The readonly field is normally populated by the TMDb picker; exercise its save boundary.
+ await page.locator('#movieTmdbIdInput').evaluate(input=>{input.value='84';});
+ await page.locator('#movieForm').evaluate(form=>form.requestSubmit());
+ await page.locator('.nav [data-view="home"]').click();
+ await page.waitForFunction(()=>document.querySelector('#recentGrid [data-open-detail="cold"] .recent-public strong')?.textContent==='暂未获取');
+ check('manual reassociation clears old score before new response',await page.locator('#recentGrid [data-open-detail="cold"] .recent-public strong').textContent()==='暂未获取');
+ // Route callbacks have already captured the deferred responses by this rendered state.
+ assert.equal(typeof releaseOldScore,'function');assert.equal(typeof releaseNewScore,'function');
+ releaseOldScore();await page.evaluate(()=>window.oldScorePending);
+ check('late old response cannot display on newly associated movie',await page.locator('#recentGrid [data-open-detail="cold"] .recent-public strong').textContent()==='暂未获取');
+ releaseNewScore();
+ await page.waitForFunction(()=>document.querySelector('#recentGrid [data-open-detail="cold"] .recent-public strong')?.textContent==='★ 7.9');
+ check('new association renders only its own response',await page.evaluate(()=>{
+   const movie=window.CineverseStateGateway.snapshot().movies.find(m=>m.id==='cold');
+   return movie.info.tmdbId===84 && movie.info.tmdbVoteAverage===null && movie.personal.rating===6.2;
+ }));
+ reassociating=false;
  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(200);
  await page.screenshot({path:path.join(OUT,'after-mobile.png'),fullPage:true});
  check('mobile public states contain no invalid numbers',!(await page.locator('#recentGrid').innerText()).match(/NaN|undefined/));

@@ -229,7 +229,7 @@
     if (Array.isArray(detail?.production_countries) && detail.production_countries.length) movie.info.countries = detail.production_countries.map(item => item.name).filter(Boolean);
     const directors = (credits?.crew || []).filter(person => person?.job === 'Director').map(person => person.name).filter(Boolean);
     if (directors.length) movie.info.directors = directors;
-    movie.info.tmdbId = radar.tmdbId;
+    window.CineverseDomain.setTmdbAssociation(movie, 'movie', radar.tmdbId);
     movie.personal = { ...(movie.personal || {}), status: 'want' };
     movie.updatedAt = new Date().toISOString();
   }
