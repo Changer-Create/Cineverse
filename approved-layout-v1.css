@@ -551,3 +551,91 @@ body #libraryGrid:not(.list-view) .lib-card { height:auto!important; }
 #planView .plan-day-chip.deferred .plan-rich-title{color:#efd39c}
 @media (min-width:1800px){#planView .plan-day-chip.plan-rich-card{grid-template-columns:40px minmax(0,1fr);gap:8px;min-height:64px;padding:6px}#planView .plan-rich-poster{width:40px;height:56px}#planView .plan-rich-title{font-size:10px}#planView .plan-rich-director,#planView .plan-rich-runtime{font-size:8px}}
 @media (max-width:980px){#planView .plan-day-chip.plan-rich-card{grid-template-columns:28px minmax(0,1fr);gap:5px;min-height:46px;padding:4px}#planView .plan-rich-poster{width:28px;height:40px}#planView .plan-rich-title{font-size:8.5px}#planView .plan-rich-director,#planView .plan-rich-runtime{font-size:7px}}
+
+/* Library, radar and plan follow the document, based on the visible page only. */
+html.cineverse-app:has(#libraryView:not(.hidden), #radarView:not(.hidden), #planView:not(.hidden)) {
+  height:auto;
+  min-height:100%;
+  overflow-x:clip;
+  overflow-y:auto;
+}
+html.cineverse-app:has(#libraryView:not(.hidden), #radarView:not(.hidden), #planView:not(.hidden)) body {
+  height:auto;
+  min-height:100dvh;
+  overflow:visible;
+}
+html.cineverse-app:has(#libraryView:not(.hidden), #radarView:not(.hidden), #planView:not(.hidden)) :is(.app, .main) {
+  height:auto;
+  max-height:none;
+  min-height:100dvh;
+  overflow:visible;
+}
+html.cineverse-app:has(#libraryView:not(.hidden), #radarView:not(.hidden), #planView:not(.hidden)) .main > :is(#libraryView, #radarView, #planView):not(.hidden) {
+  height:auto;
+  max-height:none;
+  min-height:0;
+  flex:none;
+  overflow:visible;
+  overscroll-behavior:auto;
+  scrollbar-gutter:auto;
+}
+html.cineverse-app :is(#libraryView, #radarView, #planView) :is(.library-shell, .radar-shell, .radar-layout, .radar-main-panel, .radar-side, .plan-shell, .plan-layout, .plan-calendar-panel, .plan-side, .plan-list-panel) {
+  height:auto;
+  max-height:none;
+  min-height:0;
+  min-width:0;
+  flex:none;
+  overflow:visible;
+  overscroll-behavior:auto;
+}
+html.cineverse-app #libraryView .library-shell {
+  grid-template-rows:repeat(4, auto);
+}
+html.cineverse-app #libraryView .library-shell > section:last-child,
+html.cineverse-app #libraryView #libraryGrid {
+  height:auto;
+  max-height:none;
+  min-height:0;
+  flex:none;
+  overflow:visible;
+}
+html.cineverse-app #planView .plan-layout { align-items:start; }
+html.cineverse-app #planView .plan-calendar {
+  height:auto;
+  max-height:none;
+  min-height:0;
+  flex:none;
+  grid-auto-rows:minmax(140px, auto);
+  overflow:visible;
+}
+html.cineverse-app #planView .plan-day {
+  min-height:140px!important;
+  overflow:visible;
+}
+html.cineverse-app #planView .plan-day-movies {
+  height:auto;
+  max-height:none;
+  min-height:0;
+  flex:none;
+  overflow:visible;
+}
+html.cineverse-app #planView .plan-calendar-scroll {
+  min-width:0;
+  max-width:100%;
+}
+@media (max-width:980px) {
+  html.cineverse-app #planView .plan-calendar-scroll {
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    touch-action:pan-x pan-y;
+  }
+  html.cineverse-app #planView .plan-calendar-scroll > :is(.calendar-week, .plan-calendar) {
+    min-width:700px;
+  }
+  html.cineverse-app #planView .plan-list-row {
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+  html.cineverse-app #planView .plan-list-movie { grid-column:1/-1; }
+  html.cineverse-app #planView .plan-list-row :is(input, select) { min-width:0; width:100%; }
+  html.cineverse-app #planView .plan-row-actions { grid-column:1/-1; justify-content:flex-start; flex-wrap:wrap; }
+}

@@ -112,29 +112,13 @@ async function main() {
   const calendar = page.locator('#planCalendar');
   const calendarMetrics = await calendar.evaluate(node => ({ clientHeight: node.clientHeight, scrollHeight: node.scrollHeight, rows: node.querySelectorAll('.plan-day').length }));
   check('calendar keeps seven columns and month rows', calendarMetrics.rows >= 28, JSON.stringify(calendarMetrics));
-  check('calendar has an independently scrollable dense list', calendarMetrics.scrollHeight > calendarMetrics.clientHeight, JSON.stringify(calendarMetrics));
-  const scrollTarget = await calendar.evaluate(node => {
-    let current = node;
-    while (current && current !== document.body) {
-      if (current.scrollHeight > current.clientHeight && getComputedStyle(current).overflowY !== 'visible') return current;
-      current = current.parentElement;
-    }
-    return null;
-  });
-  check('calendar exposes an internal scroll container', Boolean(scrollTarget));
-  const scrollTop = await page.evaluate(() => {
-    const calendar = document.querySelector('#planCalendar');
-    let current = calendar;
-    while (current && current !== document.body) {
-      if (current.scrollHeight > current.clientHeight && getComputedStyle(current).overflowY !== 'visible') {
-        current.scrollTop = Math.min(64, current.scrollHeight);
-        return current.scrollTop;
-      }
-      current = current.parentElement;
-    }
-    return 0;
-  });
-  check('calendar internal scrollTop is mutable', scrollTop > 0, String(scrollTop));
+  check('calendar grows with dense date content', calendarMetrics.scrollHeight <= calendarMetrics.clientHeight + 1, JSON.stringify(calendarMetrics));
+  check('calendar rows expand instead of clipping six planned movies', await page.locator('.plan-day').evaluateAll(days => days.some(day => day.clientHeight > 140)));
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.mouse.move(1000, 100);
+  await page.mouse.wheel(0, 500);
+  await page.waitForFunction(() => document.scrollingElement.scrollTop > 0);
+  check('plan scrolls through the document', await page.evaluate(() => document.scrollingElement.scrollTop > 0));
   await page.locator('#planListBtn').click();
   check('calendar/list switch shows list panel', await page.locator('#planListPanel').isVisible());
   check('calendar/list switch hides calendar panel', !(await page.locator('#planCalendarWrap').isVisible()));

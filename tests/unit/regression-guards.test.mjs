@@ -40,7 +40,7 @@ for (const asset of ['app-router-v1.js', 'app-library-model-v1.js']) {
 }
 assert.match(index, /app-state-storage-v1\.js\?v=20261001-association/);
 assert.match(index, /app-domain-model-v1\.js\?v=20261001-association/);
-assert.match(index, /content-center-runtime-v1\.js\?v=20261001-association/);
+assert.match(index, /content-center-runtime-v1\.js\?v=20261001-scroll/);
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
 assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
 assert.match(index, /app-main-v1\.js\?v=20261001-association/);
@@ -58,7 +58,7 @@ console.log('Regression guard tests passed.');
 
 assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /score-cache-policy-v1\.js\?v=20261001-score/);
 assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /public-score-service-v1\.js\?v=20261001-association/);
-assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20261001-score/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20261001-scroll/);
 assert.match(stateStorage, /getContextVersion:\(\) => store\.getContextVersion\(\)/);
 assert.match(stateStorage, /metadata\.guard/);
 assert.match(stateStorage, /setPlan\(movieId, plannedDate/);
