@@ -141,4 +141,3 @@ main().catch(e=>{report.failure=e.stack;process.exitCode=1;}).finally(async()=>{
  fs.mkdirSync(OUT,{recursive:true});fs.writeFileSync(path.join(OUT,BASE_REF?'baseline.json':'result.json'),JSON.stringify(report,null,2));
  console.log(JSON.stringify(report,null,2));
 });
-
