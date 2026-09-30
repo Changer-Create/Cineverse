@@ -6,10 +6,6 @@
 
   const STORAGE_KEY = 'movie-collection-v2';
   const CLOUD_DIRTY_KEY = 'movie-cloud-dirty-v1';
-  const SCORE_CACHE_KEY = 'movie-tmdb-score-cache-v1';
-  const SCORE_TTL = 7 * 24 * 60 * 60 * 1000;
-  const TMDB_PROXY_URL = window.CineversePublicConfig?.tmdbProxyUrl || '';
-  const SCORE_POLICY = window.CineverseScoreCachePolicy;
   const grid = document.getElementById('libraryGrid');
   const libraryView = document.getElementById('libraryView');
   if (!grid || !libraryView) return;
@@ -108,48 +104,19 @@
     poster.setAttribute('aria-label', `打开《${movie?.info?.title || '作品'}》详情`);
   }
 
-  function scoreCache() {
-    const parsed = safeParse(localStorage.getItem(SCORE_CACHE_KEY));
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  function scoreKey(movie) { return scoreService()?.scoreKey(movie) || ''; }
+  function scoreDisplay(movie) {
+    return scoreService()?.display(movie) || { text:'暂未获取', title:'评分服务未就绪' };
   }
-
-  function scoreKey(movie) {
-    const id = Number(movie?.info?.tmdbId);
-    if (!Number.isFinite(id) || id <= 0) return '';
-    return `${movie?.mediaType === 'tv' ? 'tv' : 'movie'}:${id}`;
-  }
-
-  function scoreCacheState(movie) {
-    return scoreService()?.state?.(movie) || { kind:'miss', row:null };
-  }
-
-  function freshCacheRow(movie) {
-    const state = scoreCacheState(movie);
-    return state.kind === 'success' || state.kind === 'empty' ? state.row : null;
-  }
-
-  function cachedScore(movie) {
-    return scoreService()?.read?.(movie) ?? window.CineverseDomain.publicScore(movie, scoreCache());
-  }
-
-  function writeCachedScore(key, score, kind = 'success') {
-    if (!key || !SCORE_POLICY) return;
-    const cache = scoreCache();
-    if (kind === 'error') SCORE_POLICY.writeFailure(cache, key);
-    else if (kind === 'empty') SCORE_POLICY.writeEmpty(cache, key);
-    else SCORE_POLICY.writeSuccess(cache, key, score);
-    SCORE_POLICY.prune(cache);
-    localStorage.setItem(SCORE_CACHE_KEY, JSON.stringify(cache));
-  }
-
-  function scoreText(value) {
-    return value == null ? '—' : `★ ${Number(value).toFixed(1)}`;
-  }
-
-  function updateScoreNodes(key, score) {
+  function updateScoreNodes(key) {
     if (!key) return;
+    const { movieMap } = currentStateMovieMap();
     document.querySelectorAll(`[data-tmdb-score-key="${CSS.escape(key)}"]`).forEach(node => {
-      node.textContent = scoreText(score);
+      const movie = movieMap.get(String(cardMovieId(node.closest('.lib-card'))));
+      if (!movie || scoreKey(movie) !== key) return;
+      const display = scoreDisplay(movie);
+      node.textContent = display.text;
+      node.title = display.title;
       node.dataset.loaded = '1';
     });
   }
@@ -164,8 +131,8 @@
       updateScoreNodes(key, service.read(movie));
       return;
     }
-    const value = await service.fetch(movie);
-    updateScoreNodes(key, value);
+    await service.fetch(movie);
+    updateScoreNodes(key);
   }
 
   let scoreObserver = null;
@@ -187,9 +154,9 @@
     const rating = card.querySelector('.lib-rating');
     if (!rating) return;
     const key = scoreKey(movie);
-    const publicValue = cachedScore(movie);
     const personalValue = movie?.personal?.rating;
-    const signature = `${personalValue ?? ''}|${key}|${publicValue ?? ''}`;
+    const display = scoreDisplay(movie);
+    const signature = `${personalValue ?? ''}|${key}|${display.text}|${display.title}`;
     if (rating.dataset.libraryScoreSignature === signature) return;
     rating.dataset.libraryScoreSignature = signature;
     rating.classList.add('library-score-row');
@@ -198,11 +165,11 @@
         <span>我的评分</span>
         <b>${personalValue != null && Number.isFinite(Number(personalValue)) ? '★ ' + Number(personalValue).toFixed(1) : '—'}</b>
       </div>
-      <div class="library-score-box public" title="TMDb 公众评分">
+      <div class="library-score-box public" title="${esc(display.title)}">
         <span>公众口碑</span>
-        <b ${key ? `data-tmdb-score-key="${esc(key)}"` : ''}>${scoreText(publicValue)}</b>
+        <b ${key ? `data-tmdb-score-key="${esc(key)}"` : ''}>${esc(display.text)}</b>
       </div>`;
-    if (key && publicValue == null && !freshCacheRow(movie)) {
+    if (scoreService()?.shouldFetch(movie)) {
       const observer = ensureScoreObserver();
       if (observer) observer.observe(card);
       else fetchPublicScore(movie);

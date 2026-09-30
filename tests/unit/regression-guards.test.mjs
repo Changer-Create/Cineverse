@@ -38,27 +38,27 @@ assert.match(deleteFlow, /const notified = saveState\(state, 'delete'\)/, 'libra
 for (const asset of ['app-router-v1.js', 'app-library-model-v1.js']) {
   assert.match(index, new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2015`));
 }
-assert.match(index, /app-state-storage-v1\.js\?v=20260909-b01/);
-assert.match(index, /app-domain-model-v1\.js\?v=20260908-home-plan/);
-assert.match(index, /content-center-runtime-v1\.js\?v=20260908-home-plan/);
+assert.match(index, /app-state-storage-v1\.js\?v=20261001-association/);
+assert.match(index, /app-domain-model-v1\.js\?v=20261001-association/);
+assert.match(index, /content-center-runtime-v1\.js\?v=20261001-association/);
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
 assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
-assert.match(index, /app-main-v1\.js\?v=20260909-b01/);
+assert.match(index, /app-main-v1\.js\?v=20261001-association/);
   assert.match(index, /ui-theme-nature-v2\.css\?v=20260908-home-plan/);
 assert.match(index, /data-theme-preset="forest"/);
 assert.match(index, /data-theme-preset="snow"/);
 assert.match(index, /data-theme-preset="ocean"/);
 
-for (const asset of ['radar-20.js', 'radar-experience-v3.js', 'rating-sync-v3.js', 'watch-record-edit-v1.js']) {
+for (const asset of ['radar-20.js', 'rating-sync-v3.js', 'watch-record-edit-v1.js']) {
   assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), new RegExp(`${asset.replaceAll('.', '\\.') }\\?v=20260822-2300`));
 }
 assert.match(readFileSync('content-center-runtime-v1.js', 'utf8'), /cloud-auth-v5\.js\?v=20260909-a05/);
 
 console.log('Regression guard tests passed.');
 
-assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /score-cache-policy-v1\.js\?v=20260909-a06a/);
-assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /public-score-service-v1\.js\?v=20260909-a06b/);
-assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20260909-b02/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /score-cache-policy-v1\.js\?v=20261001-score/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /public-score-service-v1\.js\?v=20261001-association/);
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /library-card-system-v1\.js\?v=20261001-score/);
 assert.match(stateStorage, /getContextVersion:\(\) => store\.getContextVersion\(\)/);
 assert.match(stateStorage, /metadata\.guard/);
 assert.match(stateStorage, /setPlan\(movieId, plannedDate/);
@@ -67,3 +67,8 @@ assert.match(cloudAuth, /commitSyncedState\(userId,data,now,uploadContext\)/);
 assert.match(radar, /r\?\.ignored \|\| !isCurrentWeek/);
 assert.match(radar, /guard:\(\) => requestId === generationRequestId/);
 assert.match(detail, /renderContext\.requestSeq !== requestSeq/);
+
+assert.ok(index.indexOf('score-cache-policy-v1.js?') < index.indexOf('app-main-v1.js?'));
+assert.ok(index.indexOf('public-score-service-v1.js?') < index.indexOf('app-main-v1.js?'));
+
+assert.match(readFileSync('content-center-runtime-v1.js','utf8'), /radar-experience-v3\.js\?v=20261001-association/);

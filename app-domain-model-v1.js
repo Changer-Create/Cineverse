@@ -13,20 +13,38 @@
     });
   };
 
-  // One public-rating source for library and home, including the TMDb cache.
+  const tmdbSourceKey = movie => {
+    const raw = movie?.info?.tmdbId;
+    const id = typeof raw === 'number' || (typeof raw === 'string' && /^\d+$/.test(raw)) ? Number(raw) : NaN;
+    return Number.isSafeInteger(id) && id > 0 && ['movie','tv'].includes(movie?.mediaType) ? `${movie.mediaType}:${id}` : '';
+  };
+  function setTmdbAssociation(movie, mediaType, tmdbId) {
+    const previous = tmdbSourceKey(movie);
+    movie.info ||= {};
+    movie.mediaType = mediaType;
+    movie.info.tmdbId = tmdbId;
+    if (previous !== tmdbSourceKey(movie)) {
+      movie.info.tmdbVoteAverage = null;
+      movie.info.tmdbScoreSourceKey = null;
+      if (movie.radar) movie.radar.publicReputation = null;
+    }
+    return movie;
+  }
+
+  // Unkeyed legacy fields remain in backups, but cannot prove their association.
   const publicScore = (movie, cache = {}, now = Date.now()) => {
     const valid = value => {
-      const number = Number(value);
-      return Number.isFinite(number) && number > 0 && number <= 10 ? number : null;
+      return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 10 ? value : null;
     };
-    for (const value of [movie?.radar?.publicReputation, movie?.info?.tmdbVoteAverage]) {
-      const score = valid(value);
-      if (score != null) return score;
-    }
-    const id = Number(movie?.info?.tmdbId);
-    if (!Number.isFinite(id) || id <= 0) return null;
-    const row = cache[`${movie?.mediaType === 'tv' ? 'tv' : 'movie'}:${id}`];
-    return row && Number(row.expiresAt) >= now ? valid(row.score) : null;
+    const key = tmdbSourceKey(movie);
+    if (!key) return null;
+    const row = cache[key];
+    if (row?.status === 'empty') return null;
+    if (row && Number(row.expiresAt) > now && valid(row.score) != null) return valid(row.score);
+    // Imported TMDb fields have no verified freshness; UI labels them as prior values.
+    if (movie?.info?.tmdbScoreSourceKey !== key) return null;
+    const legacy = valid(movie?.info?.tmdbVoteAverage);
+    return legacy != null && legacy > 0 ? legacy : null;
   };
 
   const hasPlan = (movie, month) => (movie?.plans || []).some(plan => !month || plan.month === month);
@@ -83,7 +101,7 @@
   };
 
   window.CineverseDomain = Object.freeze({
-    publicScore, moviesOf, uniq, uniqBy, hasPlan, getPlan, planEntries, watchEntries,
+    publicScore, tmdbSourceKey, setTmdbAssociation, moviesOf, uniq, uniqBy, hasPlan, getPlan, planEntries, watchEntries,
     mediaTypeLabel, mediaTypeIcon, displayStatus, isSeasonSourceWatch, posterHue, metrics
   });
 })();

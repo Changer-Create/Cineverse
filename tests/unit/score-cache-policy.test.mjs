@@ -24,6 +24,7 @@ assert.equal(policy.read(cache, 'movie:3', now + 10).kind, 'backoff');
 assert.equal(policy.read(cache, 'movie:3', now + 31).kind, 'miss');
 
 policy.writeFailure(cache, 'movie:1', now + 10, 30);
-assert.equal(cache['movie:1'].status, 'success', 'failure must not replace valid success');
+assert.equal(cache['movie:1'].status, 'error', 'failure must set backoff even for explicit refresh');
+assert.equal(cache['movie:1'].score, 8.4, 'failure preserves last valid success');
 
 console.log('Score cache policy tests passed.');

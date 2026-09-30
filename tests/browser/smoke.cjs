@@ -65,7 +65,15 @@ async function main() {
       }
     } catch {}
   });
-  await page.route('**/functions/v1/tmdb-proxy', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ results: [], total_results: 0 }) }));
+  await page.route('**/functions/v1/tmdb-proxy', route => {
+    const request = route.request().postDataJSON();
+    const match = request?.path?.match(/^\/(movie|tv)\/(\d+)$/);
+    const movie = match && fixture.movies.find(m => m.mediaType === match[1] && Number(m.info.tmdbId) === Number(match[2]));
+    const score = movie?.info?.tmdbVoteAverage;
+    const body = match ? { id:Number(match[2]), vote_average:score ?? 0, vote_count:score != null ? 120 : 0 }
+      : { results:[], total_results:0 };
+    return route.fulfill({ status:200, contentType:'application/json', body:JSON.stringify(body) });
+  });
   await page.route('**/rest/v1/global_site_config**', route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
 
   await page.goto(`${BASE}/index.html#home`, { waitUntil: 'domcontentloaded' });
@@ -86,7 +94,7 @@ async function main() {
   check('home radar is capped at four cards', homeRadarCount === 4, `found ${homeRadarCount}`);
   const recentText = await page.locator('#recentGrid').innerText();
   check('recent view shows cached public score', recentText.includes('★ 8.6'), recentText);
-  check('recent view shows dash for missing public score', recentText.includes('—'), recentText);
+  check('recent view shows a truthful missing public score state', /暂无评分|未关联 TMDb|暂未获取/.test(recentText), recentText);
 
   await page.goto(`${BASE}/index.html#settings`, { waitUntil: 'domcontentloaded' });
   for (const theme of ['nebula', 'forest', 'snow', 'ocean']) {

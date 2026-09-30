@@ -42,6 +42,7 @@
         posterUrl:movie.info.posterUrl || '', overview:movie.info.overview || '',
         tmdbId:movie.info.tmdbId || movie.tmdbId || null,
         tmdbVoteAverage:movie.info.tmdbVoteAverage ?? null,
+        tmdbScoreSourceKey:movie.info.tmdbScoreSourceKey ?? null,
         doubanId:movie.info.doubanId || movie.doubanId || null
       },
       personal:{
