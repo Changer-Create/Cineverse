@@ -377,9 +377,9 @@
         .radar-score-row{gap:5px!important;margin-top:8px!important}
         .radar-score-box{padding:6px!important}
         .radar-score-box b{font-size:var(--text-card)!important}
-        .radar-reason{min-height:48px!important;margin-top:8px!important;font-size:var(--text-body)!important;line-height:var(--leading-body)!important}
+        .radar-reason{min-height:48px!important;margin-top:8px!important;font-size:var(--text-body)!important;line-height:1.75!important}
         .radar-card-actions{gap:5px!important;margin-top:8px!important}
-        .radar-card-actions button{padding:6px 4px!important;font-size:var(--text-body)!important}
+        .radar-card-actions button{padding:6px 4px!important;font-size:var(--text-control)!important}
       }
       @media (max-width:1180px) and (min-width:761px){
         .radar-page-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}

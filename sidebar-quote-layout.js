@@ -32,8 +32,8 @@
           .sidebar .brand{padding-bottom:16px!important}
           .sidebar .nav{gap:4px!important}
           .sidebar .nav a{
-            font-size:var(--text-body)!important;
-            line-height:var(--leading-body)!important;
+            font-size:var(--text-control)!important;
+            line-height:var(--leading-control)!important;
             gap:9px!important;
             padding:8px 11px!important;
             border-radius:12px!important;
@@ -66,15 +66,15 @@
         }
         #sidebarQuoteCard .quote-credit{margin-top:7px!important}
         #sidebarQuoteCard .quote-actions{margin-top:8px!important;flex-wrap:wrap}
-        #sidebarQuoteCard .quote-action{font-size:var(--text-body)!important;padding:4px 7px!important}
+        #sidebarQuoteCard .quote-action{font-size:var(--text-control)!important;padding:4px 7px!important}
         @media (min-width:981px) and (max-height:800px){
           .sidebar .brand{padding-bottom:12px!important}
           .sidebar .nav{gap:3px!important}
-          .sidebar .nav a{font-size:var(--text-body)!important;padding:7px 10px!important}
+          .sidebar .nav a{font-size:var(--text-control)!important;padding:7px 10px!important}
           .sidebar .nav .ico{font-size:13px!important}
           #sidebarQuoteCard{padding:12px 13px 11px!important}
-          #sidebarQuoteCard .quote-text{font-size:var(--text-caption)!important;line-height:var(--leading-caption)!important}
-          #sidebarQuoteCard .quote-credit{font-size:var(--text-caption)!important;margin-top:5px!important}
+          #sidebarQuoteCard .quote-text{font-size:var(--text-body)!important;line-height:var(--leading-caption)!important}
+          #sidebarQuoteCard .quote-credit{font-size:var(--text-micro)!important;margin-top:5px!important}
           #sidebarQuoteCard .quote-actions{margin-top:6px!important}
         }
       `;

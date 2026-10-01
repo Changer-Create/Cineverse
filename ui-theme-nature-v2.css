@@ -374,7 +374,8 @@ body[data-ui-theme="ocean"] .theme-preset.active{border-color:var(--line-bright)
 body[data-ui-theme="snow"]{
   --panel-rgb:244,250,255;
   --daylight-heading:#102945;
-  --daylight-muted:#4f6984;
+  --daylight-muted:#455d76;
+  --muted:#455d76!important;
   --daylight-subtle:#617a92;
   --daylight-accent:#145b98;
   --daylight-gold:#765108;

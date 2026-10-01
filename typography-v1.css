@@ -1,20 +1,24 @@
 /* Shared text roles. Keep browser font preferences and display font families. */
 :root {
   font-size:100%;
-  --text-caption:.875rem;
-  --text-body:1rem;
-  --text-card:1.125rem;
-  --text-section:1.25rem;
+  --text-micro:.875rem;
+  --text-caption:1rem;
+  --text-control:1rem;
+  --text-body:1.125rem;
+  --text-card:1.25rem;
+  --text-section:1.375rem;
   --text-dialog:1.5rem;
+  --text-display:1.5rem;
   --text-page:2rem;
   --text-metric:2rem;
   --leading-caption:1.5;
-  --leading-body:1.6;
+  --leading-body:1.65;
+  --leading-control:1.5;
   --leading-title:1.35;
   --leading-metric:1.2;
 }
 body {font-size:var(--text-body);line-height:var(--leading-body);font-weight:400}
-button,input,select,textarea {font-family:inherit;font-size:var(--text-body);line-height:var(--leading-body)}
+button,input,select,textarea {font-family:inherit;font-size:var(--text-control);line-height:var(--leading-control)}
 button {font-weight:500}
 small {font-size:var(--text-caption);line-height:var(--leading-caption)}
 h1,h2 {font-size:var(--text-page);line-height:var(--leading-title)}
@@ -27,20 +31,21 @@ html body :is(.lib-title,.movie-title,.radar-result-title,.cv-global-search-titl
 html body :is(.lib-meta,.media-type-pill,.lib-tag,.library-score-box span,.radar-result-meta,.cv-global-search-meta,.cv-global-search-kind,.plan-rich-director,.plan-rich-runtime,.stats-summary-card span,.stats-summary-card small,.chart-legend,.stats-month-col>span,.rank-row b,.stats-film-row span,.quote-text,.quote-credit,.movie-account-syncstate) {
   font-size:var(--text-caption);line-height:var(--leading-caption);
 }
-html body :is(.stats-summary-card b,.lib-mini-stat b,.plan-page-stat b,.stat-card b,.rating-donut-center b,.month-insight-metric-v3 strong,.stat b,.ops-kpi b) {
+html body :is(.radar-page-stat b,.stats-summary-card b,.lib-mini-stat b,.plan-page-stat b,.stat-card b,.rating-donut-center b,.month-insight-metric-v3 strong,.stat b,.ops-kpi b) {
   font-size:var(--text-metric);line-height:var(--leading-metric);font-weight:650;
 }
-html body :is(.plan-rich-title,.calendar-week span,.plan-day-number,.rank-row>span,.radar-reason,.random-quote,.detail-overview,.stats-summary-copy,.profile-name,.movie-account-email) {
-  font-size:var(--text-body);line-height:var(--leading-body);
-}
+html body :is(.calendar-week span,.plan-day-number) {font-size:var(--text-control);line-height:var(--leading-control)}
+html body :is(.rank-row>span,.profile-name,.movie-account-email) {font-size:var(--text-caption);line-height:var(--leading-caption)}
+html body :is(.radar-reason,.random-quote,.detail-overview,.stats-summary-copy) {font-size:var(--text-body);line-height:var(--leading-body)}
 html body :is(.random-quote,.detail-overview,.stats-summary-copy) {line-height:1.75}
 html body :is(.modal-head h3,.movie-account-head h3,.cv-feedback-head h3) {font-size:var(--text-dialog);line-height:var(--leading-title)}
 html body :is(.panel-head h2,.brand h1,.brand b) {font-size:var(--text-section)}
-html body .nav a {font-size:var(--text-body);line-height:var(--leading-body);min-height:44px}
-html body :is(button,input,select,textarea) {font-size:var(--text-body)}
+html body .nav a {font-size:var(--text-control);line-height:var(--leading-control);min-height:44px}
+html body :is(button,input,select,textarea) {font-size:var(--text-control)}
 html body :is(.quote-action,.sync-state,.eyebrow,.cv-feedback-kicker,.movie-account-kicker) {font-size:var(--text-caption)}
 html body :is(.stat-label,.detail-score-label) {font-size:var(--text-caption);line-height:var(--leading-caption)}
-html body :is(.match-source-title b,.match-source-original,.quick-watch-copy b,.watch-feed-main b,.rewatch-item b,.watch-feed-score strong) {font-size:var(--text-card);line-height:var(--leading-title)}
+html body :is(.match-source-title b,.match-candidate-copy b,.quick-watch-copy b,.watch-feed-main b,.rewatch-item b,.watch-feed-score strong) {font-size:var(--text-card);line-height:var(--leading-title)}
+html body :is(.match-source-original,.match-source-meta,.match-candidate-copy span,.tmdb-kind) {font-size:var(--text-caption);line-height:var(--leading-caption)}
 html body :is(.detail-score,.watch-stat b,.match-stat b) {font-size:var(--text-metric);line-height:var(--leading-metric)}
 html body .watch-feed-note {font-size:var(--text-body);line-height:var(--leading-body)}
 html.cineverse-app #homeView .month-top-score-v3 strong {font-size:var(--text-card);line-height:var(--leading-title)}
@@ -70,7 +75,7 @@ html.cineverse-app #libraryGrid .lib-title {font-size:var(--text-card);line-heig
 html.cineverse-app #libraryGrid .lib-meta {display:block;max-height:none;overflow:visible;white-space:normal;-webkit-line-clamp:unset}
 html.cineverse-app #libraryGrid :is(.lib-tags,.library-score-box b) {height:auto;max-height:none;overflow:visible;white-space:normal;flex-wrap:wrap}
 html.cineverse-app #libraryGrid .lib-actions {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
-html.cineverse-app #libraryGrid .lib-actions>* {height:auto!important;min-height:40px;white-space:normal;padding:7px 9px!important;font-size:var(--text-body)!important;line-height:var(--leading-body)}
+html.cineverse-app #libraryGrid .lib-actions>* {height:auto!important;min-height:40px;white-space:normal;padding:7px 9px!important;font-size:var(--text-control)!important;line-height:var(--leading-control)}
 html.cineverse-app #libraryGrid.list-view .lib-card {grid-template-columns:70px minmax(0,1fr);gap:12px}
 html.cineverse-app #libraryGrid.list-view :is(.lib-rating,.lib-tags,.lib-actions) {display:grid;grid-column:2;min-width:0}
 html.cineverse-app :is(.library-toolbar,.library-page-controls,.library-head,.radar-title-row,.plan-title-row,.plan-toolbar,.stats-title-row,.stats-card-head,.panel-head,.plan-panel-head,.detail-actions,.watched-actions) {height:auto;flex-wrap:wrap;min-width:0}
@@ -97,7 +102,7 @@ html.cineverse-app #planView :is(.plan-rich-director,.plan-rich-runtime) {font-s
 html.cineverse-app #planView .plan-list-row {grid-template-columns:minmax(0,1fr) 160px 150px;align-items:start}
 html.cineverse-app #planView .plan-row-actions {grid-column:1/-1;justify-content:flex-start;flex-wrap:wrap}
 /* Charts retain twelve months and own only horizontal overflow. */
-html.cineverse-app #statsView .stats-summary {grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))}
+html.cineverse-app #statsView .stats-summary {grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
 html.cineverse-app #statsView .stats-layout {grid-template-columns:minmax(0,1fr)}
 html.cineverse-app #statsView .stats-side {grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
 html.cineverse-app #statsView .stats-card:has(.stats-month-chart)>.stats-card-body {overflow-x:auto}
@@ -153,4 +158,52 @@ body[data-ui-theme="snow"] :is(.stats-card,.lib-card,.movie-modal) {background:v
   html body :is(.cv-global-search-action,.batch-tmdb-candidate button) {grid-column:1/-1}
   html body :is(.tool-btn,.library-page-controls button,.radar-card-actions button,.plan-row-actions button,.settings-card button) {min-height:44px}
   html.cineverse-app :is(.random-content,.rating-donut-wrap,.detail-hero,.watched-record) {grid-template-columns:minmax(0,1fr)}
+}
+
+/* Round two: every normal reading role is at least caption; micro is opt-in. */
+html body :is(.radar-page-stat span,.radar-page-stat small,.plan-page-stat span,.plan-page-stat small,.lib-mini-stat span,.stats-summary-card span,.stats-summary-card small,.stat-label,.stat-note,.detail-fact,.detail-side-meta,.watch-date,.watch-copy .venue,.stats-insight span,.stats-insight small,.donut-legend-row,.chart-legend,.stats-month-bars em,.rank-row>span,.rank-row b,.setting-copy span,.modal-field label,.movie-auth-status,.cv-feedback-status,.cv-feedback-note,.cv-feedback-diagnostics,.manual-filter-empty,.cv-global-search-status) {
+  font-size:var(--text-caption);line-height:var(--leading-caption);color:var(--muted);
+}
+html.cineverse-app #radarView .radar-page-stat b {font-size:var(--text-metric);line-height:var(--leading-metric)}
+html.cineverse-app :is(#homeView .stat-value,#libraryView .lib-mini-stat b,#planView .plan-page-stat b,#statsView .stats-summary-card b) {font-size:var(--text-metric);line-height:var(--leading-metric)}
+html.cineverse-app :is(#homeView .recent-metric strong,#libraryView .library-score-box b,#radarView .radar-score-box b,#planView .plan-rich-title,#detailView .watch-rating,#statsView .stats-film-row strong) {font-size:var(--text-card);line-height:var(--leading-title)}
+html.cineverse-app :is(#homeView .random-quote,#homeView .quote-text,#radarView .radar-reason,#detailView #detailOverview,#detailView .watch-copy,#statsView .stats-summary-copy,#matchView .match-source-reason) {font-size:var(--text-body);line-height:1.75;color:var(--text)}
+html body :is(.movie-account-head p,.cv-feedback-head p,.library-scheme-dialog-body p,.batch-tmdb-intro) {font-size:var(--text-body);line-height:var(--leading-body)}
+/* The random feature title keeps its existing display size. */
+html.cineverse-app #homeView #randomTitle {font-size:var(--text-display);line-height:var(--leading-title)}
+html.cineverse-app #homeView :is(.random-meta,.random-facts strong) {font-size:var(--text-caption);line-height:var(--leading-caption)}
+html.cineverse-app :is(#homeView .movie-name,#homeView #randomPublicScore,#homeView .month-top-title-v3,#planView .plan-list-movie b) {font-size:var(--text-card);line-height:var(--leading-title)}
+html body :is(.profile .name,.profile .role,.movie-account-email,.movie-account-syncstate) {font-size:var(--text-caption);line-height:var(--leading-caption)}
+html body :is(textarea,.bulk-title-textarea) {font-size:var(--text-body);line-height:var(--leading-body)}
+html body :is(#libraryDoubanImportDialog,#libraryDeleteDialog) h3 {font-size:var(--text-dialog);line-height:var(--leading-title)}
+html body dialog h3 {font-size:var(--text-dialog);line-height:var(--leading-title)}
+html body :is(.cv-feedback-input,.cv-feedback-select,.cv-feedback-file) {font-size:var(--text-control);line-height:var(--leading-control)}
+html body :is(.manual-filter-option,.watch-history-pager button,.watch-record-edit-btn,.library-status-display) {font-size:var(--text-control);line-height:var(--leading-control);min-height:40px}
+html body .manual-filter-option {white-space:normal;overflow-wrap:anywhere;overflow:visible}
+html.cineverse-app #planView .plan-calendar-scroll>:is(.calendar-week,.plan-calendar) {min-width:1260px}
+html.cineverse-app #planView :is(.plan-rich-director,.plan-rich-runtime) {font-size:var(--text-caption);line-height:var(--leading-caption);color:var(--muted)}
+html.cineverse-app :is(.radar-page-stats,.library-summary,.plan-page-stats,.stats-summary,#statsRow) {grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr))}
+html.cineverse-app #detailView :is(.watch-entry,.watch-copy,.watch-record-actions) {height:auto;max-height:none;overflow:visible;min-width:0}
+html.cineverse-app #detailView .watch-entry {grid-template-columns:100px minmax(0,1fr) auto;align-items:start}
+html.cineverse-app #detailView .watch-record-actions {flex-wrap:wrap;min-width:0;max-width:100%}
+html.cineverse-app #detailView .watch-record-actions button {height:auto;min-height:40px;padding:8px}
+/* Sources only: ordinary help, errors, tags and stat notes never use micro. */
+html.cineverse-app #sidebarQuoteCard .quote-credit,
+html.cineverse-app .quote-source-credit,
+html.cineverse-app #detailView .detail-public-source {
+  font-size:var(--text-micro);line-height:var(--leading-caption);color:var(--muted);
+}
+/* Opaque reading panels prevent theme wallpaper from lowering text contrast. */
+html body button:not(:is(.icon-btn,.fav-star,.library-delete-btn,.plan-day-add,.modal-close,.movie-account-close,.cv-feedback-close,.library-douban-modal-close)) {min-height:40px}
+body[data-ui-theme="snow"] :is(.radar-page-stat,.stats-summary-card,.stats-card,.lib-card,.movie-modal,.movie-account-body,.cv-feedback-body,.manual-filter-menu,.cv-global-search-drop) {
+  background-color:rgb(244,250,255)!important;background-image:none!important;color:var(--text);
+}
+body[data-ui-theme="snow"] :is(.radar-page-stat small,.radar-page-stat span,.stats-card small,.stats-card span,.lib-meta,.library-score-box span,.modal-field label,.cv-feedback-note,.movie-cloud-note) {color:var(--muted)!important}
+@media(max-width:680px) {
+  html body button:not(:is(.icon-btn,.fav-star,.library-delete-btn,.plan-day-add,.modal-close,.movie-account-close,.cv-feedback-close,.library-douban-modal-close)) {min-height:44px}
+  html.cineverse-app #detailView .watch-entry {grid-template-columns:minmax(0,1fr)}
+  html.cineverse-app #detailView .watch-record-actions {justify-self:start;width:auto}
+  html.cineverse-app #detailView .detail-watch-grid {grid-template-columns:minmax(0,1fr)}
+  html.cineverse-app #detailView .detail-watch-grid>* {grid-column:1;grid-row:auto;min-width:0}
+  html body :is(.watch-record-actions button,.manual-filter-option,.watch-history-pager button) {min-height:44px}
 }

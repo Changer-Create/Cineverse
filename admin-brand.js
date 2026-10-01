@@ -46,7 +46,7 @@
     .brand-admin-grid{display:grid;grid-template-columns:minmax(220px,.7fr) minmax(320px,1.3fr);gap:22px;align-items:start}
     .brand-admin-preview{display:grid;gap:12px}.brand-preview-card{min-height:330px;border:1px solid rgba(166,182,255,.14);border-radius:18px;background:linear-gradient(180deg,rgba(7,14,32,.94),rgba(8,17,38,.82));display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center}
     .brand-preview-card img{width:138px;height:138px;object-fit:cover;border-radius:50%;border:1px solid rgba(245,198,108,.28);box-shadow:0 16px 40px rgba(0,0,0,.32);background:#030714;margin-bottom:18px}
-    .brand-preview-card b{font-size:var(--text-body);letter-spacing:.06em}.brand-preview-card span{color:#7f8aaa;font-size:var(--text-caption);margin-top:5px}
+    .brand-preview-card b{font-size:var(--text-body);letter-spacing:.06em}.brand-preview-card span{color:var(--muted);font-size:var(--text-caption);margin-top:5px}
     .brand-admin-form{display:grid;gap:14px}.brand-admin-form .field input{width:100%}.brand-file-actions,.brand-save-actions{display:flex;gap:9px;flex-wrap:wrap}.brand-file-actions .btn{display:inline-flex;align-items:center}
     .brand-admin-status{min-height:18px;color:#8edbb6;font-size:var(--text-body)}.brand-admin-status.error{color:#ff9bae}
     @media(max-width:850px){.brand-admin-grid{grid-template-columns:1fr}.brand-preview-card{min-height:260px}}
