@@ -83,10 +83,9 @@
     const style = document.createElement('style');
     style.id = 'libraryFilterSystemStyleV1';
     style.textContent = `
-      #libraryView .library-filter-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px;align-items:start}
+      #libraryView .library-filter-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;margin-bottom:10px;align-items:start}
       #libraryView .library-tools{position:relative}
-      #libraryView .library-filter-top{padding-right:108px}
-      #libraryView .library-filter-toggle{position:absolute;right:10px;top:27px;height:38px;padding:0 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:var(--text-body)}
+      #libraryView .library-filter-toggle{position:static;justify-self:end;margin-top:calc(1.6em + 5px);min-height:40px;padding:8px 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:var(--text-body)}
       #libraryView .library-filter-toggle:hover{border-color:rgba(159,124,255,.5);color:#fff}
       #libraryView .filter-grid.library-filter-collapsed{display:none}
       #libraryView .library-toolbar.library-action-strip{margin-top:10px;padding:10px 12px;border:1px solid rgba(161,179,255,.14);border-radius:15px;background:rgba(8,18,42,.62)}
@@ -137,7 +136,7 @@
       .plan-filter-day:hover{background:rgba(159,124,255,.08);color:#fff}
       .plan-filter-day.active{border-color:rgba(98,210,162,.32);background:rgba(98,210,162,.1);color:#bcebd5}
       .plan-filter-day.placeholder{pointer-events:none;opacity:0}
-      @media(max-width:1180px){#libraryView .library-filter-top{grid-template-columns:1fr}#libraryView .filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+      @media(max-width:1180px){#libraryView .library-filter-top{grid-template-columns:1fr}#libraryView .library-filter-toggle{margin-top:0}#libraryView .filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
       @media(max-width:760px){#libraryView .filter-operation-row{grid-template-columns:repeat(3,1fr)}#libraryView .filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     `;
     document.head.appendChild(style);
@@ -173,7 +172,7 @@
   grid.classList.add('library-filter-collapsed');
   filterToggle.setAttribute('aria-expanded', 'false');
   filterToggle.textContent = '展开筛选 ▾';
-  tools.appendChild(filterToggle);
+  top.appendChild(filterToggle);
   filterToggle.addEventListener('click', () => {
     const expanded = grid.classList.toggle('library-filter-collapsed') === false;
     filterToggle.setAttribute('aria-expanded', String(expanded));

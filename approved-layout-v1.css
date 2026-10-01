@@ -149,7 +149,7 @@
 #homeView #watched .recent-metric strong {
   margin-top: 4px;
   color: #dce4f4;
-  font-size:var(--text-body);
+  font-size:var(--text-card);
   font-weight: 600;
 }
 
@@ -415,7 +415,7 @@
   #homeView #watched .recent .t { font-size:var(--text-card); }
   #homeView #watched .recent-creator,
   #homeView #watched .recent-metric span { font-size:var(--text-caption); }
-  #homeView #watched .recent-metric strong { font-size:var(--text-body); }
+  #homeView #watched .recent-metric strong { font-size:var(--text-card); }
 
   #homeView .random-panel {
     display: flex;
