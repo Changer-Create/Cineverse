@@ -197,7 +197,7 @@
         min-height:150px;
         padding:12px;
         color:#7783a1;
-        font-size:12px;
+        font-size:var(--text-body);
         text-align:center;
         background:radial-gradient(circle at 50% 38%,rgba(159,124,255,.12),transparent 44%);
       }
@@ -211,7 +211,7 @@
       }
       #homeView .month-top-kicker-v3{
         color:#8995b4;
-        font-size:10px;
+        font-size:var(--text-caption);
         letter-spacing:.06em;
         margin-bottom:8px;
       }
@@ -219,8 +219,8 @@
         width:100%;
         color:#f7f3ff;
         font-family:"Songti SC","STSong","SimSun",serif;
-        font-size:clamp(20px,2vw,30px);
-        line-height:1.25;
+        font-size:var(--text-dialog);
+        line-height:var(--leading-title);
         font-weight:650;
         word-break:break-word;
         overflow:visible;
@@ -236,19 +236,19 @@
       #homeView .month-top-director-v3 span,
       #homeView .month-top-score-v3 span{
         color:#74809d;
-        font-size:9px;
+        font-size:var(--text-caption);
       }
       #homeView .month-top-director-v3 strong{
         color:#b8c1d9;
-        font-size:11px;
-        line-height:1.55;
+        font-size:var(--text-caption);
+        line-height:var(--leading-caption);
         font-weight:500;
         white-space:normal;
         word-break:break-word;
       }
       #homeView .month-top-score-v3 strong{
         color:#f5c66c;
-        font:600 22px Georgia,"Times New Roman",serif;
+        font:600 var(--text-body) Georgia,"Times New Roman",serif;
       }
       #homeView .month-insight-metrics-v3{
         min-height:78px;
@@ -273,16 +273,16 @@
       }
       #homeView .month-insight-metric-v3 strong{
         color:#f3f1fb;
-        font:600 24px Georgia,"Times New Roman",serif;
-        line-height:1;
+        font:600 var(--text-body) Georgia,"Times New Roman",serif;
+        line-height:var(--leading-body);
       }
       #homeView .month-insight-metric-v3 span{
         color:#8792ad;
-        font-size:10px;
+        font-size:var(--text-caption);
       }
       @media(max-width:520px){
         #homeView .month-top-work-v3{grid-template-columns:minmax(92px,38%) minmax(0,1fr);gap:12px;padding:11px}
-        #homeView .month-top-title-v3{font-size:19px}
+        #homeView .month-top-title-v3{font-size:var(--text-dialog)}
         #homeView .month-top-director-v3,#homeView .month-top-score-v3{margin-top:10px}
       }
     `;

@@ -249,7 +249,7 @@
       #detailWatchList .watch-record-edit-btn{
         min-width:48px;height:30px;padding:0 10px;display:inline-grid;place-items:center;flex:0 0 auto;
         border:1px solid rgba(161,179,255,.18);border-radius:9px;
-        background:rgba(15,29,63,.7);color:#b9c5df;font-size:11px;line-height:1;
+        background:rgba(15,29,63,.7);color:#b9c5df;font-size:var(--text-body);line-height:var(--leading-body);
         transition:.16s ease;margin:0;
       }
       #detailWatchList .watch-record-actions [data-delete-watch]{

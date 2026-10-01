@@ -105,8 +105,8 @@
 
 #homeView #watched .recent-identity { min-width: 0; }
 #homeView #watched .recent .t {
-  font-size: 11px;
-  line-height: 1.3;
+  font-size:var(--text-card);
+  line-height:var(--leading-title);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -118,7 +118,7 @@
   margin-top: 5px;
   min-width: 0;
   color: #7f8caa;
-  font-size: 8px;
+  font-size:var(--text-body);
 }
 
 #homeView #watched .recent-creator span {
@@ -143,13 +143,13 @@
 
 #homeView #watched .recent-metric span {
   color: #7784a3;
-  font-size: 8px;
+  font-size:var(--text-caption);
 }
 
 #homeView #watched .recent-metric strong {
   margin-top: 4px;
   color: #dce4f4;
-  font-size: 10px;
+  font-size:var(--text-body);
   font-weight: 600;
 }
 
@@ -218,8 +218,8 @@
   flex: 1 1 auto;
   margin: 8px 0;
   overflow: auto;
-  font-size: 11px;
-  line-height: 1.65;
+  font-size:var(--text-body);
+  line-height:var(--leading-body);
 }
 
 #homeView .random-panel .random-actions {
@@ -244,16 +244,16 @@
 }
 #homeView .random-facts span {
   color: #74809d;
-  font-size: 8px;
+  font-size:var(--text-caption);
 }
 #homeView .random-facts strong {
   margin-top: 3px;
   color: #dbe3f2;
-  font-size: 10px;
+  font-size:var(--text-body);
   font-weight: 500;
-  line-height: 1.45;
+  line-height:var(--leading-body);
 }
-#homeView .random-facts .public { color: var(--gold); font-size: 15px; }
+#homeView .random-facts .public { color: var(--gold); font-size:var(--text-card); }
 
 @media (max-width: 1180px) {
   #homeView .random-panel .random-content {
@@ -286,7 +286,7 @@
 #statsView .stats-card { height: auto; }
 #statsView .stats-month-chart { min-height: 250px; }
 #statsView .stats-film-row { min-height: 54px; padding: 9px 10px; }
-#statsView .stats-summary-copy { font-size: 10px; line-height: 1.8; }
+#statsView .stats-summary-copy { font-size:var(--text-body); line-height:var(--leading-body); }
 
 @media (max-width: 1300px) {
   #statsView .stats-layout { grid-template-columns: 1fr; }
@@ -412,10 +412,10 @@
   }
 
   #homeView #watched .mini-poster { width: 64px; }
-  #homeView #watched .recent .t { font-size: 14px; }
+  #homeView #watched .recent .t { font-size:var(--text-card); }
   #homeView #watched .recent-creator,
-  #homeView #watched .recent-metric span { font-size: 10px; }
-  #homeView #watched .recent-metric strong { font-size: 13px; }
+  #homeView #watched .recent-metric span { font-size:var(--text-caption); }
+  #homeView #watched .recent-metric strong { font-size:var(--text-body); }
 
   #homeView .random-panel {
     display: flex;
@@ -438,13 +438,13 @@
     align-self: center;
   }
 
-  #homeView .random-panel .random-title { font-size: 30px; }
+  #homeView .random-panel .random-title { font-size:var(--text-dialog); }
   #homeView .random-panel .random-meta,
-  #homeView .random-panel .random-quote { font-size: 14px; }
+  #homeView .random-panel .random-quote { font-size:var(--text-body); }
   #homeView .random-facts { padding: 20px 22px; }
-  #homeView .random-facts span { font-size: 10px; }
-  #homeView .random-facts strong { font-size: 13px; }
-  #homeView .random-facts .public { font-size: 22px; }
+  #homeView .random-facts span { font-size:var(--text-caption); }
+  #homeView .random-facts strong { font-size:var(--text-body); }
+  #homeView .random-facts .public { font-size:var(--text-card); }
 
   #homeView .home-triple {
     height: 700px;
@@ -459,7 +459,7 @@
 
   #statsView .stats-month-chart { min-height: 380px; }
   #statsView .stats-film-row { min-height: 68px; }
-  #statsView .stats-summary-copy { font-size: 12px; }
+  #statsView .stats-summary-copy { font-size:var(--text-body); }
 
   #settingsView .theme-swatch { height: 110px; }
   #settingsView .wallpaper-preview-v2 { height: 220px; }
@@ -541,16 +541,16 @@ body #libraryGrid:not(.list-view) .lib-card { height:auto!important; }
 
 /* S07: calendar rich cards are rendered by app-main's single calendar entry. */
 #planView .plan-day-chip.plan-rich-card{display:grid;grid-template-columns:34px minmax(0,1fr);gap:7px;align-items:center;min-height:54px;padding:5px;white-space:normal;overflow:hidden;text-overflow:clip}
-#planView .plan-rich-poster{width:34px;height:48px;border-radius:6px;overflow:hidden;background:linear-gradient(155deg,#24335f,#0b132b 62%,#4b355d);border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;color:#9385d9;font-size:11px;flex:0 0 auto}
+#planView .plan-rich-poster{width:34px;height:48px;border-radius:6px;overflow:hidden;background:linear-gradient(155deg,#24335f,#0b132b 62%,#4b355d);border:1px solid rgba(255,255,255,.08);display:grid;place-items:center;color:#9385d9;font-size:var(--text-body);flex:0 0 auto}
 #planView .plan-rich-poster img{width:100%;height:100%;object-fit:cover;display:block}
 #planView .plan-rich-copy{min-width:0;display:grid;gap:2px;align-content:center}
 #planView .plan-rich-title,#planView .plan-rich-director,#planView .plan-rich-runtime{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
-#planView .plan-rich-title{color:#eef1fb;font-size:9.5px;font-weight:650;line-height:1.25}
-#planView .plan-rich-director,#planView .plan-rich-runtime{color:#8f9bb8;font-size:7.5px}
+#planView .plan-rich-title{color:#eef1fb;font-size:var(--text-body);font-weight:650;line-height:var(--leading-body)}
+#planView .plan-rich-director,#planView .plan-rich-runtime{color:#8f9bb8;font-size:var(--text-caption)}
 #planView .plan-day-chip.completed .plan-rich-title{color:#bcebd4}
 #planView .plan-day-chip.deferred .plan-rich-title{color:#efd39c}
-@media (min-width:1800px){#planView .plan-day-chip.plan-rich-card{grid-template-columns:40px minmax(0,1fr);gap:8px;min-height:64px;padding:6px}#planView .plan-rich-poster{width:40px;height:56px}#planView .plan-rich-title{font-size:10px}#planView .plan-rich-director,#planView .plan-rich-runtime{font-size:8px}}
-@media (max-width:980px){#planView .plan-day-chip.plan-rich-card{grid-template-columns:28px minmax(0,1fr);gap:5px;min-height:46px;padding:4px}#planView .plan-rich-poster{width:28px;height:40px}#planView .plan-rich-title{font-size:8.5px}#planView .plan-rich-director,#planView .plan-rich-runtime{font-size:7px}}
+@media (min-width:1800px){#planView .plan-day-chip.plan-rich-card{grid-template-columns:40px minmax(0,1fr);gap:8px;min-height:64px;padding:6px}#planView .plan-rich-poster{width:40px;height:56px}#planView .plan-rich-title{font-size:var(--text-body)}#planView .plan-rich-director,#planView .plan-rich-runtime{font-size:var(--text-caption)}}
+@media (max-width:980px){#planView .plan-day-chip.plan-rich-card{grid-template-columns:28px minmax(0,1fr);gap:5px;min-height:46px;padding:4px}#planView .plan-rich-poster{width:28px;height:40px}#planView .plan-rich-title{font-size:var(--text-body)}#planView .plan-rich-director,#planView .plan-rich-runtime{font-size:var(--text-caption)}}
 
 /* Library, radar and plan follow the document, based on the visible page only. */
 html.cineverse-app:has(#libraryView:not(.hidden), #radarView:not(.hidden), #planView:not(.hidden)) {

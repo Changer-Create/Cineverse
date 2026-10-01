@@ -86,13 +86,13 @@
       #libraryView .library-filter-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px;align-items:start}
       #libraryView .library-tools{position:relative}
       #libraryView .library-filter-top{padding-right:108px}
-      #libraryView .library-filter-toggle{position:absolute;right:10px;top:27px;height:38px;padding:0 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:11px}
+      #libraryView .library-filter-toggle{position:absolute;right:10px;top:27px;height:38px;padding:0 13px;border-radius:11px;border:1px solid rgba(159,124,255,.28);background:rgba(91,67,170,.12);color:#d9d2f4;font-size:var(--text-body)}
       #libraryView .library-filter-toggle:hover{border-color:rgba(159,124,255,.5);color:#fff}
       #libraryView .filter-grid.library-filter-collapsed{display:none}
       #libraryView .library-toolbar.library-action-strip{margin-top:10px;padding:10px 12px;border:1px solid rgba(161,179,255,.14);border-radius:15px;background:rgba(8,18,42,.62)}
       #libraryView .library-filter-top .filter-cell{min-width:0;margin:0}
       #libraryView .filter-operation-row{display:grid;grid-template-columns:repeat(3,minmax(62px,.72fr)) minmax(84px,1fr) minmax(54px,.62fr) minmax(76px,.82fr);gap:6px}
-      #libraryView .filter-operation-row button{height:38px;min-width:0;border-radius:11px;border:1px solid rgba(156,169,218,.14);background:rgba(11,22,50,.72);color:#aeb8d1;font-size:10px;padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.18s ease}
+      #libraryView .filter-operation-row button{height:38px;min-width:0;border-radius:11px;border:1px solid rgba(156,169,218,.14);background:rgba(11,22,50,.72);color:#aeb8d1;font-size:var(--text-body);padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.18s ease}
       #libraryView .filter-operation-row button:hover{border-color:rgba(159,124,255,.34);color:#f0edff;background:rgba(159,124,255,.07)}
       #libraryView .filter-scheme-slot.saved{color:#cfc6ff;border-color:rgba(159,124,255,.28);background:rgba(112,83,217,.1)}
       #libraryView .filter-scheme-slot.selected{box-shadow:0 0 0 2px rgba(159,124,255,.12) inset;border-color:rgba(159,124,255,.55);color:#fff}
@@ -105,7 +105,7 @@
       #libraryView .filter-grid .manual-filter-input-wrap,#libraryView .filter-grid .rating-filter-row{min-width:0;height:38px}
       #libraryView .filter-grid .manual-filter-input-wrap>input,#libraryView .filter-grid .filter-cell>input,#libraryView .filter-grid .rating-filter-row input{height:38px!important}
       #libraryView .filter-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px;height:25px}
-      #libraryView .filter-mode-btn{height:25px;border-radius:8px;border:1px solid rgba(156,169,218,.14);background:rgba(255,255,255,.025);color:#8791ac;font-size:10px;padding:0 6px;transition:.18s ease}
+      #libraryView .filter-mode-btn{height:25px;border-radius:8px;border:1px solid rgba(156,169,218,.14);background:rgba(255,255,255,.025);color:#8791ac;font-size:var(--text-body);padding:0 6px;transition:.18s ease}
       #libraryView .filter-mode-btn:hover{border-color:rgba(159,124,255,.27);color:#c9c3df;background:rgba(159,124,255,.055)}
       #libraryView .filter-mode-btn.include.active,#libraryView .filter-mode-btn.rating-gte.active,#libraryView .filter-mode-btn.sort-desc.active{border-color:rgba(98,210,162,.36);background:rgba(98,210,162,.1);color:#a7e8ca}
       #libraryView .filter-mode-btn.exclude.active,#libraryView .filter-mode-btn.rating-lt.active,#libraryView .filter-mode-btn.sort-asc.active{border-color:rgba(255,127,154,.32);background:rgba(255,127,154,.09);color:#d98d9e}
@@ -118,7 +118,7 @@
       #favoriteFilterBtn.active{color:#f2ce80;border-color:rgba(245,198,108,.42);background:rgba(245,198,108,.1);box-shadow:0 0 18px rgba(245,198,108,.06)}
       #libraryFilterSchemeDialog{width:min(420px,calc(100vw - 28px));padding:0;border:1px solid rgba(159,124,255,.28);border-radius:18px;background:linear-gradient(160deg,#101b3b,#081126);color:#eef2ff;box-shadow:0 28px 80px rgba(0,0,0,.52)}
       #libraryFilterSchemeDialog::backdrop{background:rgba(2,6,17,.72);backdrop-filter:blur(6px)}
-      .library-scheme-dialog-body{padding:22px}.library-scheme-dialog-body h3{margin:0 0 6px;font-size:19px}.library-scheme-dialog-body p{margin:0 0 16px;color:#8f9ab7;font-size:11px}.library-scheme-dialog-body label{display:block;margin-bottom:7px;color:#aeb8d1;font-size:11px}.library-scheme-dialog-body input{width:100%;height:42px;border:1px solid rgba(161,179,255,.2);border-radius:11px;background:rgba(5,14,34,.78);color:#fff;padding:0 12px;outline:none}.library-scheme-dialog-body input:focus{border-color:rgba(159,124,255,.55);box-shadow:0 0 0 3px rgba(159,124,255,.09)}.library-scheme-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.library-scheme-dialog-actions button{height:36px;padding:0 14px;border-radius:10px;border:1px solid rgba(161,179,255,.18);background:rgba(18,30,64,.72);color:#dce2f5}.library-scheme-dialog-actions .primary{border-color:rgba(159,124,255,.4);background:rgba(101,76,211,.55);color:#fff}
+      .library-scheme-dialog-body{padding:22px}.library-scheme-dialog-body h3{margin:0 0 6px;font-size:var(--text-dialog)}.library-scheme-dialog-body p{margin:0 0 16px;color:#8f9ab7;font-size:var(--text-body)}.library-scheme-dialog-body label{display:block;margin-bottom:7px;color:#aeb8d1;font-size:var(--text-body)}.library-scheme-dialog-body input{width:100%;height:42px;border:1px solid rgba(161,179,255,.2);border-radius:11px;background:rgba(5,14,34,.78);color:#fff;padding:0 12px;outline:none}.library-scheme-dialog-body input:focus{border-color:rgba(159,124,255,.55);box-shadow:0 0 0 3px rgba(159,124,255,.09)}.library-scheme-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.library-scheme-dialog-actions button{height:36px;padding:0 14px;border-radius:10px;border:1px solid rgba(161,179,255,.18);background:rgba(18,30,64,.72);color:#dce2f5}.library-scheme-dialog-actions .primary{border-color:rgba(159,124,255,.4);background:rgba(101,76,211,.55);color:#fff}
       .plan-filter-calendar-system-v1{position:fixed;z-index:10020;width:min(344px,calc(100vw - 20px));padding:12px;border:1px solid rgba(133,151,205,.32);border-radius:15px;background:#0b1734;color:#eef2ff;box-shadow:0 22px 60px rgba(0,0,0,.48);display:none}
       .plan-filter-calendar-system-v1.open{display:block}
       .plan-filter-calendar-head{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:7px;align-items:center}
@@ -128,12 +128,12 @@
       .plan-filter-calendar-actions .year-only{border-color:rgba(98,210,162,.24);color:#a9e6ca;background:rgba(98,210,162,.07)}
       .plan-filter-calendar-actions .clear{padding:0 12px;color:#c4a6ae}
       .plan-filter-months{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
-      .plan-filter-month{height:30px;border-radius:8px;border:1px solid rgba(156,169,218,.12);background:rgba(255,255,255,.025);color:#aeb8d2;font-size:11px}
+      .plan-filter-month{height:30px;border-radius:8px;border:1px solid rgba(156,169,218,.12);background:rgba(255,255,255,.025);color:#aeb8d2;font-size:var(--text-body)}
       .plan-filter-month:hover,.plan-filter-month.active{border-color:rgba(159,124,255,.34);background:rgba(159,124,255,.1);color:#efeaff}
       .plan-filter-weekdays,.plan-filter-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-      .plan-filter-weekdays{margin-top:11px;color:#65728f;font-size:9px;text-align:center}
+      .plan-filter-weekdays{margin-top:11px;color:#65728f;font-size:var(--text-body);text-align:center}
       .plan-filter-days{margin-top:5px}
-      .plan-filter-day{height:29px;border-radius:8px;border:1px solid transparent;background:transparent;color:#b7c0d8;font-size:10px}
+      .plan-filter-day{height:29px;border-radius:8px;border:1px solid transparent;background:transparent;color:#b7c0d8;font-size:var(--text-body)}
       .plan-filter-day:hover{background:rgba(159,124,255,.08);color:#fff}
       .plan-filter-day.active{border-color:rgba(98,210,162,.32);background:rgba(98,210,162,.1);color:#bcebd5}
       .plan-filter-day.placeholder{pointer-events:none;opacity:0}

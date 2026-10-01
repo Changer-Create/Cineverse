@@ -54,8 +54,8 @@
         justify-content:center;
         padding:16px;
         color:#8894b3;
-        font-size:11px;
-        line-height:1.7;
+        font-size:var(--text-body);
+        line-height:var(--leading-body);
         text-align:center;
         background:rgba(11,22,49,.24);
       }

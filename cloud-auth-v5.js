@@ -159,17 +159,17 @@
       #movieAccountDialog{width:min(470px,calc(100vw - 28px));border:1px solid rgba(161,179,255,.22);border-radius:22px;background:linear-gradient(155deg,rgba(11,23,52,.985),rgba(6,14,33,.99));color:#f6f3ff;padding:0;box-shadow:0 32px 90px rgba(0,0,0,.55);overflow:hidden}
       #movieAccountDialog::backdrop{background:rgba(2,6,17,.72);backdrop-filter:blur(7px)}
       .movie-account-head{padding:24px 25px 16px;border-bottom:1px solid rgba(161,179,255,.12);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-      .movie-account-kicker{font-size:10px;color:#8b96b3;letter-spacing:.16em}.movie-account-head h3{margin:7px 0 4px;font-size:22px}.movie-account-head p{margin:0;color:#929db9;font-size:12px;line-height:1.7}
+      .movie-account-kicker{font-size:var(--text-caption);color:#8b96b3;letter-spacing:.16em}.movie-account-head h3{margin:7px 0 4px;font-size:var(--text-dialog)}.movie-account-head p{margin:0;color:#929db9;font-size:var(--text-body);line-height:var(--leading-body)}
       .movie-account-close{width:34px;height:34px;border-radius:10px;border:1px solid rgba(161,179,255,.15);background:rgba(255,255,255,.035);color:#cdd4e8}
       .movie-account-body{padding:20px 25px 25px}.movie-auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:rgba(3,10,27,.5);border:1px solid rgba(161,179,255,.12);border-radius:12px;padding:3px;margin-bottom:17px}
       .movie-auth-tab{height:34px;border:0;border-radius:9px;background:transparent;color:#8995b4}.movie-auth-tab.active{background:rgba(111,97,244,.22);color:#fff}
-      .movie-auth-field{margin-top:12px}.movie-auth-field label{display:block;color:#929db9;font-size:11px;margin:0 0 6px}
+      .movie-auth-field{margin-top:12px}.movie-auth-field label{display:block;color:#929db9;font-size:var(--text-body);margin:0 0 6px}
       .movie-auth-input{width:100%;height:43px;border:1px solid rgba(161,179,255,.17);border-radius:12px;background:rgba(6,15,36,.8);outline:0;color:#eef1fb;padding:0 12px}.movie-auth-input:focus{border-color:rgba(159,124,255,.52);box-shadow:0 0 0 3px rgba(159,124,255,.08)}
       .movie-auth-submit{width:100%;height:42px;margin-top:17px;border:1px solid rgba(168,143,255,.35);border-radius:12px;background:linear-gradient(135deg,rgba(111,97,244,.82),rgba(91,75,204,.9));color:#fff;font-weight:600}.movie-auth-submit:disabled{opacity:.55;cursor:wait}
-      .movie-auth-status{min-height:19px;margin-top:10px;color:#919dbb;font-size:11px;line-height:1.6}.movie-auth-status.error{color:#ff9aae}
-      .movie-account-card{border:1px solid rgba(161,179,255,.14);border-radius:16px;background:rgba(13,25,55,.52);padding:16px}.movie-account-email{font-size:14px;color:#f0eff8;word-break:break-all}.movie-account-syncstate{margin-top:6px;color:#8e9ab8;font-size:11px}
+      .movie-auth-status{min-height:19px;margin-top:10px;color:#919dbb;font-size:var(--text-body);line-height:var(--leading-body)}.movie-auth-status.error{color:#ff9aae}
+      .movie-account-card{border:1px solid rgba(161,179,255,.14);border-radius:16px;background:rgba(13,25,55,.52);padding:16px}.movie-account-email{font-size:var(--text-body);color:#f0eff8;word-break:break-all}.movie-account-syncstate{margin-top:6px;color:#8e9ab8;font-size:var(--text-caption)}
       .movie-account-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.movie-account-actions button{height:38px;border-radius:11px;border:1px solid rgba(161,179,255,.17);background:rgba(18,31,67,.75);color:#dce2f5}.movie-account-actions button.primary{border-color:rgba(159,124,255,.32);background:rgba(111,97,244,.25);color:#fff}.movie-account-actions button.danger{color:#ff9aae}.movie-account-actions.has-conflict .danger{grid-column:1/-1}
-      .movie-cloud-note{margin-top:13px;padding:11px 12px;border-radius:11px;background:rgba(100,167,255,.07);color:#8996b6;font-size:10px;line-height:1.7}
+      .movie-cloud-note{margin-top:13px;padding:11px 12px;border-radius:11px;background:rgba(100,167,255,.07);color:#8996b6;font-size:var(--text-caption);line-height:var(--leading-caption)}
       @media(max-width:560px){#movieAccountDialog{width:calc(100vw - 18px)}.movie-account-head,.movie-account-body{padding-left:18px;padding-right:18px}}
     `;
     document.head.appendChild(style);

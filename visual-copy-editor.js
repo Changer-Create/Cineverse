@@ -37,7 +37,7 @@
     .then(({ok,data})=>{
       if(!ok||!data?.valid)throw new Error('invalid');
       const script=document.createElement('script');
-      script.src='visual-copy-editor-core.js';
+      script.src='visual-copy-editor-core.js?v=20261001-type';
       script.dataset.visualCopyEditorCore='1';
       document.head.appendChild(script);
     })
