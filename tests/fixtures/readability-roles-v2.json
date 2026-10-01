@@ -1,0 +1,63 @@
+{
+  "microWhitelist": [
+    "#sidebarQuoteCard .quote-credit",
+    ".quote-source-credit",
+    "#detailView .detail-public-source"
+  ],
+  "home": {
+    "metric": "#statsRow .stat-value",
+    "card": "#recentGrid .recent-metric strong,#randomPublicScore,.movie-name,.month-top-title-v3",
+    "caption": "#recentGrid .recent-metric span",
+    "body": "#randomQuote",
+    "control": "#globalSearch"
+  },
+  "library": {
+    "metric": ".lib-mini-stat b",
+    "card": ".lib-title,.library-score-box b",
+    "caption": ".lib-meta,.lib-tag",
+    "control": "#libNextPage,.filter-operation-row button"
+  },
+  "match": {
+    "metric": ".match-stat b",
+    "card": ".match-source-title b,.match-candidate-copy b",
+    "caption": ".match-source-meta",
+    "body": ".match-source-reason",
+    "control": ".match-item-actions button"
+  },
+  "radar": {
+    "metric": ".radar-page-stat b",
+    "card": ".radar-result-title,.radar-score-box b",
+    "caption": ".radar-page-stat small,.radar-page-stat span,.radar-result-meta",
+    "body": ".radar-reason",
+    "control": ".radar-card-actions button"
+  },
+  "plan": {
+    "metric": ".plan-page-stat b",
+    "card": ".plan-rich-title",
+    "caption": ".plan-rich-director,.plan-rich-runtime",
+    "control": ".calendar-week span,.plan-day-number,#planListBtn"
+  },
+  "stats": {
+    "metric": ".stats-summary-card b",
+    "card": ".stats-film-row b,.stats-film-row strong,.stats-insight b",
+    "caption": ".stats-month-col>span,.chart-legend,.stats-summary-card small,.rank-row>span",
+    "body": ".stats-summary-copy",
+    "control": "#statsYear,#statsCopySummary"
+  },
+  "settings": {
+    "caption": ".setting-copy span",
+    "section": ".settings-card-head h3",
+    "control": "#settingsProfileName,select"
+  },
+  "detail": {
+    "page": "#detailTitle",
+    "metric": "#detailRating",
+    "card": ".watch-rating",
+    "caption": ".detail-fact,.watch-date",
+    "body": "#detailOverview,.watch-copy",
+    "control": ".watch-record-edit-btn,.watch-history-pager button"
+  },
+  "displayExceptions": {
+    "#randomTitle": 24
+  }
+}

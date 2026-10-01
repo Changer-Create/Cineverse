@@ -9,7 +9,7 @@ assert.doesNotMatch(cards,/function decorateActions/);
 assert.doesNotMatch(cards,/proxy\.hidden/);
 assert.match(main,/data-library-delete/);
 assert.match(main,/CineverseLibraryActions\.openWatch/);
-assert.match(runtime,/library-card-system-v2\.css\?v=20261001-type/);
+assert.match(runtime,/library-card-system-v2\.css\?v=20261001-readability-r2/);
 assert.match(runtime,/library-card-system-v1\.js\?v=20261001-scroll/);
 assert.match(css,/--card-surface/);
 assert.match(css,/#libraryGrid \.lib-actions/);

@@ -210,7 +210,7 @@
         padding:4px 0;
       }
       #homeView .month-top-kicker-v3{
-        color:#8995b4;
+        color:var(--muted);
         font-size:var(--text-caption);
         letter-spacing:.06em;
         margin-bottom:8px;
@@ -235,11 +235,11 @@
       }
       #homeView .month-top-director-v3 span,
       #homeView .month-top-score-v3 span{
-        color:#74809d;
+        color:var(--muted);
         font-size:var(--text-caption);
       }
       #homeView .month-top-director-v3 strong{
-        color:#b8c1d9;
+        color:var(--muted);
         font-size:var(--text-caption);
         line-height:var(--leading-caption);
         font-weight:500;
@@ -277,7 +277,7 @@
         line-height:var(--leading-body);
       }
       #homeView .month-insight-metric-v3 span{
-        color:#8792ad;
+        color:var(--muted);
         font-size:var(--text-caption);
       }
       @media(max-width:520px){

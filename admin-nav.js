@@ -40,7 +40,7 @@
   const style=document.createElement('style');
   style.id='adminNavigationStyle';
   style.textContent=`
-    .nav-admin-help{margin-bottom:14px;color:#8792af;font-size:var(--text-body);line-height:var(--leading-body)}
+    .nav-admin-help{margin-bottom:14px;color:#8792af;font-size:var(--text-control);line-height:var(--leading-control)}
     .nav-sort-list{display:grid;gap:9px;max-width:720px}
     .nav-sort-row{display:grid;grid-template-columns:38px 38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:11px 12px;border:1px solid rgba(166,182,255,.14);border-radius:13px;background:rgba(255,255,255,.022);transition:.16s ease;user-select:none}
     .nav-sort-row:hover{border-color:rgba(159,124,255,.32);background:rgba(159,124,255,.045)}
@@ -49,7 +49,7 @@
     .nav-drag-handle{width:30px;height:30px;display:grid;place-items:center;border:1px solid rgba(166,182,255,.14);border-radius:9px;color:#9ca8c8;background:#08132d;cursor:grab;font-size:16px;line-height:1}
     .nav-sort-row.dragging .nav-drag-handle{cursor:grabbing}
     .nav-sort-index{font:600 var(--text-body) Georgia,serif;color:#f2d28d;text-align:center}
-    .nav-sort-main b{display:block;font-size:var(--text-body);color:#edf0fb}.nav-sort-main small{display:block;margin-top:3px;color:#73809f;font-size:var(--text-caption)}
+    .nav-sort-main b{display:block;font-size:var(--text-body);color:#edf0fb}.nav-sort-main small{display:block;margin-top:3px;color:var(--muted);font-size:var(--text-caption)}
     .nav-sort-move{display:flex;gap:5px}.nav-sort-move button{width:31px;height:31px;border:1px solid rgba(166,182,255,.14);border-radius:9px;background:#0a1733;color:#cbd3e9;cursor:pointer}.nav-sort-move button:hover{border-color:rgba(159,124,255,.4);color:#fff}
     .nav-admin-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:16px}.nav-admin-status{font-size:var(--text-body);color:#8edbb6;min-height:16px}.nav-admin-status.dirty{color:#f0cd81}
     @media(max-width:650px){.nav-sort-row{grid-template-columns:34px 30px minmax(0,1fr)}.nav-sort-move{grid-column:3;justify-content:flex-start}}

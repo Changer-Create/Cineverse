@@ -183,15 +183,6 @@
     const style = document.createElement('style');
     style.id = 'radarExperienceV3Style';
     style.textContent = `
-      #radarPageGrid .radar-reason{
-        display:-webkit-box!important;
-        -webkit-box-orient:vertical!important;
-        -webkit-line-clamp:3!important;
-        overflow:hidden!important;
-        text-overflow:ellipsis!important;
-        min-height:0!important;
-        max-height:4.65em!important;
-      }
       html.radar-detail-preview #detailView .detail-actions{display:flex!important}
       html.radar-detail-preview #detailView .detail-actions>*{display:none!important}
       html.radar-detail-preview #detailStatusBtn{display:inline-flex!important}

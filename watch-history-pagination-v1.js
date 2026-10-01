@@ -169,7 +169,7 @@
         background:rgba(14,27,59,.7);
         color:#b9c4dd;
         padding:0 10px;
-        font-size:var(--text-body);
+        font-size:var(--text-control);
         cursor:pointer;
       }
       #detailView .watch-history-pager button:hover:not(:disabled){
