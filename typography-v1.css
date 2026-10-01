@@ -172,7 +172,7 @@ html body :is(.movie-account-head p,.cv-feedback-head p,.library-scheme-dialog-b
 /* The random feature title keeps its existing display size. */
 html.cineverse-app #homeView #randomTitle {font-size:var(--text-display);line-height:var(--leading-title)}
 html.cineverse-app #homeView :is(.random-meta,.random-facts strong) {font-size:var(--text-caption);line-height:var(--leading-caption)}
-html.cineverse-app :is(#homeView .movie-name,#homeView #randomPublicScore,#homeView .month-top-title-v3,#planView .plan-list-movie b) {font-size:var(--text-card);line-height:var(--leading-title)}
+html.cineverse-app :is(#homeView .movie-name,#homeView #randomPublicScore,#homeView .month-top-title-v3,#planView .plan-list-movie b,#statsView .stats-insight b) {font-size:var(--text-card);line-height:var(--leading-title)}
 html body :is(.profile .name,.profile .role,.movie-account-email,.movie-account-syncstate) {font-size:var(--text-caption);line-height:var(--leading-caption)}
 html body :is(textarea,.bulk-title-textarea) {font-size:var(--text-body);line-height:var(--leading-body)}
 html body :is(#libraryDoubanImportDialog,#libraryDeleteDialog) h3 {font-size:var(--text-dialog);line-height:var(--leading-title)}

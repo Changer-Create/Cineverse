@@ -6,7 +6,7 @@
   ],
   "home": {
     "metric": "#statsRow .stat-value",
-    "card": "#recentGrid .recent-metric strong",
+    "card": "#recentGrid .recent-metric strong,#randomPublicScore,.movie-name,.month-top-title-v3",
     "caption": "#recentGrid .recent-metric span",
     "body": "#randomQuote",
     "control": "#globalSearch"
@@ -39,7 +39,7 @@
   },
   "stats": {
     "metric": ".stats-summary-card b",
-    "card": ".stats-film-row b,.stats-film-row strong",
+    "card": ".stats-film-row b,.stats-film-row strong,.stats-insight b",
     "caption": ".stats-month-col>span,.chart-legend,.stats-summary-card small,.rank-row>span",
     "body": ".stats-summary-copy",
     "control": "#statsYear,#statsCopySummary"
@@ -56,5 +56,8 @@
     "caption": ".detail-fact,.watch-date",
     "body": "#detailOverview,.watch-copy",
     "control": ".watch-record-edit-btn,.watch-history-pager button"
+  },
+  "displayExceptions": {
+    "#randomTitle": 24
   }
 }
