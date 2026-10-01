@@ -8,7 +8,7 @@
   style.textContent = `
     .movie-action-unified-v1 { display:flex!important; gap:8px!important; width:100%; }
     .movie-action-unified-v1 > * { flex:1!important; height:36px!important; display:flex!important; align-items:center!important; justify-content:center!important; white-space:nowrap!important; }
-    #libraryGrid .movie-action-unified-v1 > * { height:29px!important; font-size:9px!important; }
+    #libraryGrid .movie-action-unified-v1 > * { height:29px!important; font-size:var(--text-body)!important; }
   `;
   document.head.appendChild(style);
 

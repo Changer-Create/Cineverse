@@ -160,7 +160,7 @@
         min-width:76px;
         text-align:center;
         color:#8792af;
-        font-size:10px;
+        font-size:var(--text-caption);
       }
       #detailView .watch-history-pager button{
         height:32px;
@@ -169,7 +169,7 @@
         background:rgba(14,27,59,.7);
         color:#b9c4dd;
         padding:0 10px;
-        font-size:10px;
+        font-size:var(--text-body);
         cursor:pointer;
       }
       #detailView .watch-history-pager button:hover:not(:disabled){

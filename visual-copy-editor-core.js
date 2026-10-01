@@ -57,7 +57,7 @@
       #ccVisualMarkerLayer{position:fixed;inset:0;z-index:99970;pointer-events:none}
       .cc-visual-marker{position:fixed;width:24px;height:24px;border:1px solid rgba(245,198,108,.68);border-radius:8px;background:#19172a;color:#ffe3a3;box-shadow:0 7px 22px rgba(0,0,0,.34);display:grid;place-items:center;padding:0;font-size:12px;line-height:1;pointer-events:auto;cursor:pointer;transform:translate(-50%,-50%);transition:.15s}
       .cc-visual-marker:hover{transform:translate(-50%,-50%) scale(1.08);background:#2a2140;border-color:#ffe0a0}
-      #ccVisualToolbar{position:fixed;right:18px;top:18px;z-index:99990;display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(159,124,255,.42);border-radius:14px;background:rgba(8,14,31,.94);backdrop-filter:blur(18px);box-shadow:0 16px 45px rgba(0,0,0,.38);color:#e9e5f7;font:12px "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+      #ccVisualToolbar{position:fixed;right:18px;top:18px;z-index:99990;display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(159,124,255,.42);border-radius:14px;background:rgba(8,14,31,.94);backdrop-filter:blur(18px);box-shadow:0 16px 45px rgba(0,0,0,.38);color:#e9e5f7;font:var(--text-body) "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
       #ccVisualToolbar b{color:#f7d993;font-weight:600}#ccVisualToolbar span{color:#929dbc;font-size:10px}
       #ccVisualToolbar button{border:1px solid rgba(166,182,255,.18);border-radius:9px;background:rgba(24,36,72,.86);color:#e7ebf6;padding:7px 9px;cursor:pointer}
       #ccVisualToolbar button:hover{border-color:rgba(159,124,255,.45)}#ccVisualToolbar .cc-exit{color:#ffabbc;border-color:rgba(255,135,159,.28)}

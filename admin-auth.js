@@ -30,7 +30,7 @@
     if(!document.querySelector('#adminLogoutBtn')){
       const btn=document.createElement('button');
       btn.id='adminLogoutBtn';btn.type='button';btn.textContent=`退出管理员 · ${username}`;
-      btn.style.cssText='display:block;width:100%;margin-top:10px;border:1px solid rgba(255,135,159,.22);background:rgba(106,33,52,.10);color:#ff9fb2;text-align:left;padding:10px 12px;border-radius:11px;cursor:pointer;font:11px "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+      btn.style.cssText='display:block;width:100%;margin-top:10px;border:1px solid rgba(255,135,159,.22);background:rgba(106,33,52,.10);color:#ff9fb2;text-align:left;padding:10px 12px;border-radius:11px;cursor:pointer;font:var(--text-body) "PingFang SC","Microsoft YaHei",system-ui,sans-serif';
       btn.addEventListener('click',async()=>{try{await call('logout')}catch{}clear();location.replace('admin.html')});
       side.appendChild(btn);
     }

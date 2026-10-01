@@ -28,7 +28,7 @@
         width:34px;height:34px;border-radius:10px;
         border:1px solid rgba(161,179,255,.18);
         background:rgba(9,19,44,.92);color:#cfd6e9;
-        display:grid;place-items:center;font-size:20px;line-height:1;
+        display:grid;place-items:center;font-size:var(--text-body);line-height:var(--leading-body);
       }
       #${DIALOG_ID} .library-douban-modal-close:hover{border-color:rgba(173,140,255,.42);color:#fff}
       @media(max-width:700px){

@@ -165,7 +165,7 @@
 
   #homeView .hero h2 {
     margin: 5px 0 4px;
-    font-size: 28px;
+    font-size:var(--text-page);
   }
 
   #homeView .hero .sub {
@@ -183,7 +183,7 @@
   }
 
   #homeView .stat-value {
-    font-size: 21px;
+    font-size:var(--text-metric);
   }
 
   #homeView .home-top-grid,
@@ -275,7 +275,7 @@
 
   #planView .plan-title-row h2 {
     margin: 2px 0 0;
-    font-size: 25px;
+    font-size:var(--text-page);
   }
 
   #planView .plan-month-nav button,
@@ -295,7 +295,7 @@
 
   #planView .plan-page-stat b {
     margin-top: 2px;
-    font-size: 19px;
+    font-size:var(--text-metric);
   }
 
   #planView .plan-toolbar {
@@ -381,7 +381,7 @@
   }
 
   #planView .plan-ring strong {
-    font-size: 22px;
+    font-size:var(--text-body);
   }
 
   #planView .plan-status-bars,
@@ -405,7 +405,7 @@
 
   #statsView .stats-title-row h2 {
     margin: 2px 0 3px;
-    font-size: 25px;
+    font-size:var(--text-page);
   }
 
   #statsView .stats-controls select,
@@ -426,7 +426,7 @@
 
   #statsView .stats-summary-card b {
     margin-top: 2px;
-    font-size: 18px;
+    font-size:var(--text-metric);
   }
 
   #statsView .stats-layout,
