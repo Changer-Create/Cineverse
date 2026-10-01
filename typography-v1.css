@@ -140,6 +140,8 @@ body[data-ui-theme="snow"] :is(.stats-card,.lib-card,.movie-modal) {background:v
   html.cineverse-app #planView .plan-list-movie {grid-column:1/-1}
 }
 @media(max-width:680px) {
+  html.cineverse-app #radarView .radar-page-grid {grid-template-columns:minmax(0,1fr)}
+  html.cineverse-app #radarView .radar-card-actions button {min-height:44px}
   :root {--text-page:1.75rem;--text-metric:1.75rem}
   html.cineverse-app .main {padding-bottom:100px}
   html.cineverse-app .topbar {grid-template-columns:minmax(0,1fr) auto;gap:8px}
