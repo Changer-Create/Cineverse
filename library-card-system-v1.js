@@ -376,21 +376,6 @@
     poster.click();
   });
 
-  const fixedQuery = window.matchMedia('(min-width:1181px) and (min-height:720px)');
-  function updateFixedWorkspace() {
-    const active = !libraryView.classList.contains('hidden') && fixedQuery.matches;
-    document.documentElement.classList.toggle('library-fixed-workspace-v1', active);
-    document.body.classList.toggle('library-fixed-workspace-v1', active);
-  }
-
-  if (fixedQuery.addEventListener) fixedQuery.addEventListener('change', updateFixedWorkspace);
-  else fixedQuery.addListener?.(updateFixedWorkspace);
-  window.addEventListener('hashchange', () => queueMicrotask(updateFixedWorkspace));
-
-  // Only observe the library view's hidden/visible state. This observer never writes back to libraryView.
-  const viewObserver = new MutationObserver(updateFixedWorkspace);
-  viewObserver.observe(libraryView, { attributes:true, attributeFilter:['class'] });
-
   // Core renderLibrary replaces direct card children. Observe only direct childList changes;
   // decorating inside cards therefore cannot retrigger this observer and cannot self-loop.
   const gridObserver = new MutationObserver(scheduleDecorate);
@@ -398,6 +383,5 @@
 
   ensurePlanDialog();
   ensureDeleteDialog();
-  updateFixedWorkspace();
   scheduleDecorate();
 })();

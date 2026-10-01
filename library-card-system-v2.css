@@ -1,28 +1,17 @@
 /* B02 movie-card component styles. Theme values come from the shared semantic tokens. */
 #libraryGrid{--card-surface:var(--panel-strong,rgba(10,20,45,.85));--card-surface-raised:var(--panel,rgba(10,20,45,.85));--card-text:var(--text,#f7f3ff);--card-text-muted:var(--muted,#aab3cf);--card-border:var(--line,rgba(161,179,255,.16));--card-accent:var(--purple,#9f7cff);}
 @media (min-width:1181px) and (min-height:720px){
-        html.library-fixed-workspace-v1,body.library-fixed-workspace-v1{height:100%;overflow:hidden}
-        body.library-fixed-workspace-v1 .app{height:100dvh;min-height:0}
-        body.library-fixed-workspace-v1 .main{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding-bottom:18px}
-        body.library-fixed-workspace-v1 .topbar{flex:0 0 auto;margin-bottom:12px}
-        body.library-fixed-workspace-v1 #libraryView:not(.hidden){display:flex;flex:1 1 auto;min-height:0;overflow:hidden}
-        body.library-fixed-workspace-v1 #libraryView .library-shell{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);gap:10px;flex:1 1 auto;min-height:0;width:100%}
-        body.library-fixed-workspace-v1 #libraryView .library-hero{padding:13px 17px}
-        body.library-fixed-workspace-v1 #libraryView .library-head{align-items:center}
-        body.library-fixed-workspace-v1 #libraryView .library-head h2{font-size:28px}
-        body.library-fixed-workspace-v1 #libraryView .library-head p{margin:5px 0 0;font-size:12px}
-        body.library-fixed-workspace-v1 #libraryView .library-summary{min-width:min(520px,47vw);gap:8px}
-        body.library-fixed-workspace-v1 #libraryView .lib-mini-stat{padding:8px 10px}
-        body.library-fixed-workspace-v1 #libraryView .lib-mini-stat b{font-size:18px}
-        body.library-fixed-workspace-v1 #libraryView .library-tools{padding:10px}
-        body.library-fixed-workspace-v1 #libraryView .library-shell>section:last-child{min-height:0;overflow:hidden;display:flex;flex-direction:column}
-        body.library-fixed-workspace-v1 #libraryGrid{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;align-content:start;padding-right:6px;scrollbar-width:thin;scrollbar-color:rgba(141,154,196,.28) transparent}
-        body.library-fixed-workspace-v1 #libraryGrid::-webkit-scrollbar{width:7px}
-        body.library-fixed-workspace-v1 #libraryGrid::-webkit-scrollbar-track{background:transparent}
-        body.library-fixed-workspace-v1 #libraryGrid::-webkit-scrollbar-thumb{background:rgba(141,154,196,.22);border-radius:999px}
-        body.library-fixed-workspace-v1 #libraryGrid:hover::-webkit-scrollbar-thumb{background:rgba(159,124,255,.34)}
-        body.library-fixed-workspace-v1 #libraryPagination{flex:0 0 auto;margin-top:9px;padding:8px 11px}
-      }
+        html.cineverse-app:has(#libraryView:not(.hidden)) .topbar{margin-bottom:12px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .library-hero{padding:13px 17px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .library-head{align-items:center}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .library-head h2{font-size:28px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .library-head p{margin:5px 0 0;font-size:12px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .library-summary{min-width:min(520px,47vw);gap:8px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .lib-mini-stat{padding:8px 10px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .lib-mini-stat b{font-size:18px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryView .library-tools{padding:10px}
+        html.cineverse-app:has(#libraryView:not(.hidden)) #libraryPagination{margin-top:9px;padding:8px 11px}
+}
 
       #libraryGrid .status-pill{display:none;visibility:hidden;pointer-events:none}
       #libraryGrid .lib-poster[data-open-detail]{cursor:pointer}
