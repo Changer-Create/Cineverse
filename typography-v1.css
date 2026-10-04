@@ -61,9 +61,13 @@ html.cineverse-app :is(#homeView,#statsView,#watchedView,#matchView,#detailView,
 }
 html.cineverse-app #homeView :is(.home-top-grid,.home-triple) {align-items:start;grid-template-rows:auto}
 html.cineverse-app #homeView .home-top-grid {grid-template-columns:minmax(0,1.3fr) minmax(320px,1fr)}
-html.cineverse-app #homeView .recent-grid {grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
-html.cineverse-app #homeView .home-triple {grid-template-columns:repeat(auto-fit,minmax(320px,1fr));grid-template-areas:none}
-html.cineverse-app #homeView .home-triple>.panel {grid-area:auto}
+html.cineverse-app #homeView {container:home-layout / inline-size}
+html.cineverse-app #homeView #watched .recent-grid {grid-template-columns:minmax(0,1fr)}
+html.cineverse-app #homeView .home-triple {grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"radar insight plan"}
+html.cineverse-app #homeView .home-triple>#radar {grid-area:radar}
+html.cineverse-app #homeView .home-triple>.insight {grid-area:insight}
+html.cineverse-app #homeView .home-triple>#plan {grid-area:plan}
+html.cineverse-app #homeView .home-triple>.panel {height:auto;min-height:0;max-height:none;min-width:0}
 html.cineverse-app #homeView .home-top-grid>:is(#watched,.random-panel) {height:auto;min-height:0;max-height:none}
 html.cineverse-app #homeView :is(.recent,.random-content,.random-actions,.panel-head,.random-facts) {min-width:0;height:auto;max-height:none;flex-wrap:wrap}
 html.cineverse-app #homeView :is(.recent .t,.recent .d,.recent .r,.random-title,.random-quote,.random-meta,.month-top-copy-v3) {height:auto;max-height:none;overflow:visible;white-space:normal;-webkit-line-clamp:unset}
@@ -209,3 +213,48 @@ body[data-ui-theme="snow"] :is(.radar-page-stat small,.radar-page-stat span,.sta
   html.cineverse-app #detailView .detail-watch-grid>* {grid-column:1;grid-row:auto;min-width:0}
   html body :is(.watch-record-actions button,.manual-filter-option,.watch-history-pager button) {min-height:44px}
 }
+/* Home layout follows panel width; typography must not create implicit grid tracks. */
+html.cineverse-app #homeView #watched .recent {
+  grid-template-columns:52px minmax(0,1.5fr) repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+html.cineverse-app #homeView #watched .mini-poster {width:52px}
+html.cineverse-app #homeView #watched :is(.recent-creator,.recent-metric span,.recent-metric strong) {
+  white-space:normal;overflow:visible;overflow-wrap:anywhere;
+}
+html.cineverse-app #homeView .random-panel .random-content {
+  grid-template-columns:120px minmax(0,1fr);height:auto;min-height:0;max-height:none;
+}
+html.cineverse-app #homeView .random-panel .random-main {height:auto}
+html.cineverse-app #homeView .random-panel .random-facts {
+  grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr));
+}
+html.cineverse-app #homeView .random-panel .random-poster {width:120px;height:180px}
+@container home-layout (max-width:1199px) {
+  html.cineverse-app #homeView .home-top-grid {grid-template-columns:minmax(0,1fr)}
+  html.cineverse-app #homeView .home-triple {
+    grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"radar radar" "insight plan";
+  }
+}
+@container home-layout (max-width:799px) {
+  html.cineverse-app #homeView .home-triple {
+    grid-template-columns:minmax(0,1fr);grid-template-areas:"radar" "insight" "plan";
+  }
+}
+@container (max-width:650px) {
+  html.cineverse-app #homeView #watched .recent {grid-template-columns:42px repeat(3,minmax(0,1fr));grid-template-rows:auto auto}
+  html.cineverse-app #homeView #watched .mini-poster {width:42px;grid-row:1/3}
+  html.cineverse-app #homeView #watched .recent-identity {grid-column:2/-1}
+  html.cineverse-app #homeView #watched .recent-time {grid-column:2}
+  html.cineverse-app #homeView #watched .recent-personal {grid-column:3}
+  html.cineverse-app #homeView #watched .recent-public {grid-column:4}
+}
+@container (max-width:450px) {
+  html.cineverse-app #homeView .random-panel .random-content {grid-template-columns:80px minmax(0,1fr)}
+  html.cineverse-app #homeView .random-panel .random-poster {width:80px;height:120px}
+  html.cineverse-app #homeView .random-panel .random-facts {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+html.cineverse-app #homeView #watched :is(.recent .t,.recent-creator span) {
+  white-space:normal;overflow:visible;overflow-wrap:anywhere;
+}
+html.cineverse-app #homeView #watched .recent-creator {flex-wrap:wrap}
