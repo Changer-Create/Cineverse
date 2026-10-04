@@ -260,7 +260,7 @@ html.cineverse-app #homeView #watched :is(.recent .t,.recent-creator span) {
 html.cineverse-app #homeView #watched .recent-creator {flex-wrap:wrap}
 /* Library cards: artwork and identity first, compact scores, two clear actions. */
 html.cineverse-app #libraryGrid:not(.list-view) {
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:16px;
 }
 html.cineverse-app #libraryGrid .lib-card {
   grid-template-columns:104px minmax(0,1fr);gap:0 16px;padding:16px;
@@ -269,7 +269,7 @@ html.cineverse-app #libraryGrid .lib-card {
 html.cineverse-app #libraryGrid .lib-poster {
   width:104px;height:156px;margin:0;align-self:start;border-radius:10px;
 }
-html.cineverse-app #libraryGrid .lib-body {padding:0;min-width:0;display:flex;flex-direction:column}
+html.cineverse-app #libraryGrid .lib-body {container:library-body / inline-size;padding:0;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:0 16px;align-content:start}
 html.cineverse-app #libraryGrid .lib-title-wrap {padding:0;min-width:0}
 html.cineverse-app #libraryGrid .lib-title {
   display:block;overflow:visible;white-space:normal;-webkit-line-clamp:unset;overflow-wrap:anywhere;
@@ -313,4 +313,20 @@ html.cineverse-app #libraryGrid .lib-poster .poster-title {position:static;paddi
 html.cineverse-app #libraryGrid.list-view .lib-card {grid-template-columns:104px minmax(0,1fr)}
 @media(max-width:480px) {
   html.cineverse-app #libraryGrid.list-view .lib-card {grid-template-columns:80px minmax(0,1fr)}
+}
+
+/* Keep identity in the center and both scores in a dedicated right column. */
+html.cineverse-app #libraryGrid .lib-title-wrap {grid-column:1;grid-row:1}
+html.cineverse-app #libraryGrid .lib-tags {grid-column:1;grid-row:2;display:flex}
+html.cineverse-app #libraryGrid .lib-rating.library-score-row {
+  grid-column:2;grid-row:1/3;display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:flex-start;gap:20px;margin:0;padding:4px 0 0;
+}
+html.cineverse-app #libraryGrid .library-score-box {display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+@container library-body (max-width:279px) {
+  html.cineverse-app #libraryGrid .lib-title-wrap {grid-column:1/-1}
+  html.cineverse-app #libraryGrid .lib-tags {grid-column:1/-1}
+  html.cineverse-app #libraryGrid .lib-rating.library-score-row {
+    grid-column:1/-1;grid-row:3;flex-direction:row;flex-wrap:wrap;gap:12px 20px;margin-top:12px;padding:0;
+  }
 }

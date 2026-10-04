@@ -40,10 +40,10 @@ for (const asset of ['app-router-v1.js', 'app-library-model-v1.js']) {
 }
 assert.match(index, /app-state-storage-v1\.js\?v=20261001-association/);
 assert.match(index, /app-domain-model-v1\.js\?v=20261001-association/);
-assert.match(index, /content-center-runtime-v1\.js\?v=20261004-library-card/);
+assert.match(index, /content-center-runtime-v1\.js\?v=20261005-score-column/);
 assert.match(index, /app-tmdb-match-v1\.js\?v=20260822-2400/);
 assert.match(index, /app-douban-import-v1\.js\?v=20260822-2500/);
-assert.match(index, /app-main-v1\.js\?v=20261004-library-card/);
+assert.match(index, /app-main-v1\.js\?v=20261005-score-column/);
   assert.match(index, /ui-theme-nature-v2\.css\?v=20261001-readability-r2/);
 assert.match(index, /data-theme-preset="forest"/);
 assert.match(index, /data-theme-preset="snow"/);
