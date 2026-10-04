@@ -258,3 +258,59 @@ html.cineverse-app #homeView #watched :is(.recent .t,.recent-creator span) {
   white-space:normal;overflow:visible;overflow-wrap:anywhere;
 }
 html.cineverse-app #homeView #watched .recent-creator {flex-wrap:wrap}
+/* Library cards: artwork and identity first, compact scores, two clear actions. */
+html.cineverse-app #libraryGrid:not(.list-view) {
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px;
+}
+html.cineverse-app #libraryGrid .lib-card {
+  grid-template-columns:104px minmax(0,1fr);gap:0 16px;padding:16px;
+  align-content:start;align-items:start;
+}
+html.cineverse-app #libraryGrid .lib-poster {
+  width:104px;height:156px;margin:0;align-self:start;border-radius:10px;
+}
+html.cineverse-app #libraryGrid .lib-body {padding:0;min-width:0;display:flex;flex-direction:column}
+html.cineverse-app #libraryGrid .lib-title-wrap {padding:0;min-width:0}
+html.cineverse-app #libraryGrid .lib-title {
+  display:block;overflow:visible;white-space:normal;-webkit-line-clamp:unset;overflow-wrap:anywhere;
+}
+html.cineverse-app #libraryGrid .lib-meta {margin-top:6px;overflow-wrap:anywhere}
+html.cineverse-app #libraryGrid .lib-format {display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+html.cineverse-app #libraryGrid .media-type-pill {margin:0;font-size:var(--text-caption);padding:0;border:0;background:none;color:var(--muted);font-weight:400}
+html.cineverse-app #libraryGrid .lib-rating.library-score-row {
+  display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0;padding:0;
+}
+html.cineverse-app #libraryGrid .library-score-box {
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;padding:0;border:0;background:none;border-radius:0;
+}
+html.cineverse-app #libraryGrid .library-score-box b {margin:0;overflow-wrap:anywhere}
+html.cineverse-app #libraryGrid .lib-tags {margin-top:8px;min-height:0;max-height:none;flex-wrap:wrap}
+html.cineverse-app #libraryGrid .lib-tags:empty {display:none}
+html.cineverse-app #libraryGrid .lib-footer {grid-column:1/-1;min-width:0;margin-top:16px;border-top:1px solid var(--line);padding-top:10px}
+html.cineverse-app #libraryGrid .lib-card-toolbar {display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}
+html.cineverse-app #libraryGrid .lib-card-tools {display:flex;gap:6px;margin-left:auto}
+html.cineverse-app #libraryGrid .lib-card-tools :is(.fav-star,.library-delete-btn) {
+  position:static;width:36px;height:36px;min-height:36px;padding:0;display:grid;place-items:center;
+  border:1px solid var(--line);background:transparent;border-radius:10px;transform:none;
+}
+html.cineverse-app #libraryGrid .lib-want-status {
+  min-height:36px;padding:5px 8px;border:0;background:transparent;color:var(--muted);font-size:var(--text-control);
+}
+html.cineverse-app #libraryGrid .lib-want-status.active {color:var(--text);background:var(--chip);border-radius:8px}
+html.cineverse-app #libraryGrid .lib-watched-status {font-size:var(--text-caption);color:var(--muted)}
+html.cineverse-app #libraryGrid .lib-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-width:0;gap:10px;margin-top:10px}
+html.cineverse-app #libraryGrid .lib-actions .lib-watch-primary {background:var(--chip);border-color:var(--purple);font-weight:600}
+html.cineverse-app #libraryGrid .lib-select {left:20px;top:20px}
+@media(max-width:480px) {
+  html.cineverse-app #libraryGrid .lib-card {grid-template-columns:80px minmax(0,1fr);gap:0 12px;padding:12px}
+  html.cineverse-app #libraryGrid .lib-poster {width:80px;height:120px}
+  html.cineverse-app #libraryGrid .lib-select {left:16px;top:16px}
+}
+html.cineverse-app #libraryGrid .lib-card {grid-template-rows:1fr auto}
+html.cineverse-app #libraryGrid .lib-rating.library-score-row {justify-content:flex-start}
+html.cineverse-app #libraryGrid .lib-poster:not(.has-image) {display:grid;place-items:center;padding:8px;background:var(--panel-strong)}
+html.cineverse-app #libraryGrid .lib-poster .poster-title {position:static;padding:0;font-size:var(--text-caption);line-height:1.5;text-align:center;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+html.cineverse-app #libraryGrid.list-view .lib-card {grid-template-columns:104px minmax(0,1fr)}
+@media(max-width:480px) {
+  html.cineverse-app #libraryGrid.list-view .lib-card {grid-template-columns:80px minmax(0,1fr)}
+}
