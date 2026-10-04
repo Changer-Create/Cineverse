@@ -621,3 +621,9 @@ body[data-ui-theme="ocean"] :is(
   color:var(--daylight-heading)!important;
   border-color:var(--line)!important;
 }
+
+/* Match the rating donut center to its daylight card, preserving segment colors. */
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #statsView .rating-donut::before {
+  background:rgb(var(--panel-rgb))!important;
+  border-color:var(--line)!important;
+}
