@@ -595,3 +595,29 @@ body[data-ui-theme="ocean"] :is(
 }
 
 :is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #planView .plan-ring::before{background:rgb(var(--panel-rgb))!important}
+/* Detail reading surfaces must use the same daylight palette as their text. */
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #detailView :is(.detail-hero,.detail-section) {
+  background:rgb(var(--panel-rgb))!important;
+  color:var(--daylight-heading)!important;
+  border-color:var(--line)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #detailView :is(.detail-side-card,.watch-entry,.watch-stat,.rating-trend,.detail-subcard,.watch-empty) {
+  background:#fff!important;
+  color:var(--daylight-heading)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:0 2px 8px rgba(16,41,69,.04);
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #detailView :is(.detail-score,.watch-stat b,.watch-date,.rating-trend h4,.detail-section-head h3,.detail-subcard h3) {
+  color:var(--daylight-heading)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #detailView :is(.detail-score-label,.detail-score small,.detail-side-meta,.detail-side-meta span,.detail-public-source,.watch-copy,.watch-stat span,.trend-bar span,.watch-empty) {
+  color:var(--daylight-muted)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #detailView .detail-public-card .detail-score {
+  color:var(--daylight-accent)!important;
+}
+:is(body[data-ui-theme="snow"],body[data-ui-theme="ocean"]) #detailView :is(.detail-actions button:not(.active):not(.primary),.watch-entry button,.watch-history-pager button) {
+  background:rgb(var(--panel-rgb))!important;
+  color:var(--daylight-heading)!important;
+  border-color:var(--line)!important;
+}
